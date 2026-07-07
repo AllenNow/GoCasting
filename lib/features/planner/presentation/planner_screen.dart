@@ -1,136 +1,153 @@
+import '../../../l10n/l10n.dart';
+import 'dart:convert';
+
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
 
+import '../../../core/database/reference_db.dart';
 import '../domain/astronomy.dart';
-import '../providers/planner_providers.dart';
+import '../domain/tide_predictor.dart';
 
-/// 出行规划器主页面 — Session Dashboard
-class PlannerScreen extends ConsumerWidget {
+/// Planner 控制器
+class PlannerController extends GetxController {
+  final selectedBeach = Rxn<Beache>();
+  final selectedDate = DateTime.now().obs;
+  final beaches = <Beache>[].obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    _loadBeaches();
+  }
+
+  Future<void> _loadBeaches() async {
+    final db = Get.find<ReferenceDatabase>();
+    beaches.value = await db.select(db.beaches).get();
+  }
+
+  void selectBeach(Beache beach) => selectedBeach.value = beach;
+  void selectDate(DateTime date) => selectedDate.value = date;
+}
+
+/// 出行规划器主页面
+class PlannerScreen extends StatelessWidget {
   const PlannerScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final selectedBeach = ref.watch(selectedBeachProvider);
-    final selectedDate = ref.watch(selectedDateProvider);
+  Widget build(BuildContext context) {
+    final ctrl = Get.put(PlannerController());
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Planner'),
+        title: Text(context.tr.tabPlanner),
         actions: [
           IconButton(
             icon: const Icon(Icons.calendar_today),
-            onPressed: () => _pickDate(context, ref, selectedDate),
-            tooltip: 'Select Date',
+            onPressed: () async {
+              final d = await showDatePicker(
+                context: context,
+                initialDate: ctrl.selectedDate.value,
+                firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                lastDate: DateTime.now().add(const Duration(days: 365)),
+              );
+              if (d != null) ctrl.selectDate(d);
+            },
           ),
         ],
       ),
-      body: selectedBeach == null
-          ? const _NoBeachSelected()
-          : _Dashboard(
-              date: selectedDate,
-              lat: selectedBeach.lat,
-              lon: selectedBeach.lon,
-              beachName: selectedBeach.name,
+      body: Obx(() {
+        final beach = ctrl.selectedBeach.value;
+        if (beach == null) return const _NoBeachSelected();
+        return _Dashboard(beach: beach, date: ctrl.selectedDate.value);
+      }),
+      floatingActionButton: Obx(() => FloatingActionButton.extended(
+            onPressed: () => _showBeachPicker(context, ctrl),
+            icon: const Icon(Icons.beach_access),
+            label: Text(ctrl.selectedBeach.value?.name ?? 'Select Beach'),
+          )),
+    );
+  }
+
+  void _showBeachPicker(BuildContext context, PlannerController ctrl) {
+    Get.bottomSheet(
+      Container(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        height: Get.height * 0.7,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(context.tr.selectBeach, style: Theme.of(context).textTheme.titleLarge),
             ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showBeachPicker(context, ref),
-        icon: const Icon(Icons.beach_access),
-        label: Text(selectedBeach?.name ?? 'Select Beach'),
+            Expanded(
+              child: Obx(() {
+                if (ctrl.beaches.isEmpty) {
+                  return const Center(child: Text('No beaches loaded'));
+                }
+                return ListView.builder(
+                  itemCount: ctrl.beaches.length,
+                  itemBuilder: (_, i) {
+                    final b = ctrl.beaches[i];
+                    return ListTile(
+                      leading: const Icon(Icons.beach_access),
+                      title: Text(b.name),
+                      subtitle: Text('${b.region} • ${b.beachType}'),
+                      onTap: () {
+                        ctrl.selectBeach(b);
+                        Get.back();
+                      },
+                    );
+                  },
+                );
+              }),
+            ),
+          ],
+        ),
       ),
-    );
-  }
-
-  Future<void> _pickDate(
-      BuildContext context, WidgetRef ref, DateTime current) async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: current,
-      firstDate: DateTime.now().subtract(const Duration(days: 365)),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (date != null) {
-      ref.read(selectedDateProvider.notifier).state = date;
-    }
-  }
-
-  void _showBeachPicker(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => const _BeachPickerSheet(),
     );
   }
 }
 
 class _NoBeachSelected extends StatelessWidget {
   const _NoBeachSelected();
+  @override
+  Widget build(BuildContext context) => Center(
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Icon(Icons.beach_access, size: 64, color: Colors.grey),
+          SizedBox(height: 16),
+          Text(context.tr.noBeachSelected, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
+          SizedBox(height: 8),
+          Text('Tap the button below to choose your fishing spot', style: TextStyle(color: Colors.grey)),
+        ]),
+      );
+}
+
+class _Dashboard extends StatelessWidget {
+  const _Dashboard({required this.beach, required this.date});
+  final Beache beach;
+  final DateTime date;
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.beach_access, size: 64, color: Colors.grey),
-          SizedBox(height: 16),
-          Text(
-            'Select a Beach',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Tap the button below to choose your fishing spot',
-            style: TextStyle(color: Colors.grey),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Session Dashboard — 潮汐 + 月相 + 日出日落 + 日月
-class _Dashboard extends ConsumerWidget {
-  const _Dashboard({
-    required this.date,
-    required this.lat,
-    required this.lon,
-    required this.beachName,
-  });
-
-  final DateTime date;
-  final double lat;
-  final double lon;
-  final String beachName;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final astroData =
-        ref.watch(astronomyProvider((date: date, lat: lat, lon: lon)));
+    const astro = Astronomy();
+    final moon = astro.getMoonPhase(date);
+    final sun = astro.getSunTimes(date, beach.lat, beach.lon);
+    final solunar = astro.getSolunarPeriods(date, beach.lat, beach.lon);
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // 日期和位置
-        Text(
-          '$beachName — ${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
+        Text('${beach.name} — ${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
+            style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 16),
-
-        // 月相卡片
-        _MoonCard(moon: astroData.moon),
+        _MoonCard(moon: moon),
         const SizedBox(height: 12),
-
-        // 日出日落卡片
-        _SunCard(sun: astroData.sun),
+        _SunCard(sun: sun),
         const SizedBox(height: 12),
-
-        // Solunar 活跃期
-        _SolunarCard(solunar: astroData.solunar),
+        _SolunarCard(solunar: solunar),
         const SizedBox(height: 12),
-
-        // 潮汐（需要数据填充后才能显示）
-        _TidePlaceholder(),
+        _TideCard(stationId: beach.nearestStationId, date: date),
       ],
     );
   }
@@ -140,58 +157,31 @@ class _MoonCard extends StatelessWidget {
   const _MoonCard({required this.moon});
   final MoonPhaseInfo moon;
 
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            // 月相图标
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.grey.shade900,
-              ),
-              child: Center(
-                child: Text(
-                  _moonEmoji(moon.phase),
-                  style: const TextStyle(fontSize: 28),
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(moon.phaseName,
-                      style: const TextStyle(fontWeight: FontWeight.w600)),
-                  Text(
-                      '${(moon.illumination * 100).toStringAsFixed(0)}% illuminated'),
-                  Text('Moon age: ${moon.ageInDays.toStringAsFixed(1)} days'),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _moonEmoji(double phase) {
-    if (phase < 0.0625) return '🌑';
-    if (phase < 0.1875) return '🌒';
-    if (phase < 0.3125) return '🌓';
-    if (phase < 0.4375) return '🌔';
-    if (phase < 0.5625) return '🌕';
-    if (phase < 0.6875) return '🌖';
-    if (phase < 0.8125) return '🌗';
-    if (phase < 0.9375) return '🌘';
+  String _emoji(double p) {
+    if (p < 0.0625) return '🌑';
+    if (p < 0.1875) return '🌒';
+    if (p < 0.3125) return '🌓';
+    if (p < 0.4375) return '🌔';
+    if (p < 0.5625) return '🌕';
+    if (p < 0.6875) return '🌖';
+    if (p < 0.8125) return '🌗';
+    if (p < 0.9375) return '🌘';
     return '🌑';
   }
+
+  @override
+  Widget build(BuildContext context) => Card(child: Padding(
+    padding: const EdgeInsets.all(16),
+    child: Row(children: [
+      Container(width: 50, height: 50, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.grey.shade900),
+        child: Center(child: Text(_emoji(moon.phase), style: const TextStyle(fontSize: 28)))),
+      const SizedBox(width: 16),
+      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(moon.phaseName, style: const TextStyle(fontWeight: FontWeight.w600)),
+        Text('${(moon.illumination * 100).toStringAsFixed(0)}% illuminated'),
+      ]),
+    ]),
+  ));
 }
 
 class _SunCard extends StatelessWidget {
@@ -199,52 +189,25 @@ class _SunCard extends StatelessWidget {
   final SunTimes sun;
 
   @override
+  Widget build(BuildContext context) => Card(child: Padding(
+    padding: const EdgeInsets.all(16),
+    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      const Row(children: [Icon(Icons.wb_sunny, size: 20, color: Colors.orange), SizedBox(width: 8), Text('Sun', style: TextStyle(fontWeight: FontWeight.w600))]),
+      const SizedBox(height: 8),
+      Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
+        _Time('Sunrise', sun.sunrise), _Time('Noon', sun.solarNoon), _Time('Sunset', sun.sunset),
+      ]),
+    ]),
+  ));
+}
+
+class _Time extends StatelessWidget {
+  const _Time(this.label, this.time);
+  final String label; final DateTime? time;
+  @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Row(
-              children: [
-                Icon(Icons.wb_sunny, size: 20, color: Colors.orange),
-                SizedBox(width: 8),
-                Text('Sun', style: TextStyle(fontWeight: FontWeight.w600)),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _TimeDisplay(
-                    label: 'Sunrise', time: sun.sunrise, icon: Icons.arrow_upward),
-                _TimeDisplay(
-                    label: 'Noon', time: sun.solarNoon, icon: Icons.wb_sunny),
-                _TimeDisplay(
-                    label: 'Sunset', time: sun.sunset, icon: Icons.arrow_downward),
-              ],
-            ),
-            if (sun.civilTwilightBegin != null) ...[
-              const Divider(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _TimeDisplay(
-                      label: 'First Light',
-                      time: sun.civilTwilightBegin,
-                      icon: Icons.brightness_low),
-                  _TimeDisplay(
-                      label: 'Last Light',
-                      time: sun.civilTwilightEnd,
-                      icon: Icons.brightness_low),
-                ],
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
+    final s = time != null ? '${time!.hour.toString().padLeft(2, '0')}:${time!.minute.toString().padLeft(2, '0')}' : '--:--';
+    return Column(children: [Text(s, style: const TextStyle(fontWeight: FontWeight.w600)), Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey))]);
   }
 }
 
@@ -253,188 +216,100 @@ class _SolunarCard extends StatelessWidget {
   final SolunarPeriods solunar;
 
   @override
+  Widget build(BuildContext context) => Card(child: Padding(
+    padding: const EdgeInsets.all(16),
+    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      const Row(children: [Icon(Icons.water, size: 20, color: Colors.blue), SizedBox(width: 8), Text('Solunar Feeding', style: TextStyle(fontWeight: FontWeight.w600))]),
+      const SizedBox(height: 8),
+      ...solunar.majorPeriods.map((p) => _Period(p.label, p.start, p.end, Colors.green)),
+      ...solunar.minorPeriods.map((p) => _Period(p.label, p.start, p.end, Colors.orange)),
+    ]),
+  ));
+}
+
+class _Period extends StatelessWidget {
+  const _Period(this.label, this.start, this.end, this.color);
+  final String label; final DateTime start; final DateTime end; final Color color;
+  @override
+  Widget build(BuildContext context) => Padding(padding: const EdgeInsets.symmetric(vertical: 4), child: Row(children: [
+    Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+    const SizedBox(width: 8), Text(label), const Spacer(),
+    Text('${start.hour.toString().padLeft(2, '0')}:${start.minute.toString().padLeft(2, '0')} - ${end.hour.toString().padLeft(2, '0')}:${end.minute.toString().padLeft(2, '0')}', style: const TextStyle(fontWeight: FontWeight.w500)),
+  ]));
+}
+
+/// 潮汐图卡片
+class _TideCard extends StatelessWidget {
+  const _TideCard({required this.stationId, required this.date});
+  final int stationId; final DateTime date;
+
+  @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Row(
-              children: [
-                Icon(Icons.water, size: 20, color: Colors.blue),
-                SizedBox(width: 8),
-                Text('Solunar Feeding Periods',
-                    style: TextStyle(fontWeight: FontWeight.w600)),
-              ],
-            ),
-            const SizedBox(height: 12),
-            if (solunar.majorPeriods.isNotEmpty) ...[
-              const Text('Major (2h windows)',
-                  style: TextStyle(color: Colors.grey, fontSize: 12)),
-              ...solunar.majorPeriods.map((p) => _PeriodRow(
-                    label: p.label,
-                    start: p.start,
-                    end: p.end,
-                    color: Colors.green,
-                  )),
-            ],
-            if (solunar.minorPeriods.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              const Text('Minor (1h windows)',
-                  style: TextStyle(color: Colors.grey, fontSize: 12)),
-              ...solunar.minorPeriods.map((p) => _PeriodRow(
-                    label: p.label,
-                    start: p.start,
-                    end: p.end,
-                    color: Colors.orange,
-                  )),
-            ],
-          ],
+    return Card(child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Row(children: [Icon(Icons.waves, size: 20, color: Colors.blue), SizedBox(width: 8), Text('Tide', style: TextStyle(fontWeight: FontWeight.w600))]),
+        const SizedBox(height: 12),
+        FutureBuilder<TidePrediction?>(
+          future: _computeTide(),
+          builder: (ctx, snap) {
+            if (snap.connectionState == ConnectionState.waiting) return const SizedBox(height: 150, child: Center(child: CircularProgressIndicator()));
+            final pred = snap.data;
+            if (pred == null) return const SizedBox(height: 150, child: Center(child: Text('No tide data', style: TextStyle(color: Colors.grey))));
+            return _TideChart(prediction: pred);
+          },
         ),
-      ),
-    );
+      ]),
+    ));
   }
+
+  Future<TidePrediction?> _computeTide() async {
+    final db = Get.find<ReferenceDatabase>();
+    final station = await (db.select(db.tideStations)..where((t) => t.id.equals(stationId))).getSingleOrNull();
+    if (station == null) return null;
+
+    final json = jsonDecode(station.harmonicConstantsJson) as Map<String, dynamic>;
+    final constituents = (json['constituents'] as List).map((c) {
+      final m = c as Map<String, dynamic>;
+      return HarmonicConstant(name: m['name'] as String, amplitude: (m['amp'] as num).toDouble(), phase: (m['phase'] as num).toDouble(), speed: _speed(m['name'] as String));
+    }).toList();
+    if (constituents.isEmpty) return null;
+
+    const predictor = TidePredictor();
+    final start = DateTime(date.year, date.month, date.day);
+    return predictor.predict(datum: 2.0, constants: constituents, start: start, end: start.add(const Duration(hours: 23, minutes: 50)));
+  }
+
+  static double _speed(String name) => const {
+    'M2': 28.9841042, 'S2': 30.0, 'N2': 28.4397295, 'K1': 15.0410686, 'O1': 13.9430356, 'P1': 14.9589314,
+  }[name] ?? 28.9841;
 }
 
-class _TidePlaceholder extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            const Icon(Icons.waves, size: 40, color: Colors.grey),
-            const SizedBox(height: 8),
-            Text(
-              'Tide predictions available after beach data is loaded',
-              style: Theme.of(context).textTheme.bodySmall,
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TimeDisplay extends StatelessWidget {
-  const _TimeDisplay({required this.label, this.time, required this.icon});
-  final String label;
-  final DateTime? time;
-  final IconData icon;
+class _TideChart extends StatelessWidget {
+  const _TideChart({required this.prediction});
+  final TidePrediction prediction;
 
   @override
   Widget build(BuildContext context) {
-    final timeStr = time != null
-        ? '${time!.hour.toString().padLeft(2, '0')}:${time!.minute.toString().padLeft(2, '0')}'
-        : '--:--';
-    return Column(
-      children: [
-        Icon(icon, size: 16, color: Colors.grey),
-        const SizedBox(height: 4),
-        Text(timeStr, style: const TextStyle(fontWeight: FontWeight.w600)),
-        Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
-      ],
-    );
-  }
-}
+    final spots = <FlSpot>[];
+    for (var i = 0; i < prediction.timestamps.length; i++) {
+      final h = prediction.timestamps[i].hour + prediction.timestamps[i].minute / 60.0;
+      spots.add(FlSpot(h, prediction.heights[i]));
+    }
+    final minY = prediction.heights.reduce((a, b) => a < b ? a : b) - 0.3;
+    final maxY = prediction.heights.reduce((a, b) => a > b ? a : b) + 0.3;
 
-class _PeriodRow extends StatelessWidget {
-  const _PeriodRow({
-    required this.label,
-    required this.start,
-    required this.end,
-    required this.color,
-  });
-  final String label;
-  final DateTime start;
-  final DateTime end;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    final startStr =
-        '${start.hour.toString().padLeft(2, '0')}:${start.minute.toString().padLeft(2, '0')}';
-    final endStr =
-        '${end.hour.toString().padLeft(2, '0')}:${end.minute.toString().padLeft(2, '0')}';
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: 8),
-          Text(label),
-          const Spacer(),
-          Text('$startStr - $endStr',
-              style: const TextStyle(fontWeight: FontWeight.w500)),
-        ],
+    return SizedBox(height: 180, child: LineChart(LineChartData(
+      minX: 0, maxX: 24, minY: minY, maxY: maxY,
+      gridData: const FlGridData(show: true, horizontalInterval: 1, verticalInterval: 6),
+      titlesData: FlTitlesData(
+        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, interval: 6, getTitlesWidget: (v, _) => Text('${v.toInt()}h', style: const TextStyle(fontSize: 10)))),
+        leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, reservedSize: 32, getTitlesWidget: (v, _) => Text('${v.toStringAsFixed(1)}m', style: const TextStyle(fontSize: 9)))),
       ),
-    );
-  }
-}
-
-/// 海滩选择器底部弹出
-class _BeachPickerSheet extends ConsumerWidget {
-  const _BeachPickerSheet();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final beachesAsync = ref.watch(beachListProvider);
-
-    return DraggableScrollableSheet(
-      initialChildSize: 0.7,
-      maxChildSize: 0.9,
-      minChildSize: 0.3,
-      expand: false,
-      builder: (context, controller) {
-        return Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text('Select Beach',
-                  style: Theme.of(context).textTheme.titleLarge),
-            ),
-            Expanded(
-              child: beachesAsync.when(
-                loading: () =>
-                    const Center(child: CircularProgressIndicator()),
-                error: (err, _) => Center(child: Text('Error: $err')),
-                data: (beaches) {
-                  if (beaches.isEmpty) {
-                    return const Center(
-                      child: Text('No beaches loaded yet.\n'
-                          'Beach data will be available after database seeding.'),
-                    );
-                  }
-                  return ListView.builder(
-                    controller: controller,
-                    itemCount: beaches.length,
-                    itemBuilder: (context, index) {
-                      final beach = beaches[index];
-                      return ListTile(
-                        leading: const Icon(Icons.beach_access),
-                        title: Text(beach.name),
-                        subtitle: Text('${beach.region} • ${beach.beachType}'),
-                        onTap: () {
-                          ref.read(selectedBeachProvider.notifier).state =
-                              beach;
-                          Navigator.pop(context);
-                        },
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        );
-      },
-    );
+      borderData: FlBorderData(show: false),
+      lineBarsData: [LineChartBarData(spots: spots, isCurved: true, color: Colors.blue, barWidth: 2.5, dotData: const FlDotData(show: false), belowBarData: BarAreaData(show: true, color: Colors.blue.withValues(alpha: 0.1)))],
+    )));
   }
 }

@@ -1,62 +1,49 @@
-import 'package:drift/drift.dart' show Value;
+import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'package:get/get.dart';
 
 import '../../../core/database/user_db.dart';
-import '../providers/maintenance_providers.dart';
+import '../data/maintenance_repository.dart';
 
 /// 添加装备页面
-class AddGearScreen extends ConsumerStatefulWidget {
+class AddGearScreen extends StatefulWidget {
   const AddGearScreen({super.key});
 
   @override
-  ConsumerState<AddGearScreen> createState() => _AddGearScreenState();
+  State<AddGearScreen> createState() => _AddGearScreenState();
 }
 
-class _AddGearScreenState extends ConsumerState<AddGearScreen> {
+class _AddGearScreenState extends State<AddGearScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _brandController = TextEditingController();
-  final _modelController = TextEditingController();
-  final _priceController = TextEditingController();
-
+  final _nameCtrl = TextEditingController();
+  final _brandCtrl = TextEditingController();
+  final _modelCtrl = TextEditingController();
+  final _priceCtrl = TextEditingController();
   String _gearType = 'reel';
   DateTime? _purchaseDate;
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _brandController.dispose();
-    _modelController.dispose();
-    _priceController.dispose();
+    _nameCtrl.dispose();
+    _brandCtrl.dispose();
+    _modelCtrl.dispose();
+    _priceCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-
-    final repo = ref.read(maintenanceRepositoryProvider);
+    final repo = Get.find<MaintenanceRepository>();
     await repo.addGear(UserGearCompanion.insert(
       gearType: _gearType,
-      customName: _nameController.text.trim(),
-      brand: Value(_brandController.text.trim().isEmpty
-          ? null
-          : _brandController.text.trim()),
-      model: Value(_modelController.text.trim().isEmpty
-          ? null
-          : _modelController.text.trim()),
-      purchaseDate: Value(_purchaseDate?.toIso8601String().split('T').first),
-      pricePaid: Value(double.tryParse(_priceController.text)),
+      customName: _nameCtrl.text.trim(),
+      brand: drift.Value(_brandCtrl.text.trim().isEmpty ? null : _brandCtrl.text.trim()),
+      model: drift.Value(_modelCtrl.text.trim().isEmpty ? null : _modelCtrl.text.trim()),
+      purchaseDate: drift.Value(_purchaseDate?.toIso8601String().split('T').first),
+      pricePaid: drift.Value(double.tryParse(_priceCtrl.text)),
       createdAt: DateTime.now().toIso8601String(),
     ));
-
-    // 刷新列表
-    ref.invalidate(allGearProvider);
-
-    if (mounted) {
-      context.pop();
-    }
+    Get.back();
   }
 
   @override
@@ -68,13 +55,9 @@ class _AddGearScreenState extends ConsumerState<AddGearScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // 装备类型
             DropdownButtonFormField<String>(
               initialValue: _gearType,
-              decoration: const InputDecoration(
-                labelText: 'Gear Type',
-                prefixIcon: Icon(Icons.category),
-              ),
+              decoration: const InputDecoration(labelText: 'Gear Type', prefixIcon: Icon(Icons.category)),
               items: const [
                 DropdownMenuItem(value: 'reel', child: Text('Reel')),
                 DropdownMenuItem(value: 'rod', child: Text('Rod')),
@@ -84,74 +67,28 @@ class _AddGearScreenState extends ConsumerState<AddGearScreen> {
               onChanged: (v) => setState(() => _gearType = v!),
             ),
             const SizedBox(height: 16),
-            // 名称
             TextFormField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Name *',
-                hintText: 'e.g., My Penn Battle III',
-                prefixIcon: Icon(Icons.label),
-              ),
-              validator: (v) =>
-                  v == null || v.trim().isEmpty ? 'Name is required' : null,
+              controller: _nameCtrl,
+              decoration: const InputDecoration(labelText: 'Name *', prefixIcon: Icon(Icons.label)),
+              validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
             ),
             const SizedBox(height: 16),
-            // 品牌
-            TextFormField(
-              controller: _brandController,
-              decoration: const InputDecoration(
-                labelText: 'Brand',
-                hintText: 'e.g., Penn',
-                prefixIcon: Icon(Icons.business),
-              ),
-            ),
+            TextFormField(controller: _brandCtrl, decoration: const InputDecoration(labelText: 'Brand', prefixIcon: Icon(Icons.business))),
             const SizedBox(height: 16),
-            // 型号
-            TextFormField(
-              controller: _modelController,
-              decoration: const InputDecoration(
-                labelText: 'Model',
-                hintText: 'e.g., Battle III 5000',
-                prefixIcon: Icon(Icons.precision_manufacturing),
-              ),
-            ),
+            TextFormField(controller: _modelCtrl, decoration: const InputDecoration(labelText: 'Model', prefixIcon: Icon(Icons.precision_manufacturing))),
             const SizedBox(height: 16),
-            // 购买价格
-            TextFormField(
-              controller: _priceController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Price Paid',
-                hintText: 'e.g., 129.99',
-                prefixIcon: Icon(Icons.attach_money),
-              ),
-            ),
+            TextFormField(controller: _priceCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Price Paid', prefixIcon: Icon(Icons.attach_money))),
             const SizedBox(height: 16),
-            // 购买日期
             ListTile(
               leading: const Icon(Icons.calendar_today),
-              title: Text(_purchaseDate == null
-                  ? 'Purchase Date (optional)'
-                  : 'Purchased: ${_purchaseDate!.toIso8601String().split('T').first}'),
+              title: Text(_purchaseDate == null ? 'Purchase Date (optional)' : 'Purchased: ${_purchaseDate!.toIso8601String().split('T').first}'),
               onTap: () async {
-                final date = await showDatePicker(
-                  context: context,
-                  initialDate: DateTime.now(),
-                  firstDate: DateTime(2000),
-                  lastDate: DateTime.now(),
-                );
-                if (date != null) {
-                  setState(() => _purchaseDate = date);
-                }
+                final d = await showDatePicker(context: context, initialDate: DateTime.now(), firstDate: DateTime(2000), lastDate: DateTime.now());
+                if (d != null) setState(() => _purchaseDate = d);
               },
             ),
             const SizedBox(height: 32),
-            // 保存按钮
-            FilledButton.icon(
-              onPressed: _save,
-              icon: const Icon(Icons.save),
-              label: const Text('Save Gear'),
-            ),
+            FilledButton.icon(onPressed: _save, icon: const Icon(Icons.save), label: const Text('Save Gear')),
           ],
         ),
       ),

@@ -9,13 +9,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: any
 
-  # State Management
-  flutter_riverpod: ^2.6.1
-  riverpod_annotation: ^2.6.1
-
-  # Navigation
-  go_router: ^14.8.1
+  # GetX — State Management + Navigation + Utils
+  get: ^4.7.2
 
   # Database
   drift: ^2.22.1
@@ -43,13 +42,13 @@ dev_dependencies:
 
   # Code Generation
   build_runner: ^2.4.14
-  riverpod_generator: ^2.6.3
   freezed: ^2.5.8
   json_serializable: ^6.9.4
   drift_dev: ^2.22.1
 
 flutter:
   uses-material-design: true
+  generate: true
 
   assets:
     - assets/db/

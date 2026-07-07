@@ -1,54 +1,49 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'package:get/get.dart';
 
+import '../../../app/routes.dart';
+import '../../../l10n/l10n.dart';
 import '../domain/gear_wizard_state.dart';
-import '../providers/gear_wizard_provider.dart';
+import '../providers/gear_wizard_controller.dart';
 
 /// 装备配置向导主页面
-class GearWizardScreen extends ConsumerWidget {
+class GearWizardScreen extends StatelessWidget {
   const GearWizardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final step = ref.watch(wizardStepProvider);
-    final wizardState = ref.watch(gearWizardProvider);
+  Widget build(BuildContext context) {
+    final ctrl = Get.put(GearWizardController());
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Setup Wizard'),
+        title: Text(context.tr.setupWizard),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () {
-            ref.read(gearWizardProvider.notifier).reset();
-            ref.read(wizardStepProvider.notifier).state = 0;
-            context.pop();
+            ctrl.reset();
+            Get.back();
           },
         ),
       ),
-      body: Column(
-        children: [
-          // 进度指示器
-          _WizardProgress(currentStep: step),
-          // 步骤内容
-          Expanded(
-            child: switch (step) {
-              0 => const _SpeciesStep(),
-              1 => const _BeachConditionStep(),
-              2 => const _CastingDistanceStep(),
-              3 => const _BudgetStep(),
-              _ => const _SpeciesStep(),
-            },
-          ),
-          // 底部按钮
-          _WizardNavigation(step: step, state: wizardState),
-        ],
-      ),
+      body: Obx(() => Column(
+            children: [
+              _WizardProgress(currentStep: ctrl.currentStep.value),
+              Expanded(
+                child: switch (ctrl.currentStep.value) {
+                  0 => _SpeciesStep(ctrl: ctrl),
+                  1 => _BeachConditionStep(ctrl: ctrl),
+                  2 => _CastingDistanceStep(ctrl: ctrl),
+                  3 => _BudgetStep(ctrl: ctrl),
+                  _ => _SpeciesStep(ctrl: ctrl),
+                },
+              ),
+              _WizardNavigation(ctrl: ctrl),
+            ],
+          )),
     );
   }
 }
 
-/// 进度条
 class _WizardProgress extends StatelessWidget {
   const _WizardProgress({required this.currentStep});
   final int currentStep;
@@ -77,50 +72,40 @@ class _WizardProgress extends StatelessWidget {
   }
 }
 
-/// Step 1: 选择目标鱼种
-class _SpeciesStep extends ConsumerWidget {
-  const _SpeciesStep();
+class _SpeciesStep extends StatelessWidget {
+  const _SpeciesStep({required this.ctrl});
+  final GearWizardController ctrl;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final selected = ref.watch(gearWizardProvider).selectedSpecies;
-
+  Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'What do you want to catch?',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
+          Text(context.tr.whatToCatch,
+              style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 8),
-          Text(
-            'Select one or more target species',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-          ),
+          Text(context.tr.selectSpecies,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant)),
           const SizedBox(height: 16),
           Expanded(
             child: ListView(
               children: [
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: kTargetSpecies.map((species) {
-                    final isSelected = selected.contains(species);
-                    return FilterChip(
-                      label: Text(species),
-                      selected: isSelected,
-                      onSelected: (_) {
-                        ref
-                            .read(gearWizardProvider.notifier)
-                            .toggleSpecies(species);
-                      },
-                    );
-                  }).toList(),
-                ),
+                Obx(() => Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: kTargetSpecies.map((species) {
+                        final isSelected =
+                            ctrl.selectedSpecies.contains(species);
+                        return FilterChip(
+                          label: Text(species),
+                          selected: isSelected,
+                          onSelected: (_) => ctrl.toggleSpecies(species),
+                        );
+                      }).toList(),
+                    )),
               ],
             ),
           ),
@@ -130,93 +115,75 @@ class _SpeciesStep extends ConsumerWidget {
   }
 }
 
-/// Step 2: 选择海滩条件
-class _BeachConditionStep extends ConsumerWidget {
-  const _BeachConditionStep();
+class _BeachConditionStep extends StatelessWidget {
+  const _BeachConditionStep({required this.ctrl});
+  final GearWizardController ctrl;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final selected = ref.watch(gearWizardProvider).beachCondition;
-
+  Widget build(BuildContext context) {
     return _RadioStepLayout(
-      title: 'Where do you fish?',
-      subtitle: 'Select your typical beach conditions',
-      children: BeachCondition.values.map((condition) {
-        return _OptionCard(
-          title: condition.label,
-          subtitle: condition.description,
-          isSelected: selected == condition,
-          onTap: () {
-            ref
-                .read(gearWizardProvider.notifier)
-                .setBeachCondition(condition);
-          },
-        );
-      }).toList(),
+      title: context.tr.whereToFish,
+      subtitle: context.tr.selectConditions,
+      children: BeachCondition.values
+          .map((c) => Obx(() => _OptionCard(
+                title: c.label,
+                subtitle: c.description,
+                isSelected: ctrl.beachCondition.value == c,
+                onTap: () => ctrl.beachCondition.value = c,
+              )))
+          .toList(),
     );
   }
 }
 
-/// Step 3: 选择抛投距离
-class _CastingDistanceStep extends ConsumerWidget {
-  const _CastingDistanceStep();
+class _CastingDistanceStep extends StatelessWidget {
+  const _CastingDistanceStep({required this.ctrl});
+  final GearWizardController ctrl;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final selected = ref.watch(gearWizardProvider).castingDistance;
-
+  Widget build(BuildContext context) {
     return _RadioStepLayout(
-      title: 'How far do you cast?',
-      subtitle: 'Select your target casting distance',
-      children: CastingDistance.values.map((distance) {
-        return _OptionCard(
-          title: distance.label,
-          subtitle: distance.description,
-          isSelected: selected == distance,
-          onTap: () {
-            ref
-                .read(gearWizardProvider.notifier)
-                .setCastingDistance(distance);
-          },
-        );
-      }).toList(),
+      title: context.tr.howFarCast,
+      subtitle: context.tr.selectDistance,
+      children: CastingDistance.values
+          .map((d) => Obx(() => _OptionCard(
+                title: d.label,
+                subtitle: d.description,
+                isSelected: ctrl.castingDistance.value == d,
+                onTap: () => ctrl.castingDistance.value = d,
+              )))
+          .toList(),
     );
   }
 }
 
-/// Step 4: 选择预算
-class _BudgetStep extends ConsumerWidget {
-  const _BudgetStep();
+class _BudgetStep extends StatelessWidget {
+  const _BudgetStep({required this.ctrl});
+  final GearWizardController ctrl;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final selected = ref.watch(gearWizardProvider).budgetRange;
-
+  Widget build(BuildContext context) {
     return _RadioStepLayout(
-      title: 'What\'s your budget?',
-      subtitle: 'Select your budget range for the complete setup',
-      children: BudgetRange.values.map((budget) {
-        return _OptionCard(
-          title: budget.label,
-          subtitle: budget.description,
-          isSelected: selected == budget,
-          onTap: () {
-            ref.read(gearWizardProvider.notifier).setBudgetRange(budget);
-          },
-        );
-      }).toList(),
+      title: context.tr.whatsYourBudget,
+      subtitle: context.tr.selectBudget,
+      children: BudgetRange.values
+          .map((b) => Obx(() => _OptionCard(
+                title: b.label,
+                subtitle: b.description,
+                isSelected: ctrl.budgetRange.value == b,
+                onTap: () => ctrl.budgetRange.value = b,
+              )))
+          .toList(),
     );
   }
 }
 
-/// 通用单选步骤布局
 class _RadioStepLayout extends StatelessWidget {
   const _RadioStepLayout({
     required this.title,
     required this.subtitle,
     required this.children,
   });
-
   final String title;
   final String subtitle;
   final List<Widget> children;
@@ -230,23 +197,17 @@ class _RadioStepLayout extends StatelessWidget {
         children: [
           Text(title, style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 8),
-          Text(
-            subtitle,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-          ),
+          Text(subtitle,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant)),
           const SizedBox(height: 16),
-          Expanded(
-            child: ListView(children: children),
-          ),
+          Expanded(child: ListView(children: children)),
         ],
       ),
     );
   }
 }
 
-/// 选项卡片
 class _OptionCard extends StatelessWidget {
   const _OptionCard({
     required this.title,
@@ -254,7 +215,6 @@ class _OptionCard extends StatelessWidget {
     required this.isSelected,
     required this.onTap,
   });
-
   final String title;
   final String subtitle;
   final bool isSelected;
@@ -263,7 +223,6 @@ class _OptionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-
     return Card(
       elevation: isSelected ? 2 : 0,
       color: isSelected
@@ -271,66 +230,49 @@ class _OptionCard extends StatelessWidget {
           : colorScheme.surfaceContainerLow,
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        title: Text(
-          title,
-          style: TextStyle(
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-          ),
-        ),
+        title: Text(title,
+            style: TextStyle(
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal)),
         subtitle: Text(subtitle),
-        trailing: isSelected
-            ? Icon(Icons.check_circle, color: colorScheme.primary)
-            : null,
+        trailing:
+            isSelected ? Icon(Icons.check_circle, color: colorScheme.primary) : null,
         onTap: onTap,
       ),
     );
   }
 }
 
-/// 底部导航按钮
-class _WizardNavigation extends ConsumerWidget {
-  const _WizardNavigation({required this.step, required this.state});
-
-  final int step;
-  final GearWizardState state;
-
-  bool get _canProceed => switch (step) {
-        0 => state.selectedSpecies.isNotEmpty,
-        1 => state.beachCondition != null,
-        2 => state.castingDistance != null,
-        3 => state.budgetRange != null,
-        _ => false,
-      };
+class _WizardNavigation extends StatelessWidget {
+  const _WizardNavigation({required this.ctrl});
+  final GearWizardController ctrl;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          if (step > 0)
-            OutlinedButton(
-              onPressed: () {
-                ref.read(wizardStepProvider.notifier).state = step - 1;
-              },
-              child: const Text('Back'),
-            ),
-          const Spacer(),
-          FilledButton(
-            onPressed: _canProceed
-                ? () {
-                    if (step < 3) {
-                      ref.read(wizardStepProvider.notifier).state = step + 1;
-                    } else {
-                      // 最后一步 → 跳转到结果页
-                      context.push('/gear/wizard/results');
-                    }
-                  }
-                : null,
-            child: Text(step < 3 ? 'Next' : 'Get Recommendations'),
+  Widget build(BuildContext context) {
+    return Obx(() => Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              if (ctrl.currentStep.value > 0)
+                OutlinedButton(
+                  onPressed: ctrl.prevStep,
+                  child: Text(context.tr.back),
+                ),
+              const Spacer(),
+              FilledButton(
+                onPressed: ctrl.isStepValid
+                    ? () {
+                        if (ctrl.currentStep.value < 3) {
+                          ctrl.nextStep();
+                        } else {
+                          Get.toNamed(AppRoutes.gearResults);
+                        }
+                      }
+                    : null,
+                child: Text(
+                    ctrl.currentStep.value < 3 ? 'Next' : 'Get Recommendations'),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
+        ));
   }
 }

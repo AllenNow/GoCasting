@@ -1,45 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'package:get/get.dart';
 
-import '../../../core/settings/settings_provider.dart';
+import '../../../app/routes.dart';
+import '../../../core/settings/settings_controller.dart';
+import '../../../l10n/l10n.dart';
 
-/// 装备智能引擎 — 占位页面
-class GearScreen extends ConsumerStatefulWidget {
+/// 装备智能引擎主页面
+class GearScreen extends StatelessWidget {
   const GearScreen({super.key});
 
   @override
-  ConsumerState<GearScreen> createState() => _GearScreenState();
-}
-
-class _GearScreenState extends ConsumerState<GearScreen> {
-  bool _checkedOnboarding = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_checkedOnboarding) {
-      _checkedOnboarding = true;
-      // 首次启动时检查是否需要引导
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final complete = ref.read(onboardingCompleteProvider);
-        if (!complete && mounted) {
-          context.push('/onboarding');
-        }
-      });
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final settings = Get.find<SettingsController>();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!settings.onboardingComplete.value) {
+        Get.toNamed(AppRoutes.onboarding);
+      }
+    });
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Gear'),
+        title: Text(context.tr.tabGear),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
-            onPressed: () => context.push('/settings'),
-            tooltip: 'Settings',
+            onPressed: () => Get.toNamed(AppRoutes.settings),
+            tooltip: context.tr.settings,
           ),
         ],
       ),
@@ -49,20 +36,22 @@ class _GearScreenState extends ConsumerState<GearScreen> {
           children: [
             const Icon(Icons.build, size: 64, color: Colors.grey),
             const SizedBox(height: 16),
-            const Text(
-              'Gear Intelligence',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
-            ),
+            Text(context.tr.gearIntelligence,
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
             const SizedBox(height: 8),
-            const Text(
-              'Configure your perfect surf casting setup',
-              style: TextStyle(color: Colors.grey),
-            ),
+            Text(context.tr.gearIntelligenceDesc,
+                style: const TextStyle(color: Colors.grey)),
             const SizedBox(height: 32),
             FilledButton.icon(
-              onPressed: () => context.push('/gear/wizard'),
+              onPressed: () => Get.toNamed(AppRoutes.gearWizard),
               icon: const Icon(Icons.auto_fix_high),
-              label: const Text('Configure Setup'),
+              label: Text(context.tr.configureSetup),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () => Get.toNamed(AppRoutes.gearBrowse),
+              icon: const Icon(Icons.list),
+              label: Text(context.tr.browseGear),
             ),
           ],
         ),
