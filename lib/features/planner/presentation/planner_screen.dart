@@ -1,24 +1,30 @@
-import '../../../l10n/l10n.dart';
 import 'dart:convert';
 
+import 'package:drift/drift.dart' as drift;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../core/database/reference_db.dart';
+import '../../../core/database/user_db.dart';
+import '../../../l10n/l10n.dart';
 import '../domain/astronomy.dart';
 import '../domain/tide_predictor.dart';
 
+/// Planner 控制器
 /// Planner 控制器
 class PlannerController extends GetxController {
   final selectedBeach = Rxn<Beache>();
   final selectedDate = DateTime.now().obs;
   final beaches = <Beache>[].obs;
 
+  UserDatabase get _userDb => Get.find<UserDatabase>();
+
   @override
   void onInit() {
     super.onInit();
     _loadBeaches();
+    _loadSavedBeach();
   }
 
   Future<void> _loadBeaches() async {
@@ -26,8 +32,55 @@ class PlannerController extends GetxController {
     beaches.value = await db.select(db.beaches).get();
   }
 
-  void selectBeach(Beache beach) => selectedBeach.value = beach;
+  /// 从本地设置恢复上次选择的海滩
+  Future<void> _loadSavedBeach() async {
+    final row = await (_userDb.select(_userDb.userSettings)
+          ..where((t) => t.key.equals('selected_beach_id')))
+        .getSingleOrNull();
+    if (row != null) {
+      final beachId = int.tryParse(row.value);
+      if (beachId != null && beaches.isNotEmpty) {
+        final saved = beaches.where((b) => b.id == beachId).firstOrNull;
+        if (saved != null) {
+          selectedBeach.value = saved;
+        }
+      } else if (beachId != null) {
+        // 海滩还没加载完，等加载后再找
+        ever(beaches, (list) {
+          if (selectedBeach.value == null) {
+            final saved = list.where((b) => b.id == beachId).firstOrNull;
+            if (saved != null) selectedBeach.value = saved;
+          }
+        });
+      }
+    }
+  }
+
+  /// 选择海滩并持久化
+  void selectBeach(Beache beach) {
+    selectedBeach.value = beach;
+    _saveSelectedBeach(beach.id);
+  }
+
   void selectDate(DateTime date) => selectedDate.value = date;
+
+  /// 保存选中的海滩 ID 到本地
+  Future<void> _saveSelectedBeach(int beachId) async {
+    final existing = await (_userDb.select(_userDb.userSettings)
+          ..where((t) => t.key.equals('selected_beach_id')))
+        .getSingleOrNull();
+
+    if (existing != null) {
+      await (_userDb.update(_userDb.userSettings)
+            ..where((t) => t.key.equals('selected_beach_id')))
+          .write(UserSettingsCompanion(value: drift.Value('$beachId')));
+    } else {
+      await _userDb.into(_userDb.userSettings).insert(
+            UserSettingsCompanion.insert(
+                key: 'selected_beach_id', value: '$beachId'),
+          );
+    }
+  }
 }
 
 /// 出行规划器主页面
@@ -40,6 +93,17 @@ class PlannerScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+        // 左上角：海滩选择按钮
+        leading: Obx(() => TextButton.icon(
+              onPressed: () => _showBeachPicker(context, ctrl),
+              icon: const Icon(Icons.beach_access, size: 18),
+              label: Text(
+                ctrl.selectedBeach.value?.name ?? context.tr.selectBeach,
+                style: const TextStyle(fontSize: 12),
+                overflow: TextOverflow.ellipsis,
+              ),
+            )),
+        leadingWidth: 160,
         title: Text(context.tr.tabPlanner),
         actions: [
           IconButton(
@@ -61,11 +125,6 @@ class PlannerScreen extends StatelessWidget {
         if (beach == null) return const _NoBeachSelected();
         return _Dashboard(beach: beach, date: ctrl.selectedDate.value);
       }),
-      floatingActionButton: Obx(() => FloatingActionButton.extended(
-            onPressed: () => _showBeachPicker(context, ctrl),
-            icon: const Icon(Icons.beach_access),
-            label: Text(ctrl.selectedBeach.value?.name ?? 'Select Beach'),
-          )),
     );
   }
 
