@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 
 import '../core/database/reference_db.dart';
 import '../core/database/user_db.dart';
+import '../core/roles/role_controller.dart';
 import '../core/settings/locale_controller.dart';
 import '../core/settings/settings_controller.dart';
 import '../features/maintenance/data/maintenance_repository.dart';
@@ -22,5 +23,8 @@ class InitialBinding extends Bindings {
     // 设置控制器 — 依赖 UserDatabase
     Get.put(SettingsController(), permanent: true);
     Get.put(LocaleController(), permanent: true);
+
+    // V5: 角色控制器
+    Get.put(RoleController(), permanent: true);
   }
 }

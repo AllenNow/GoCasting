@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../core/database/reference_db.dart';
+import '../../../l10n/l10n.dart';
 import 'gear_browse_screen.dart';
 
 /// 装备对比页面
@@ -14,7 +15,7 @@ class GearCompareScreen extends StatelessWidget {
     final items = browseCtrl.selectedForCompare;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Compare')),
+      appBar: AppBar(title: Text(context.tr.compare)),
       body: items.isEmpty
           ? const Center(child: Text('No items selected'))
           : browseCtrl.isRods.value

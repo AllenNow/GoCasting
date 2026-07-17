@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android Auto Backup 规则
+  确保用户数据库和照片被自动备份到 Google Drive
+-->
+<full-backup-content>
+    <!-- 包含用户数据库 -->
+    <include domain="file" path="." />
+    <!-- 排除参考数据库（从 assets 重建即可） -->
+    <exclude domain="file" path="reference.db" />
+    <!-- 排除临时文件和缓存 -->
+    <exclude domain="cache" path="." />
+</full-backup-content>

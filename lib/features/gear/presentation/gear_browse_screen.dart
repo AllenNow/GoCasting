@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../../../app/routes.dart';
 import '../../../core/database/reference_db.dart';
+import '../../../l10n/l10n.dart';
 
 /// 装备浏览控制器
 class GearBrowseController extends GetxController {
@@ -42,7 +43,7 @@ class GearBrowseScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Browse Gear'),
+        title: Text(context.tr.browseGear),
         actions: [
           Obx(() => ctrl.selectedForCompare.length >= 2
               ? IconButton(

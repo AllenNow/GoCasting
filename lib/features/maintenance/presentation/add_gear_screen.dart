@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../core/database/user_db.dart';
+import '../../../l10n/l10n.dart';
 import '../data/maintenance_repository.dart';
 
 /// 添加装备页面
@@ -49,7 +50,7 @@ class _AddGearScreenState extends State<AddGearScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Gear')),
+      appBar: AppBar(title: Text(context.tr.addGear)),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -88,7 +89,7 @@ class _AddGearScreenState extends State<AddGearScreen> {
               },
             ),
             const SizedBox(height: 32),
-            FilledButton.icon(onPressed: _save, icon: const Icon(Icons.save), label: const Text('Save Gear')),
+            FilledButton.icon(onPressed: _save, icon: const Icon(Icons.save), label: Text(context.tr.saveGear)),
           ],
         ),
       ),

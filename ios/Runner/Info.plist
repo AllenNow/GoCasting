@@ -45,5 +45,13 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- V5: 定位权限描述 -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>GoCasting needs your location to show your position on the map and find nearby fishing spots.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>GoCasting uses your location to track your fishing position and share with your team.</string>
+	<!-- 高德地图 API Key（需替换为你的真实 Key） -->
+	<key>amap_key</key>
+	<string>YOUR_AMAP_IOS_KEY_HERE</string>
 </dict>
 </plist>

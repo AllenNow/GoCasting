@@ -1,124 +1,143 @@
 ---
-title: "GoCasting Product Brief"
+title: "GoCasting 产品简介"
 status: complete
 created: 2026-07-03
-updated: 2026-07-03
+updated: 2026-07-16
 ---
 
-# Product Brief: GoCasting
+# 产品简介：GoCasting
 
-## Executive Summary
+## 概述
 
-GoCasting is a utility-first mobile app for surf casting anglers that solves the two biggest pain points in the sport: choosing the right gear and knowing when to fish. Unlike social fishing platforms that try to be everything to everyone, GoCasting is a focused, intelligent tool — the "personal surf casting assistant" that helps anglers configure optimal equipment setups, maintain their saltwater gear, and plan outings based on real-time environmental data.
+GoCasting 是一款面向海滩远投钓鱼者的工具型移动应用，解决该运动中两大核心痛点：**如何选择正确装备** 和 **何时出行最佳**。与试图成为"万能平台"的社交钓鱼应用不同，GoCasting 是一个专注、智能的工具——"个人远投钓鱼助手"，帮助钓手配置最佳装备组合、维护盐水装备、管理装备全生命周期、并基于环境数据规划出行。
 
-The surf casting equipment market is a niche but passionate segment within a $18.2B global fishing gear industry growing at 6.3% CAGR. There are 219+ fishing apps on iOS alone, yet none specialize in surf casting. Existing apps are social-first (Fishbrain, FishAngler) or navigation-first (Navionics) — nobody is building a purpose-built toolkit for the angler standing on the beach wondering which rod to bring and whether the tide is right.
+远投钓鱼装备市场是全球 182 亿美元钓鱼装备产业（CAGR 6.3%）中一个小众但热情的细分领域。iOS 上有 219+ 款钓鱼应用，但没有一款专注于远投钓鱼。现有应用要么是社交优先（Fishbrain、FishAngler），要么是导航优先（Navionics）——没有人在为站在海滩上思考"该带哪根竿、潮汐是否合适"的钓手打造专用工具箱。
 
-GoCasting fills this gap as a lean, profitable personal project built in Flutter, targeting English-speaking surf casters globally on both iOS and Android.
+GoCasting 以 Flutter 构建，面向全球英语使用的远投钓手，同时支持 iOS 和 Android。
 
-## The Problem
+## 问题定义
 
-Surf casting is uniquely demanding. Unlike freshwater fishing, it requires:
+远投钓鱼有其独特的高要求：
 
-- **Equipment precision**: Rod length (9-14ft), reel size (4000-8000), line type, leader weight, sinker shape, and hook style must all be matched to the target species, beach conditions, and casting distance. Most beginners get this wrong on day one and give up.
+- **装备精度**：竿长（9-14ft）、轮型号（4000-8000）、线型、前导线重量、铅型、钩型都必须与目标鱼种、海滩条件和抛投距离相匹配。大多数新手第一天就搞错了，然后放弃。
 
-- **Hostile environment management**: Saltwater destroys gear. A $300 reel without maintenance becomes a paperweight in one season. Reels lose 40% of their lifespan without regular care. Yet most anglers don't know what maintenance their gear needs or when.
+- **恶劣环境管理**：盐水会摧毁装备。一个 $300 的渔轮如果一个季度不维护就变成废铁。未定期维护的渔轮寿命损失高达 40%。但大多数钓手不知道装备需要什么维护，也不知道何时该维护。
 
-- **Timing complexity**: Success depends on the intersection of tide phase, swell period, wind direction, water temperature, and moon phase. Anglers currently juggle 3-5 separate apps (Surfline, Windy, tide charts, moon calendars) to plan a single outing.
+- **装备生命周期盲区**：钓手不清楚装备的保修状态、总投入成本、当前残值，也无法追踪零件级别的磨损情况。这导致不必要的损失和低效的更换决策。
 
-Today's anglers cope by spending hours on YouTube, reading forum threads, and learning through expensive trial-and-error. The 23% annual lapse rate in fishing participation suggests many simply give up.
+- **时机复杂性**：成功取决于潮汐、浪涌、风向、水温和月相的交叉点。钓手目前需要 3-5 个独立应用（Surfline、Windy、潮汐表、月相日历）来规划一次出行。
 
-## The Solution
+如今钓手通过在 YouTube 上花费数小时、阅读论坛帖子和昂贵的试错来应对。23% 的年度钓鱼参与流失率表明，很多人就此放弃。
 
-GoCasting is a tool-first surf casting assistant with three core modules:
+## 解决方案
 
-**1. Gear Intelligence Engine**
-- Input your target species, beach type, and budget → receive a complete equipment configuration (rod + reel + line + leader + rig + bait)
-- Smart compatibility checking: prevents mismatched setups before you buy
-- Gear comparison with saltwater-specific criteria (corrosion resistance, drag seal quality, casting distance ratings)
+GoCasting 是一个工具优先的远投钓鱼助手，包含四大核心模块：
 
-**2. Maintenance Tracker**
-- Log your gear inventory with purchase dates
-- Automatic maintenance schedules based on usage frequency and saltwater exposure
-- Push notifications: "Your Penn Battle III has 12 saltwater sessions since last service — rinse and re-grease this week"
-- Lifespan estimates and replacement forecasting
+**1. 装备智能引擎**
+- 输入目标鱼种、海滩类型和预算 → 获得完整装备配置推荐（竿 + 轮 + 线 + 前导线 + 钓组 + 饵料）
+- 智能兼容性检查：在购买前防止不匹配的装备组合
+- 基于海水特定标准的装备对比（防腐性、密封拖力系统、抛投距离评级）
 
-**3. Session Planner**
-- Single-screen dashboard showing tide predictions, moon phase, and solunar periods for any saved beach
-- All data computed offline from pre-loaded harmonic tide tables and astronomical algorithms
-- Pre-loaded database of popular surf casting beaches worldwide (user can also pin custom locations via map)
-- No internet connection required — works fully offline at remote beaches
+**2. 装备维护追踪器**
+- 记录装备库存及购买日期
+- 基于使用频率和盐水暴露的自动维护计划
+- 推送通知："您的 Penn Battle III 自上次维护以来已使用 12 次——本周清洗并重新上油"
+- 寿命估算和更换预测
 
-## What Makes This Different
+**3. 装备生命周期管理（V2 新增）**
+- 保修追踪：记录保修期限，到期前 30/7 天提醒
+- 收据/文档存储：拍照保存购买凭证、保修卡
+- 总拥有成本(TCO)分析：购买价 + 维护费用的完整追踪
+- 装备估值引擎：基于离线折旧公式计算当前市场价值
+- 零件级追踪：轴承、拖力垫片、导环等独立维护周期
+- 维护教程库：步骤指南、工具清单、注意事项
+- 维修状态追踪：记录送修、维修中、已取回的完整流转
 
-**No social features. No feed. No community.** GoCasting is an instrument, not a platform. Open it, get what you need, close it. This is deliberately anti-engagement — the value is in precision, not screen time.
+**4. 出行规划器**
+- 单屏仪表板显示潮汐预测、月相和日月鱼活跃期
+- 所有数据通过预加载的谐波潮汐表和天文算法离线计算
+- 预加载全球热门远投钓鱼海滩数据库（用户也可自定义位置）
+- 无需网络连接——在偏远海滩完全离线工作
 
-**Fully offline. Zero network dependency.** Every byte of data lives on-device. Tide predictions computed from harmonic constants, moon phases from astronomical algorithms, gear data bundled in the app. Works at the most remote beach with no cell signal. Database updates ship with App Store version releases.
+## 差异化优势
 
-**Surf casting only.** Every feature is purpose-built for shore-based saltwater distance casting. We don't dilute focus across boat fishing, freshwater, fly fishing, or ice fishing.
+**没有社交功能。没有动态流。没有社区。** GoCasting 是一个工具，不是平台。打开它，获取所需信息，关闭它。这是刻意的反沉迷设计——价值在于精确，而非屏幕时间。
 
-**Equipment intelligence is the core.** No other fishing app treats gear selection and maintenance as first-class problems. Fishbrain sells gear through a shop; GoCasting helps you choose, maintain, and optimize gear you already own or plan to buy.
+**完全离线。零网络依赖。** 所有数据都存储在设备上。潮汐预测通过谐波常数计算，月相通过天文算法计算，装备数据打包在应用中。在没有信号的最偏远海滩也能工作。数据库更新通过 App Store 版本发布。
 
-## Who This Serves
+**仅限远投钓鱼。** 每个功能都是为岸基海水远距离抛投而设计的。不会稀释焦点到船钓、淡水、飞蝇钓或冰钓。
 
-**Primary: The Progressing Surf Caster**
-- 1-5 years of experience, has basic gear but wants to level up
-- Age 28-50, male-skewed (though female participation is growing fast)
-- Fishes 2-8 times per month during season
-- Spends $300-$1500/year on gear
-- Pain: "I know I'm doing something wrong with my setup but I don't know what"
-- Success: Casts farther, catches more, gear lasts longer
+**装备智能是核心。** 没有其他钓鱼应用将装备选择、维护和生命周期管理作为一等公民。Fishbrain 通过商店卖装备；GoCasting 帮你选择、维护、估值和优化你已有或计划购买的装备。
 
-**Secondary: The Gear-Obsessed Optimizer**
-- 5+ years of experience, already owns premium equipment
-- Wants to maximize performance and gear lifespan
-- Pain: "I forgot when I last serviced this reel and now it's grinding"
-- Success: Perfect maintenance cadence, data-driven upgrade decisions
+**装备全生命周期管理。** 从购买到退役的完整追踪——保修、费用、估值、零件状态，这是 ZeroMyGear 等通用平台无法提供的垂直深度。
 
-## Success Criteria
+## 目标用户
 
-**User signals:**
-- 7-day retention > 35% (above fishing app average of ~20%)
-- Gear inventory adoption: >60% of users add at least one item within first week
-- Maintenance reminder completion rate > 60%
-- App Store rating ≥ 4.6
+**主要用户：进阶中的远投钓手**
+- 1-5 年经验，有基础装备但想升级
+- 年龄 28-50 岁，男性为主（女性参与快速增长）
+- 旺季每月出行 2-8 次
+- 年装备花费 $300-$1500
+- 痛点："我知道我的装备设置有问题但不知道哪里出了问题"
+- 成功标准：抛投更远、钓获更多、装备寿命更长
 
-**Project signals (personal project, no monetization in V1):**
-- 5,000 downloads within 6 months of launch
-- Positive user feedback validating the tool-first approach
-- Foundation laid for future monetization (proven value = willingness to pay later)
+**次要用户：装备发烧友/优化者**
+- 5+ 年经验，已拥有高端装备
+- 想最大化装备性能和寿命
+- 痛点："我忘了上次什么时候维护这个渔轮，现在它开始磨齿了"
+- 成功标准：完美的维护节奏、数据驱动的升级决策、准确的装备估值
 
-## Scope
+## 成功标准
 
-**V1 — In:**
-- Gear configuration wizard (species + conditions → setup recommendation)
-- Gear inventory with manual entry
-- Maintenance scheduling with push notifications
-- Session planner: tide (pre-computed harmonic tables) + moon phase + solunar (all offline algorithms)
-- Pre-loaded popular surf casting beach database + custom pin via map
-- 100% offline — all data bundled in app, zero network dependency
-- Free — no subscription, no ads, no in-app purchases
+**用户信号：**
+- 7 日留存率 > 35%（高于钓鱼应用平均 ~20%）
+- 装备库存采用率：> 60% 用户在第一周内添加至少一件装备
+- 维护提醒完成率 > 60%
+- App Store 评分 ≥ 4.6
 
-**V1 — Out:**
-- Social features, feeds, community, or catch sharing
-- Catch logging / fish diary / personal analytics
-- Historical pattern matching or AI performance insights
-- Real-time weather, wind, or swell data (requires network)
-- Go/no-go scoring (deferred — depends on weather data)
-- Affiliate links or any purchase redirection
-- Subscription / paywall / monetization of any kind
-- GPS tracking or boat navigation
-- Species identification (AI photo)
-- Real-time chat or messaging
-- Hardware integrations (Bluetooth reels, smart rods)
-- Chinese/Asian language localization (Phase 2)
+**项目信号：**
+- 发布 6 个月内 5,000 次下载
+- 正面用户反馈验证工具优先的方法
+- 为未来变现奠定基础（已验证价值 = 愿意付费）
 
-## Vision
+## 范围
 
-If GoCasting succeeds, in 2-3 years it becomes the **"essential toolkit that every serious surf caster installs before their first session and opens before every outing."**
+**V1 — 包含：**
+- 装备配置向导（鱼种 + 条件 → 装备推荐）
+- 装备库存与手动录入
+- 维护调度与推送通知
+- 出行规划器：潮汐（预计算谐波表）+ 月相 + 日月鱼活跃期（全部离线算法）
+- 预加载热门远投钓鱼海滩数据库 + 自定义位置
+- 100% 离线——所有数据打包在应用中，零网络依赖
+- 免费——无订阅、无广告、无应用内购买
 
-Growth path:
-1. **Year 1**: Nail the gear intelligence and session planning for surf casting. Build a reputation as "the surf casting app" in English-speaking markets.
-2. **Year 2**: Expand gear database depth, add AI-powered personal performance insights (connecting session conditions to outcomes), introduce brand partnerships for early access to new gear reviews.
-3. **Year 3**: Localize for Asia-Pacific markets (Chinese, Japanese, Korean) where surf casting participation is booming. Explore hardware partnerships (smart rod sensors for casting distance tracking).
+**V2 — 包含（已实现）：**
+- 保修追踪 + 收据/文档照片存储
+- 维护成本记录 + 总拥有成本(TCO)分析
+- 装备折旧/估值引擎（离线公式）
+- 零件级追踪（轴承、拖力垫片、导环等）
+- 维护教程库（6+ 完整教程）
+- 专业维修状态追踪（送修 → 维修中 → 已取回）
+- 保修到期本地通知（30天/7天）
+- 照片选取集成（相机/相册）
 
-The endgame is a tool so indispensable that gear manufacturers want to be listed in it, and surf casters consider it as essential as their rod holder.
+**排除（所有版本）：**
+- 社交功能、动态流、社区或渔获分享
+- 渔获日志 / 鱼类日记 / 个人分析
+- 实时天气、风或浪涌数据（需要网络）
+- 联盟链接或任何购买重定向
+- 订阅 / 付费墙 / 任何形式的变现
+- GPS 追踪或船舶导航
+- 物种识别（AI 照片）
+- 硬件集成（蓝牙渔轮、智能竿）
+
+## 愿景
+
+如果 GoCasting 成功，2-3 年内它将成为 **"每个认真的远投钓手在第一次出行前安装、每次出行前打开的必备工具箱"**。
+
+发展路径：
+1. **第一年**：完善远投钓鱼的装备智能和出行规划。在英语市场建立"远投钓鱼应用"的声誉。
+2. **第二年**：扩展装备数据库深度，增加 AI 驱动的个人表现洞察（将出行条件与结果关联），引入品牌合作获得新装备评测的早期访问。
+3. **第三年**：面向亚太市场本地化（中文、日文、韩文），远投钓鱼参与在这些地区正在快速增长。探索硬件合作（智能竿传感器用于抛投距离追踪）。
+
+终局是创造一个不可或缺的工具，让装备制造商想要被收录其中，让远投钓手认为它和竿架一样重要。

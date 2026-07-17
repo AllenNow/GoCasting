@@ -9,7 +9,15 @@ import '../../../core/database/reference_db.dart';
 import '../../../core/database/user_db.dart';
 import '../../../l10n/l10n.dart';
 import '../domain/astronomy.dart';
+import '../domain/go_score.dart';
 import '../domain/tide_predictor.dart';
+import 'cast_tracker_screen.dart';
+import 'coach_card.dart';
+import 'go_score_screen.dart';
+import 'nearby_screen.dart';
+import 'spot_map_screen.dart';
+import 'trip_checklist_screen.dart';
+import 'weather_card.dart';
 
 /// Planner 控制器
 /// Planner 控制器
@@ -107,6 +115,21 @@ class PlannerScreen extends StatelessWidget {
         title: Text(context.tr.tabPlanner),
         actions: [
           IconButton(
+            icon: const Icon(Icons.map),
+            onPressed: () => Get.to(() => const SpotMapScreen()),
+            tooltip: '钓点地图',
+          ),
+          IconButton(
+            icon: const Icon(Icons.near_me),
+            onPressed: () {
+              final beach = ctrl.selectedBeach.value;
+              if (beach != null) {
+                Get.to(() => NearbyScreen(lat: beach.lat, lon: beach.lon, locationName: beach.name));
+              }
+            },
+            tooltip: '周边搜索',
+          ),
+          IconButton(
             icon: const Icon(Icons.calendar_today),
             onPressed: () async {
               final d = await showDatePicker(
@@ -177,7 +200,7 @@ class _NoBeachSelected extends StatelessWidget {
           SizedBox(height: 16),
           Text(context.tr.noBeachSelected, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
           SizedBox(height: 8),
-          Text('Tap the button below to choose your fishing spot', style: TextStyle(color: Colors.grey)),
+          Text(context.tr.noBeachDesc, style: TextStyle(color: Colors.grey)),
         ]),
       );
 }
@@ -200,6 +223,15 @@ class _Dashboard extends StatelessWidget {
         Text('${beach.name} — ${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
             style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 16),
+        // AI 钓况教练
+        CoachCard(lat: beach.lat, lon: beach.lon),
+        const SizedBox(height: 12),
+        // Go-Score 快捷卡片
+        _GoScoreQuickCard(beach: beach, date: date),
+        const SizedBox(height: 12),
+        // V5: 实时天气卡片
+        WeatherCard(cityCode: beach.region),
+        const SizedBox(height: 12),
         _MoonCard(moon: moon),
         const SizedBox(height: 12),
         _SunCard(sun: sun),
@@ -207,6 +239,22 @@ class _Dashboard extends StatelessWidget {
         _SolunarCard(solunar: solunar),
         const SizedBox(height: 12),
         _TideCard(stationId: beach.nearestStationId, date: date),
+        const SizedBox(height: 12),
+        // V3: 出行清单入口
+        OutlinedButton.icon(
+          onPressed: () => Get.to(() => const TripChecklistScreen()),
+          icon: const Icon(Icons.checklist_rtl),
+          label: Text(context.tr.tripChecklist),
+          style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(44)),
+        ),
+        const SizedBox(height: 8),
+        // V3-P3: 抛投距离追踪器
+        OutlinedButton.icon(
+          onPressed: () => Get.to(() => const CastTrackerScreen()),
+          icon: const Icon(Icons.speed),
+          label: Text(context.tr.castTracker),
+          style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(44)),
+        ),
       ],
     );
   }
@@ -330,7 +378,13 @@ class _TideCard extends StatelessWidget {
     final json = jsonDecode(station.harmonicConstantsJson) as Map<String, dynamic>;
     final constituents = (json['constituents'] as List).map((c) {
       final m = c as Map<String, dynamic>;
-      return HarmonicConstant(name: m['name'] as String, amplitude: (m['amp'] as num).toDouble(), phase: (m['phase'] as num).toDouble(), speed: _speed(m['name'] as String));
+      final name = m['name'] as String;
+      return HarmonicConstant(
+        name: name,
+        amplitude: (m['amp'] as num).toDouble() * 0.3048, // feet → meters
+        phaseGmt: (m['phase_gmt'] ?? m['phase'] as num).toDouble(),
+        speed: (m['speed'] as num?)?.toDouble() ?? _speed(name),
+      );
     }).toList();
     if (constituents.isEmpty) return null;
 
@@ -370,5 +424,97 @@ class _TideChart extends StatelessWidget {
       borderData: FlBorderData(show: false),
       lineBarsData: [LineChartBarData(spots: spots, isCurved: true, color: Colors.blue, barWidth: 2.5, dotData: const FlDotData(show: false), belowBarData: BarAreaData(show: true, color: Colors.blue.withValues(alpha: 0.1)))],
     )));
+  }
+}
+
+/// Go-Score 快捷卡片 — 显示当天评分并链接到完整仪表板
+class _GoScoreQuickCard extends StatelessWidget {
+  const _GoScoreQuickCard({required this.beach, required this.date});
+  final Beache beach;
+  final DateTime date;
+
+  @override
+  Widget build(BuildContext context) {
+    const engine = GoScoreEngine();
+    final score = engine.calculateDaily(
+      date: date,
+      lat: beach.lat,
+      lon: beach.lon,
+    );
+
+    final color = _goScoreColor(score.overallScore);
+    final bestWindow = score.bestWindow;
+    final bestStr = bestWindow != null
+        ? '${bestWindow.start.hour.toString().padLeft(2, '0')}:${bestWindow.start.minute.toString().padLeft(2, '0')} — ${bestWindow.end.hour.toString().padLeft(2, '0')}:${bestWindow.end.minute.toString().padLeft(2, '0')}'
+        : 'N/A';
+
+    return GestureDetector(
+      onTap: () => Get.to(() => GoScoreScreen(
+            lat: beach.lat,
+            lon: beach.lon,
+            beachName: beach.name,
+          )),
+      child: Card(
+        color: color.withValues(alpha: 0.08),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              // 分数环
+              SizedBox(
+                width: 56,
+                height: 56,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      value: score.overallScore / 100,
+                      strokeWidth: 5,
+                      backgroundColor: Colors.grey[300],
+                      color: color,
+                    ),
+                    Text('${score.overallScore}',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: color)),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              // 信息
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text('Go-Score: ',
+                            style: const TextStyle(fontWeight: FontWeight.w600)),
+                        Text(score.label,
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, color: color)),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text('Best window: $bestStr',
+                        style: Theme.of(context).textTheme.bodySmall),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: Colors.grey),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Color _goScoreColor(int s) {
+    if (s >= 80) return Colors.green;
+    if (s >= 60) return Colors.teal;
+    if (s >= 40) return Colors.orange;
+    if (s >= 20) return Colors.deepOrange;
+    return Colors.red;
   }
 }

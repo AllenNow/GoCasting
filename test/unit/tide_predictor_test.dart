@@ -6,10 +6,10 @@ void main() {
 
   // 大连港的谐波常数 (来自 reference.db)
   final dalianConstants = [
-    const HarmonicConstant(name: 'M2', amplitude: 1.45, phase: 52, speed: 28.9841),
-    const HarmonicConstant(name: 'S2', amplitude: 0.55, phase: 85, speed: 30.0),
-    const HarmonicConstant(name: 'K1', amplitude: 0.35, phase: 105, speed: 15.0411),
-    const HarmonicConstant(name: 'O1', amplitude: 0.28, phase: 92, speed: 13.9430),
+    const HarmonicConstant(name: 'M2', amplitude: 1.45, phaseGmt: 52, speed: 28.9841),
+    const HarmonicConstant(name: 'S2', amplitude: 0.55, phaseGmt: 85, speed: 30.0),
+    const HarmonicConstant(name: 'K1', amplitude: 0.35, phaseGmt: 105, speed: 15.0411),
+    const HarmonicConstant(name: 'O1', amplitude: 0.28, phaseGmt: 92, speed: 13.9430),
   ];
 
   group('TidePredictor', () {

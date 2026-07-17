@@ -1,474 +1,540 @@
 ---
 stepsCompleted: [1, 2, 3]
 inputDocuments:
-  - "_bmad-output/planning-artifacts/prds/prd-GoCasting-2026-07-03/prd.md"
-  - "_bmad-output/planning-artifacts/architecture/arch-GoCasting-2026-07-03/ARCHITECTURE-SPINE.md"
+  - "docs/prd-GoCasting.md"
+  - "docs/architecture-GoCasting.md"
+updated: 2026-07-16
 ---
 
-# GoCasting - Epic Breakdown
+# GoCasting - Epic 分解
 
-## Overview
+## 概述
 
-This document provides the complete epic and story breakdown for GoCasting, decomposing the PRD (18 FRs, 7 NFRs) and Architecture decisions into implementable stories.
+本文档提供 GoCasting 的完整 Epic 和 Story 分解，将 PRD（26 个功能需求、7 个非功能需求）和架构决策分解为可实现的故事。
 
-## Requirements Inventory
+## 需求清单
 
-### Functional Requirements
+### 功能需求
 
-- FR-1: Gear Configuration Wizard
-- FR-2: Gear Compatibility Check
-- FR-3: Gear Comparison
-- FR-4: Gear Database (bundled SQLite, 200+ rods, 150+ reels, 100+ lines)
-- FR-5: Gear Inventory (user gear management)
-- FR-6: Usage Logging (session tracking per gear)
-- FR-7: Maintenance Scheduling (rules engine)
-- FR-8: Maintenance Notifications (local push)
-- FR-9: Lifespan Tracking (cost-per-session, remaining life)
-- FR-10: Tide Predictions (NOAA harmonic, offline)
-- FR-11: Moon Phase & Solunar (astronomical algorithms)
-- FR-12: Sunrise/Sunset (solar position algorithms)
-- FR-13: Beach Database (500+ pre-loaded beaches)
-- FR-14: Session Dashboard (unified tide/moon/sun view)
-- FR-15: Onboarding (3-screen intro flow)
-- FR-16: Data Persistence (local SQLite, WAL mode)
-- FR-17: Data Export (CSV via share sheet)
-- FR-18: Units (metric/imperial toggle)
+- FR-1: 装备配置向导
+- FR-2: 装备兼容性检查
+- FR-3: 装备对比
+- FR-4: 装备数据库（打包 SQLite，200+ 竿、150+ 轮、100+ 线）
+- FR-5: 装备库存（用户装备管理）
+- FR-6: 使用日志（按装备追踪使用）
+- FR-7: 维护调度（规则引擎）
+- FR-8: 维护通知（本地推送）
+- FR-9: 寿命追踪（每次使用成本、剩余寿命）
+- FR-10: 潮汐预测（NOAA 谐波、离线）
+- FR-11: 月相与日月鱼活跃期（天文算法）
+- FR-12: 日出/日落（太阳位置算法）
+- FR-13: 海滩数据库（500+ 预加载海滩）
+- FR-14: 出行仪表板（统一潮汐/月相/日出视图）
+- FR-15: 引导流程（3 屏介绍）
+- FR-16: 数据持久化（本地 SQLite，WAL 模式）
+- FR-17: 数据导出（CSV 通过分享面板）
+- FR-18: 单位系统（公制/英制切换）
+- FR-19: 保修追踪（V2）
+- FR-20: 收据与文档存储（V2）
+- FR-21: 维护成本追踪（V2）
+- FR-22: 总拥有成本分析（V2）
+- FR-23: 装备折旧与估值（V2）
+- FR-24: 零件级追踪（V2）
+- FR-25: 维护教程库（V2）
+- FR-26: 维修状态追踪（V2）
 
-### NonFunctional Requirements
+### 非功能需求
 
-- NFR-1: Offline-First (zero network, no permissions)
-- NFR-2: Performance (cold start <3s, queries <200ms)
-- NFR-3: Storage (<100MB bundle)
-- NFR-4: Platform (iOS 15+, Android 8+, Flutter 3.x)
-- NFR-5: Accessibility (VoiceOver, TalkBack, WCAG AA)
-- NFR-6: Localization (English V1, architecture supports i18n)
-- NFR-7: Data Integrity (WAL mode, dual DB separation)
+- NFR-1: 离线优先（零网络，无权限）
+- NFR-2: 性能（冷启动 <3s，查询 <200ms）
+- NFR-3: 存储（<120MB 包大小）
+- NFR-4: 平台（iOS 15+、Android 8+、Flutter 3.x）
+- NFR-5: 无障碍（VoiceOver、TalkBack、WCAG AA）
+- NFR-6: 本地化（当前英文，架构支持 i18n）
+- NFR-7: 数据完整性（WAL 模式、双 DB 分离）
 
-### Additional Requirements
+### 附加需求
 
-- Dual SQLite: read-only reference.db (app bundle) + writable user.db (documents)
-- Riverpod 2.x state management with code generation
-- Drift ORM for type-safe database access
-- GoRouter for navigation
-- flutter_local_notifications for maintenance reminders
-- Pure Dart astronomy (no platform plugins)
-- No INTERNET permission in manifests
-- CI/CD: GitHub Actions lint → test → build
+- 双 SQLite：只读 reference.db（应用包）+ 可写 user.db（文档目录）
+- GetX 状态管理
+- Drift ORM 类型安全数据库访问
+- GetX 路由
+- flutter_local_notifications 维护和保修提醒
+- image_picker 照片选取
+- timezone 时区感知通知调度
+- 纯 Dart 天文计算（无平台插件）
+- Manifest 中无 INTERNET 权限
 
-### UX Design Requirements
+### FR 覆盖映射
 
-N/A — No UX design document. Tool-first minimal UI.
+| FR | Epic | 描述 |
+|----|------|------|
+| FR-1 | Epic 2 | 装备配置向导 |
+| FR-2 | Epic 2 | 装备兼容性检查 |
+| FR-3 | Epic 2 | 装备对比 |
+| FR-4 | Epic 1 | 装备数据库（参考 DB）|
+| FR-5 | Epic 3 | 装备库存 |
+| FR-6 | Epic 3 | 使用日志 |
+| FR-7 | Epic 3 | 维护调度 |
+| FR-8 | Epic 3 | 维护通知 |
+| FR-9 | Epic 3 | 寿命追踪 |
+| FR-10 | Epic 4 | 潮汐预测 |
+| FR-11 | Epic 4 | 月相与日月鱼活跃期 |
+| FR-12 | Epic 4 | 日出/日落 |
+| FR-13 | Epic 1 | 海滩数据库 |
+| FR-14 | Epic 4 | 出行仪表板 |
+| FR-15 | Epic 1 | 引导流程 |
+| FR-16 | Epic 1 | 数据持久化 |
+| FR-17 | Epic 3 | 数据导出 |
+| FR-18 | Epic 1 | 单位系统 |
+| FR-19 | Epic 5 | 保修追踪 |
+| FR-20 | Epic 5 | 收据与文档存储 |
+| FR-21 | Epic 5 | 维护成本追踪 |
+| FR-22 | Epic 5 | 总拥有成本分析 |
+| FR-23 | Epic 5 | 装备折旧与估值 |
+| FR-24 | Epic 5 | 零件级追踪 |
+| FR-25 | Epic 5 | 维护教程库 |
+| FR-26 | Epic 5 | 维修状态追踪 |
 
-### FR Coverage Map
+## Epic 列表
 
-| FR | Epic | Description |
-|----|------|-------------|
-| FR-1 | Epic 2 | Gear Configuration Wizard |
-| FR-2 | Epic 2 | Gear Compatibility Check |
-| FR-3 | Epic 2 | Gear Comparison |
-| FR-4 | Epic 1 | Gear Database (reference DB) |
-| FR-5 | Epic 3 | Gear Inventory |
-| FR-6 | Epic 3 | Usage Logging |
-| FR-7 | Epic 3 | Maintenance Scheduling |
-| FR-8 | Epic 3 | Maintenance Notifications |
-| FR-9 | Epic 3 | Lifespan Tracking |
-| FR-10 | Epic 4 | Tide Predictions |
-| FR-11 | Epic 4 | Moon Phase & Solunar |
-| FR-12 | Epic 4 | Sunrise/Sunset |
-| FR-13 | Epic 1 | Beach Database |
-| FR-14 | Epic 4 | Session Dashboard |
-| FR-15 | Epic 1 | Onboarding |
-| FR-16 | Epic 1 | Data Persistence |
-| FR-17 | Epic 3 | Data Export |
-| FR-18 | Epic 1 | Units |
+### Epic 1: 项目基础与数据层
+用户可安装应用、完成引导、设置偏好、访问预加载参考数据（装备目录、海滩、潮汐站）。
+**覆盖 FR：** FR-4, FR-13, FR-15, FR-16, FR-18
 
-## Epic List
+### Epic 2: 装备智能引擎
+用户可获得个性化装备推荐、检查装备兼容性、对比产品——解决"该买什么？"问题。
+**覆盖 FR：** FR-1, FR-2, FR-3
 
-### Epic 1: Project Foundation & Data Layer
-Users can install the app, complete onboarding, set preferences, and access pre-loaded reference data (gear catalog, beaches, tide stations).
-**FRs covered:** FR-4, FR-13, FR-15, FR-16, FR-18
+### Epic 3: 装备维护追踪器
+用户可管理装备库存、记录使用、接收维护提醒、追踪装备寿命——解决"装备老是生锈"问题。
+**覆盖 FR：** FR-5, FR-6, FR-7, FR-8, FR-9, FR-17
 
-### Epic 2: Gear Intelligence Engine
-Users can get personalized equipment recommendations, check gear compatibility, and compare products — solving the "what should I buy?" problem.
-**FRs covered:** FR-1, FR-2, FR-3
+### Epic 4: 出行规划器
+用户可查看潮汐预测、月相、日月鱼活跃期和日出/日落——解决"什么时候该去？"问题。
+**覆盖 FR：** FR-10, FR-11, FR-12, FR-14
 
-### Epic 3: Gear Maintenance Tracker
-Users can manage their gear inventory, log usage sessions, receive maintenance reminders, and track gear lifespan — solving the "my gear keeps corroding" problem.
-**FRs covered:** FR-5, FR-6, FR-7, FR-8, FR-9, FR-17
-
-### Epic 4: Session Planner
-Users can view tide predictions, moon phases, solunar periods, and sunrise/sunset for any beach — solving the "when should I go?" problem.
-**FRs covered:** FR-10, FR-11, FR-12, FR-14
-
----
-
-## Epic 1: Project Foundation & Data Layer
-
-Users can install the app, complete onboarding, select unit preferences, and browse pre-loaded reference data that powers all other features.
-
-### Story 1.1: Flutter Project Scaffold & Navigation
-
-As a developer,
-I want a properly configured Flutter project with routing and state management,
-So that all future features have a solid foundation to build upon.
-
-**Acceptance Criteria:**
-
-**Given** a fresh clone of the repository
-**When** I run `flutter run`
-**Then** the app launches with a bottom navigation bar (3 tabs: Gear, Maintenance, Planner)
-**And** GoRouter handles navigation between tabs
-**And** Riverpod ProviderScope wraps the app
-**And** Material 3 theme is applied
-**And** No INTERNET permission exists in AndroidManifest.xml or Info.plist
-**And** iOS deployment target is 15.0, Android minSdk is 26
-
-### Story 1.2: Dual SQLite Database Setup
-
-As a developer,
-I want the dual database architecture established with Drift,
-So that reference data is read-only and user data is safely writable.
-
-**Acceptance Criteria:**
-
-**Given** the app starts for the first time
-**When** the database initialization completes
-**Then** reference.db is loaded from app assets (read-only)
-**And** user.db is created in the app documents directory (writable, WAL mode)
-**And** Drift DAOs are generated for both databases
-**And** reference.db contains empty schema for: rods, reels, lines, terminal_tackle, tide_stations, beaches
-**And** user.db contains empty schema for: user_gear, usage_logs, maintenance_logs, custom_beaches, user_settings
-**And** queries against reference.db complete in <200ms
-
-### Story 1.3: Gear Reference Database Seeding
-
-As a surf caster,
-I want a pre-loaded database of popular surf casting equipment,
-So that I can browse and get recommendations from real products.
-
-**Acceptance Criteria:**
-
-**Given** the app is installed
-**When** I open the gear section
-**Then** at least 200 rods are available with: brand, model, length, power, action, material, cast weight range, line rating, price tier, corrosion rating
-**And** at least 150 reels are available with: brand, model, size, gear ratio, max drag, line capacity, weight, seal type, price tier
-**And** at least 100 lines are available with: brand, type, lb test, diameter, price tier
-**And** terminal tackle (hooks, sinkers, swivels, leaders) are seeded by type and size
-**And** data covers brands: Penn, Shimano, Daiwa, St. Croix, and others
-**And** app bundle size remains under 100MB total
-
-### Story 1.4: Beach & Tide Station Database Seeding
-
-As a surf caster,
-I want a pre-loaded database of popular surf casting beaches linked to tide stations,
-So that I can quickly find my local beach and view tide data.
-
-**Acceptance Criteria:**
-
-**Given** the app is installed
-**When** I open the planner section
-**Then** at least 500 beaches are available covering: US East Coast, US West Coast, Gulf Coast, UK, Australia, New Zealand, South Africa
-**And** each beach has: name, region, coordinates, nearest tide station ID, beach type, typical species
-**And** NOAA harmonic constants are bundled for all referenced US tide stations
-**And** tide stations include: name, coordinates, harmonic constants (JSON)
-**And** beaches are searchable by name and region
-
-### Story 1.5: Settings & Unit System
-
-As a surf caster,
-I want to choose between metric and imperial units,
-So that measurements display in the system I'm familiar with.
-
-**Acceptance Criteria:**
-
-**Given** I open the Settings screen
-**When** I toggle between Metric and Imperial
-**Then** the preference is persisted in user.db
-**And** all measurements throughout the app respect the chosen unit system
-**And** rod lengths display in feet (imperial) or meters (metric)
-**And** weights display in oz/lbs (imperial) or grams/kg (metric)
-**And** distances display in yards (imperial) or meters (metric)
-**And** the setting persists across app restarts
-
-### Story 1.6: Onboarding Flow
-
-As a new user,
-I want a brief introduction to the app's three core features,
-So that I know what GoCasting can do for me and where to start.
-
-**Acceptance Criteria:**
-
-**Given** I launch the app for the first time
-**When** the onboarding screens appear
-**Then** Screen 1 shows "Configure your perfect setup" with entry to Gear Wizard
-**And** Screen 2 shows "Track your gear health" with entry to add first item
-**And** Screen 3 shows "Plan your next session" with entry to Session Planner
-**And** a "Skip" button is visible on all screens
-**And** after completing or skipping, onboarding does not show again
-**And** the completion state is persisted in user_settings
+### Epic 5: 装备生命周期管理（V2）
+用户可追踪保修、管理收据/文档、分析总拥有成本、监控零件磨损、获取维护教程、追踪维修状态——将维护追踪器扩展为完整的生命周期管理工具。
+**覆盖 FR：** FR-19, FR-20, FR-21, FR-22, FR-23, FR-24, FR-25, FR-26
 
 ---
 
-## Epic 2: Gear Intelligence Engine
+## Epic 1: 项目基础与数据层
 
-Users can get personalized equipment setup recommendations, validate gear compatibility, and compare products side-by-side.
+用户可安装应用、完成引导、选择单位偏好、浏览支撑所有其他功能的预加载参考数据。
 
-### Story 2.1: Gear Configuration Wizard UI
+### Story 1.1: Flutter 项目脚手架与导航
 
-As a surf caster,
-I want to answer a few questions about my fishing goals,
-So that I receive a complete recommended equipment setup.
+作为开发者，
+我希望有一个正确配置的 Flutter 项目，具备路由和状态管理，
+以便所有未来功能有坚实的基础。
 
-**Acceptance Criteria:**
+**验收标准：**
 
-**Given** I tap "Configure Setup" from the Gear tab
-**When** the wizard launches
-**Then** I see Step 1: Target species (multi-select from predefined list: striped bass, redfish, bluefish, sharks, etc.)
-**And** Step 2: Beach/surf conditions (open beach, jetty, inlet, rocky shore)
-**And** Step 3: Casting distance goal (short <50m, medium 50-100m, long 100m+)
-**And** Step 4: Budget range (entry $50-150, mid $150-400, premium $400+)
-**And** I can go back to previous steps
-**And** a progress indicator shows current step
+**给定** 全新克隆的仓库
+**当** 我运行 `flutter run`
+**那么** 应用启动时显示底部导航栏（3 标签：装备、维护、规划器）
+**并且** GetX 处理标签间导航
+**并且** 全局依赖通过 InitialBinding 注入
+**并且** Material 3 主题已应用
+**并且** AndroidManifest.xml 或 Info.plist 中无 INTERNET 权限
+**并且** iOS 部署目标为 15.0，Android minSdk 为 26
 
-### Story 2.2: Recommendation Engine
+### Story 1.2: 双 SQLite 数据库设置
 
-As a surf caster,
-I want the wizard to produce a complete gear setup based on my inputs,
-So that I know exactly what rod, reel, line, leader, rig, sinker, hook, and bait to use.
+作为开发者，
+我希望用 Drift 建立双数据库架构，
+以便参考数据只读、用户数据安全可写。
 
-**Acceptance Criteria:**
+**验收标准：**
 
-**Given** I have completed all wizard steps
-**When** I tap "Get Recommendations"
-**Then** the engine returns a complete setup within 1 second including:
-- Rod: top 3 candidates with length, power, action, material
-- Reel: top 3 candidates matched to rod power/size
-- Main line: type, lb test recommendation
-- Leader: material and lb test
-- Rig type: recommended rig for species + conditions
-- Sinker: type and weight range for conditions
-- Hook: style and size range for species
-- Bait: recommended options for species
-**And** all recommended items exist in the reference database
-**And** recommendations respect the user's budget filter
-**And** the engine uses rule-based matching (species → power range, conditions → sinker weight → cast weight, budget → price tier)
+**给定** 应用首次启动
+**当** 数据库初始化完成
+**那么** reference.db 从应用 assets 加载（只读）
+**并且** user.db 在应用文档目录创建（可写，WAL 模式）
+**并且** reference.db 包含空 schema：rods、reels、lines、terminal_tackle、tide_stations、beaches
+**并且** user.db 包含空 schema：user_gear、usage_logs、maintenance_logs、custom_beaches、user_settings
+**并且** 对 reference.db 的查询在 <200ms 内完成
 
-### Story 2.3: Gear Compatibility Check
+### Story 1.3: 装备参考数据库填充
 
-As a surf caster,
-I want to validate whether my chosen gear combination works together,
-So that I avoid mismatched setups that waste money or limit performance.
+作为远投钓手，
+我希望有预加载的热门远投钓鱼装备数据库，
+以便浏览并从真实产品获得推荐。
 
-**Acceptance Criteria:**
+**验收标准：**
 
-**Given** I have selected or am viewing a gear combination (rod + reel + line)
-**When** the compatibility check runs
-**Then** it flags: rod power vs reel size mismatch
-**And** flags: line weight exceeding rod line rating
-**And** flags: reel line capacity insufficient for selected line diameter/length
-**And** flags: sinker weight exceeding rod casting weight range
-**And** displays green checkmark for compatible, red warning for incompatible
-**And** each flag includes a brief explanation of why it's incompatible
+**给定** 应用已安装
+**当** 打开装备部分
+**那么** 至少 200 款鱼竿可用，包含：品牌、型号、长度、功率、调性、材料、抛投重量范围、线评级、价格档次、抗腐蚀评级
+**并且** 至少 150 款渔轮可用
+**并且** 至少 100 款钓线可用
+**并且** 末端配件已按类型和规格填充
+**并且** 数据覆盖品牌：Penn、Shimano、Daiwa、St. Croix 等
+**并且** 应用包大小保持在 120MB 以内
 
-### Story 2.4: Gear Comparison View
+### Story 1.4: 海滩与潮汐站数据库填充
 
-As a surf caster,
-I want to compare up to 3 gear items side-by-side,
-So that I can make informed purchase decisions.
+作为远投钓手，
+我希望有预加载的热门远投海滩数据库并关联潮汐站，
+以便快速找到本地海滩并查看潮汐数据。
 
-**Acceptance Criteria:**
+**验收标准：**
 
-**Given** I am browsing the gear database
-**When** I select 2-3 items of the same category (e.g., 3 reels)
-**Then** a comparison table shows them side-by-side with columns for:
-- Corrosion resistance rating
-- Casting distance performance (for rods)
-- Weight
-- Drag system type (sealed vs open, for reels)
-- Price tier
-- Key specs (size, gear ratio, max drag, etc.)
-**And** differences are visually highlighted
-**And** I can dismiss or swap items in the comparison
+**给定** 应用已安装
+**当** 打开规划器部分
+**那么** 至少 500 个海滩可用，覆盖美国东海岸、西海岸、墨西哥湾、英国、澳大利亚、新西兰、南非
+**并且** 每个海滩有：名称、区域、坐标、最近潮汐站 ID、海滩类型、典型鱼种
+**并且** NOAA 谐波常数已为所有引用的美国潮汐站打包
+**并且** 海滩可按名称和区域搜索
 
----
+### Story 1.5: 设置与单位系统
 
-## Epic 3: Gear Maintenance Tracker
+作为远投钓手，
+我希望在公制和英制之间选择，
+以便测量数据以我熟悉的系统显示。
 
-Users can manage their personal gear collection, log usage sessions, receive timely maintenance reminders, and understand gear health and cost.
+**验收标准：**
 
-### Story 3.1: Gear Inventory Management
+**给定** 打开设置页面
+**当** 在公制和英制之间切换
+**那么** 偏好持久化到 user.db
+**并且** 应用中所有测量尊重所选单位系统
+**并且** 设置跨应用重启持久化
 
-As a surf caster,
-I want to add my gear to a personal inventory,
-So that I can track what I own and its condition.
+### Story 1.6: 引导流程
 
-**Acceptance Criteria:**
+作为新用户，
+我希望有简短介绍应用三大核心功能的引导，
+以便知道 GoCasting 能做什么以及从哪里开始。
 
-**Given** I am on the Maintenance tab
-**When** I tap "Add Gear"
-**Then** I can choose from the reference database or enter manually
-**And** I can set: custom name, purchase date, price paid, status (active/stored/retired)
-**And** I can attach a photo from camera or gallery
-**And** the item is saved to user.db
-**And** I can view my full inventory list with status indicators
-**And** I can edit or delete any inventory item
+**验收标准：**
 
-### Story 3.2: Usage Session Logging
-
-As a surf caster,
-I want to log when I use my gear in saltwater,
-So that the app knows when maintenance is due.
-
-**Acceptance Criteria:**
-
-**Given** I have gear in my inventory
-**When** I tap "Log Session" or the quick "Used Today" button
-**Then** I can select which gear items were used
-**And** I can set: date (defaults to today), environment (saltwater/brackish/rinse-only), duration (optional)
-**And** the usage log is saved to user.db linked to the gear item(s)
-**And** the gear's total session count updates immediately
-**And** I can view usage history for any gear item
-
-### Story 3.3: Maintenance Scheduling Rules Engine
-
-As a surf caster,
-I want automatic maintenance schedules based on my usage patterns,
-So that I service my gear before it degrades.
-
-**Acceptance Criteria:**
-
-**Given** gear items have usage logs recorded
-**When** the scheduler evaluates maintenance status
-**Then** it applies default rules:
-- Spinning reel full service: every 15 saltwater sessions OR 90 days
-- Drag washers grease: every 10 sessions OR 60 days
-- Rod guide inspection: every 30 sessions OR 180 days
-- Line replacement: every 50 sessions OR 6 months
-**And** the threshold that triggers first (sessions or days) wins
-**And** maintenance status shows: green (OK), yellow (due soon), red (overdue)
-**And** users can customize thresholds per gear item in settings
-
-### Story 3.4: Local Maintenance Notifications
-
-As a surf caster,
-I want push notification reminders when gear maintenance is due,
-So that I don't forget to service my equipment.
-
-**Acceptance Criteria:**
-
-**Given** a gear item's maintenance threshold is exceeded
-**When** I open the app (or on scheduled check)
-**Then** a local notification is scheduled: "Your [Gear Name] has X saltwater sessions since last service — time to rinse and re-grease"
-**And** notifications use flutter_local_notifications (no server, no FCM)
-**And** tapping the notification opens the gear's detail page
-**And** I can snooze the reminder (7 days) or mark maintenance as complete
-**And** marking complete creates a maintenance_log entry and resets the counter
-
-### Story 3.5: Lifespan Tracking & Cost Analysis
-
-As a surf caster,
-I want to see how much life my gear has left and what it costs per session,
-So that I can plan replacements and understand value.
-
-**Acceptance Criteria:**
-
-**Given** I view a gear item's detail page
-**When** the lifespan section loads
-**Then** it shows: total sessions logged, estimated total lifespan (based on gear type defaults), remaining sessions estimate
-**And** it shows: cost-per-session (price paid ÷ total sessions)
-**And** it shows: complete maintenance history (dates, types, notes)
-**And** a visual progress bar indicates gear lifecycle position
-**And** lifespan defaults are: reel ~300 sessions, rod ~500 sessions, line ~50 sessions (configurable)
-
-### Story 3.6: Data Export (CSV)
-
-As a surf caster,
-I want to export my gear inventory and maintenance logs,
-So that I can back up my data or analyze it elsewhere.
-
-**Acceptance Criteria:**
-
-**Given** I go to Settings → Export Data
-**When** I tap "Export to CSV"
-**Then** a CSV file is generated containing: all gear items with details, all usage logs, all maintenance logs
-**And** the system share sheet appears allowing me to save/send the file
-**And** the CSV uses standard formatting with headers
-**And** dates are in ISO 8601 format
+**给定** 首次启动应用
+**当** 引导页面出现
+**那么** 页面 1 显示"配置完美装备"
+**并且** 页面 2 显示"追踪装备健康"
+**并且** 页面 3 显示"规划下次出行"
+**并且** 可见"跳过"按钮
+**并且** 完成或跳过后不再显示引导
 
 ---
 
-## Epic 4: Session Planner
+## Epic 2: 装备智能引擎
 
-Users can view offline tide predictions, moon phases, solunar periods, and sunrise/sunset for any beach to find the best fishing windows.
+用户可获得个性化装备推荐、验证装备兼容性、并排对比产品。
 
-### Story 4.1: Tide Prediction Algorithm
+### Story 2.1: 装备配置向导 UI
 
-As a surf caster,
-I want accurate offline tide predictions for my beach,
-So that I know the tide state without needing internet.
+作为远投钓手，
+我希望回答几个关于钓鱼目标的问题，
+以便获得完整的推荐装备组合。
 
-**Acceptance Criteria:**
+**验收标准：**
 
-**Given** I select a beach with a linked US tide station
-**When** the tide computation runs
-**Then** tide heights are predicted for any requested date/time
-**And** computation uses harmonic analysis: h(t) = H₀ + Σ(Aₙ · cos(ωₙt + φₙ))
-**And** predictions are within ±15 minutes and ±0.3m of NOAA published predictions
-**And** 7-day computation completes in <500ms
-**And** the algorithm is implemented in pure Dart (no platform plugins)
-**And** high/low tide times are identified from the computed curve
+**给定** 从装备标签点击"配置装备"
+**当** 向导启动
+**那么** 看到步骤 1：目标鱼种（多选）
+**并且** 步骤 2：海滩/浪况条件
+**并且** 步骤 3：抛投距离目标
+**并且** 步骤 4：预算范围
+**并且** 可返回上一步
+**并且** 进度指示器显示当前步骤
 
-### Story 4.2: Astronomical Calculations (Moon, Sun, Solunar)
+### Story 2.2: 推荐引擎
 
-As a surf caster,
-I want to know moon phase, solunar periods, and sunrise/sunset,
-So that I can identify the best feeding times.
+作为远投钓手，
+我希望向导基于我的输入生成完整装备组合，
+以便准确知道该用什么竿、轮、线、前导线、钓组、铅坠、钩和饵。
 
-**Acceptance Criteria:**
+**验收标准：**
 
-**Given** a location (lat/lon) and date
-**When** astronomical calculations run
-**Then** moon phase is computed with illumination percentage and phase name
-**And** moon rise/set times are computed (±2 min accuracy)
-**And** sunrise/sunset/twilight times are computed (±1 min accuracy)
-**And** solunar major periods (moon transit, moon underfoot) are computed
-**And** solunar minor periods (moon rise, moon set) are computed
-**And** all computations use Jean Meeus algorithms in pure Dart
-**And** results are deterministic (same input → same output always)
+**给定** 完成所有向导步骤
+**当** 点击"获取推荐"
+**那么** 引擎在 1 秒内返回完整组合
+**并且** 所有推荐项存在于参考数据库
+**并且** 推荐尊重用户预算
+**并且** 引擎使用基于规则的匹配
 
-### Story 4.3: Session Dashboard UI
+### Story 2.3: 装备兼容性检查
 
-As a surf caster,
-I want a single screen showing all timing data for my chosen beach and date,
-So that I can quickly decide if conditions are good.
+作为远投钓手，
+我希望验证选择的装备组合是否协调，
+以便避免浪费钱或限制性能的不匹配配置。
 
-**Acceptance Criteria:**
+**验收标准：**
 
-**Given** I have selected a beach and a date
-**When** the session dashboard loads
-**Then** it displays a tide height graph (24h view) with current time marker
-**And** high/low tide times are labeled on the graph
-**And** moon phase icon with illumination % is shown
-**And** solunar major/minor periods are overlaid as colored bands
-**And** sunrise/sunset times are shown as markers
-**And** "Best windows" are highlighted (solunar major periods overlapping tide transitions)
-**And** I can swipe between days (7-day range)
-**And** all data loads from offline computation, no network call
+**给定** 查看装备组合（竿 + 轮 + 线）
+**当** 兼容性检查运行
+**那么** 标记不兼容项并提供解释
+**并且** 兼容显示绿色勾号，不兼容显示红色警告
 
-### Story 4.4: Beach Selection & Custom Locations
+### Story 2.4: 装备对比视图
 
-As a surf caster,
-I want to select from pre-loaded beaches or add my own fishing spots,
-So that I see tide data specific to where I actually fish.
+作为远投钓手，
+我希望并排对比最多 3 件装备，
+以便做出明智的购买决策。
 
-**Acceptance Criteria:**
+**验收标准：**
 
-**Given** I am on the Planner tab
-**When** I tap the beach selector
-**Then** I can search pre-loaded beaches by name or region
-**And** results show: beach name, type, region, typical species
-**And** I can add a custom beach by entering: name, latitude, longitude
-**And** the app automatically assigns the nearest tide station to custom beaches
-**And** custom beaches are saved to user.db
-**And** I can set a "favorite" beach as default for the dashboard
-**And** I can delete custom beaches
+**给定** 浏览装备数据库
+**当** 选择 2-3 件同类物品
+**那么** 对比表并排显示：抗腐蚀、抛投性能、重量、拖力系统、价格档次
+**并且** 差异被视觉高亮
+
+---
+
+## Epic 3: 装备维护追踪器
+
+用户可管理个人装备收藏、记录使用、接收维护提醒、了解装备健康和成本。
+
+### Story 3.1: 装备库存管理
+
+作为远投钓手，
+我希望将装备添加到个人库存，
+以便追踪拥有的装备及其状态。
+
+**验收标准：**
+
+**给定** 在维护标签
+**当** 点击"添加装备"
+**那么** 可从参考数据库选择或手动输入
+**并且** 可设置：自定义名称、购买日期、价格、状态
+**并且** 可从相机或相册附加照片
+**并且** 可查看、编辑、删除库存项
+
+### Story 3.2: 使用日志记录
+
+作为远投钓手，
+我希望记录装备在海水中的使用，
+以便应用知道何时该维护。
+
+**验收标准：**
+
+**给定** 库存中有装备
+**当** 点击"记录使用"或"今日已用"
+**那么** 可选择使用的装备
+**并且** 可设置日期、环境、时长
+**并且** 装备总使用次数立即更新
+
+### Story 3.3: 维护调度规则引擎
+
+作为远投钓手，
+我希望基于使用模式的自动维护计划，
+以便在装备退化前进行维护。
+
+**验收标准：**
+
+**给定** 装备有使用记录
+**当** 调度器评估维护状态
+**那么** 应用默认规则（纺车轮每 15 次或 90 天、拖力每 10 次或 60 天等）
+**并且** 状态显示：绿色（正常）、黄色（即将到期）、红色（已过期）
+
+### Story 3.4: 本地维护通知
+
+作为远投钓手，
+我希望维护到期时收到推送提醒，
+以便不忘记维护装备。
+
+**验收标准：**
+
+**给定** 装备维护阈值已超过
+**当** 检查运行
+**那么** 调度本地通知
+**并且** 可推迟或标记完成
+
+### Story 3.5: 寿命追踪与成本分析
+
+作为远投钓手，
+我希望看到装备剩余寿命和每次使用成本，
+以便规划更换并理解价值。
+
+**验收标准：**
+
+**给定** 查看装备详情
+**当** 寿命部分加载
+**那么** 显示总使用次数、预估寿命、剩余次数、每次使用成本
+**并且** 视觉进度条指示生命周期位置
+
+### Story 3.6: 数据导出（CSV）
+
+作为远投钓手，
+我希望导出装备库存和维护日志，
+以便备份数据或在其他地方分析。
+
+**验收标准：**
+
+**给定** 进入设置 → 导出数据
+**当** 点击"导出为 CSV"
+**那么** 生成包含所有装备、使用日志、维护日志的 CSV 文件
+**并且** 系统分享面板出现
+
+---
+
+## Epic 4: 出行规划器
+
+用户可查看离线潮汐预测、月相、日月鱼活跃期和日出/日落，找到最佳钓鱼时间窗口。
+
+### Story 4.1: 潮汐预测算法
+
+作为远投钓手，
+我希望准确的离线潮汐预测，
+以便无需网络就知道潮汐状态。
+
+**验收标准：**
+
+**给定** 选择关联美国潮汐站的海滩
+**当** 潮汐计算运行
+**那么** 预测精度在 ±15 分钟和 ±0.3m 以内
+**并且** 7 天计算在 <500ms 内完成
+**并且** 算法用纯 Dart 实现
+
+### Story 4.2: 天文计算（月相、日出、日月鱼活跃期）
+
+作为远投钓手，
+我希望知道月相、日月鱼活跃期和日出/日落，
+以便识别最佳觅食时间。
+
+**验收标准：**
+
+**给定** 位置（经纬度）和日期
+**当** 天文计算运行
+**那么** 计算月相、月出月落、日出日落、日月鱼活跃期主要和次要期
+**并且** 全部使用 Jean Meeus 算法
+
+### Story 4.3: 出行仪表板 UI
+
+作为远投钓手，
+我希望单屏显示所选海滩和日期的所有时间数据，
+以便快速判断条件是否良好。
+
+**验收标准：**
+
+**给定** 选择海滩和日期
+**当** 仪表板加载
+**那么** 显示潮高图、月相、日月鱼活跃期叠加、日出/日落标记
+**并且** 高亮"最佳窗口"
+**并且** 可滑动切换天数
+
+### Story 4.4: 海滩选择与自定义位置
+
+作为远投钓手，
+我希望从预加载海滩选择或添加自定义钓点，
+以便看到我实际钓鱼地点的潮汐数据。
+
+**验收标准：**
+
+**给定** 在规划器标签
+**当** 点击海滩选择器
+**那么** 可按名称或区域搜索
+**并且** 可通过输入坐标添加自定义海滩
+**并且** 自动分配最近潮汐站
+
+---
+
+## Epic 5: 装备生命周期管理（V2）
+
+用户可追踪保修、管理收据/文档、分析总拥有成本、监控零件磨损、获取维护教程、追踪维修状态——将维护追踪器扩展为完整的生命周期管理工具。
+
+**覆盖 FR：** FR-19, FR-20, FR-21, FR-22, FR-23, FR-24, FR-25, FR-26
+
+### Story 5.1: 保修追踪与收据存储
+
+作为远投钓手，
+我希望记录保修信息并数字化存储购买收据，
+以便永不丢失购买凭证，并在保修到期前收到提醒。
+
+**验收标准：**
+
+**给定** 查看装备详情
+**当** 点击"保修"
+**那么** 可记录：保修开始日期、时长（月）、供应商/零售商、条款摘要
+**并且** 到期日期自动计算
+**并且** 到期前 30 天和 7 天收到本地通知
+**并且** 保修状态显示：有效（绿色）、即将到期（黄色）、已过期（红色）
+**并且** 可从相机或相册附加多张照片（收据、保修卡、发票）
+**并且** 照片本地存储在应用文档目录
+**并且** 照片可全屏查看并缩放
+
+### Story 5.2: 维护成本追踪与 TCO 分析
+
+作为远投钓手，
+我希望记录每次维护的费用并查看总拥有成本，
+以便了解每件装备的真实花费。
+
+**验收标准：**
+
+**给定** 记录维护事件
+**当** 维护对话框出现
+**那么** 可记录：费用金额、费用类别（自行/专业/零件）、服务商
+**并且** 装备详情页显示 TCO 摘要卡片
+**并且** 每次使用成本 = TCO ÷ 总使用次数
+**并且** 点击 TCO 卡片打开详细分析页（含饼图）
+**并且** 维护费用历史显示每次事件的日期、类型、类别和金额
+
+### Story 5.3: 装备折旧与估值引擎
+
+作为远投钓手，
+我希望看到装备当前市场估值，
+以便了解保险或转卖价值。
+
+**验收标准：**
+
+**给定** 装备有购买价格和日期
+**当** 估值卡片渲染
+**那么** 使用离线折旧公式计算当前估值
+**并且** 公式考虑：装备类型、年龄、使用次数、海水暴露率、维护评分
+**并且** 维护良好降低贬值率（激励维护）
+**并且** 显示：当前价值、保值率%、已贬值金额、剩余寿命年数
+**并且** 状况评级：优秀 / 良好 / 一般 / 磨损 / 寿命终点
+
+### Story 5.4: 零件级追踪
+
+作为远投钓手，
+我希望追踪装备的单个子组件（轴承、拖力垫片、导环），
+以便精确知道哪个零件需要维护或更换。
+
+**验收标准：**
+
+**给定** 查看装备零件页面
+**当** 零件列表加载
+**那么** 按装备类型自动初始化默认零件（渔轮：轴承、拖力垫片、导线轮、主齿轮、逆止器；鱼竿：导环、竿尖、轮座、握把）
+**并且** 每个零件有独立维护间隔和进度指示器
+**并且** 可单独标记零件"已维护"
+**并且** 可"更换"零件（记录替换，可选费用）
+**并且** 可添加自定义零件
+**并且** 更换费用计入 TCO
+
+### Story 5.5: 维护教程库
+
+作为远投钓手，
+我希望有装备的分步维护指南，
+以便知道如何正确自行维护。
+
+**验收标准：**
+
+**给定** 从装备详情点击"维护指南"
+**当** 教程页面加载
+**那么** 可按装备类型和类别筛选（清洁、润滑、检查、更换）
+**并且** 每个指南显示：标题、难度评级、预计时间、所需工具
+**并且** 点击指南显示带描述、提示和警告的编号步骤
+**并且** 最少覆盖：出行后冲洗、完整渔轮维护、拖力上油、导环检查、换线、轴承清洗
+**并且** 所有内容离线打包
+
+### Story 5.6: 维修状态追踪
+
+作为远投钓手，
+我希望追踪送去专业维修的装备，
+以便知道什么装备在外面、在哪里、何时取回。
+
+**验收标准：**
+
+**给定** 送装备去专业维修
+**当** 创建维修记录
+**那么** 可记录：服务商、送出日期、预计返回日期、备注
+**并且** 状态流转：已送出 → 维修中 → 已取回
+**并且** 可一键推进状态
+**并且** 取回时可记录维修费用
+**并且** 标记"维修中"的装备从使用快速记录中排除
+**并且** 每件装备可查看维修历史

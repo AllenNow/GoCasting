@@ -21,4 +21,20 @@ class AppTheme {
       labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
     ),
   );
+
+  static final ThemeData dark = ThemeData(
+    useMaterial3: true,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: _seedColor,
+      brightness: Brightness.dark,
+    ),
+    appBarTheme: const AppBarTheme(
+      centerTitle: true,
+      elevation: 0,
+    ),
+    navigationBarTheme: const NavigationBarThemeData(
+      elevation: 1,
+      labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+    ),
+  );
 }

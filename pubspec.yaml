@@ -24,6 +24,7 @@ dependencies:
 
   # Notifications
   flutter_local_notifications: ^18.0.1
+  timezone: ^0.10.0
 
   # Charts
   fl_chart: ^0.70.2
@@ -31,6 +32,22 @@ dependencies:
   # Models
   freezed_annotation: ^2.4.4
   json_annotation: ^4.9.0
+
+  # Image Picker
+  image_picker: ^1.1.2
+
+  # Backup & Share
+  share_plus: ^10.1.4
+  archive: ^4.0.2
+  file_picker: ^8.1.6
+
+  # V5: Map & Location
+  amap_flutter_map: ^3.0.0
+  amap_flutter_base: ^3.0.0
+  geolocator: ^13.0.2
+  permission_handler: ^11.3.1
+  http: ^1.2.2
+  url_launcher: ^6.3.1
 
   # Icons
   cupertino_icons: ^1.0.8

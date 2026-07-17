@@ -1,68 +1,78 @@
-# generated: 2026-07-03
-# last_updated: 2026-07-03
-# project: GoCasting
-# project_key: NOKEY
-# tracking_system: file-system
-# story_location: _bmad-output/implementation-artifacts
+# 生成日期: 2026-07-03
+# 最后更新: 2026-07-16
+# 项目: GoCasting
+# 项目代号: NOKEY
+# 追踪系统: file-system
+# 故事位置: _bmad-output/implementation-artifacts
 
-# STATUS DEFINITIONS:
+# 状态定义:
 # ==================
-# Epic Status:
-#   - backlog: Epic not yet started
-#   - in-progress: Epic actively being worked on
-#   - done: All stories in epic completed
+# Epic 状态:
+#   - backlog: Epic 尚未开始
+#   - in-progress: Epic 正在进行
+#   - done: Epic 中所有故事已完成
 #
-# Story Status:
-#   - backlog: Story only exists in epic file
-#   - ready-for-dev: Story file created in stories folder
-#   - in-progress: Developer actively working on implementation
-#   - review: Ready for code review
-#   - done: Story completed
+# Story 状态:
+#   - backlog: 故事仅存在于 epic 文件中
+#   - ready-for-dev: 故事文件已在 stories 文件夹创建
+#   - in-progress: 开发者正在实现
+#   - review: 等待代码审查
+#   - done: 故事已完成
 #
-# Retrospective Status:
-#   - optional: Can be completed but not required
-#   - done: Retrospective has been completed
+# 回顾状态:
+#   - optional: 可以完成但非必需
+#   - done: 回顾已完成
 
 generated: 2026-07-03
-last_updated: 2026-07-03
+last_updated: 2026-07-16
 project: GoCasting
 project_key: NOKEY
 tracking_system: file-system
 story_location: _bmad-output/implementation-artifacts
 
 development_status:
-  # Epic 1: Project Foundation & Data Layer
-  epic-1: backlog
-  1-1-flutter-project-scaffold-and-navigation: backlog
-  1-2-dual-sqlite-database-setup: backlog
-  1-3-gear-reference-database-seeding: backlog
-  1-4-beach-and-tide-station-database-seeding: backlog
-  1-5-settings-and-unit-system: backlog
-  1-6-onboarding-flow: backlog
+  # Epic 1: 项目基础与数据层
+  epic-1: done
+  1-1-flutter-project-scaffold-and-navigation: done
+  1-2-dual-sqlite-database-setup: done
+  1-3-gear-reference-database-seeding: done
+  1-4-beach-and-tide-station-database-seeding: done
+  1-5-settings-and-unit-system: done
+  1-6-onboarding-flow: done
   epic-1-retrospective: optional
 
-  # Epic 2: Gear Intelligence Engine
-  epic-2: backlog
-  2-1-gear-configuration-wizard-ui: backlog
-  2-2-recommendation-engine: backlog
-  2-3-gear-compatibility-check: backlog
-  2-4-gear-comparison-view: backlog
+  # Epic 2: 装备智能引擎
+  epic-2: done
+  2-1-gear-configuration-wizard-ui: done
+  2-2-recommendation-engine: done
+  2-3-gear-compatibility-check: done
+  2-4-gear-comparison-view: done
   epic-2-retrospective: optional
 
-  # Epic 3: Gear Maintenance Tracker
-  epic-3: backlog
-  3-1-gear-inventory-management: backlog
-  3-2-usage-session-logging: backlog
-  3-3-maintenance-scheduling-rules-engine: backlog
-  3-4-local-maintenance-notifications: backlog
-  3-5-lifespan-tracking-and-cost-analysis: backlog
-  3-6-data-export-csv: backlog
+  # Epic 3: 装备维护追踪器
+  epic-3: done
+  3-1-gear-inventory-management: done
+  3-2-usage-session-logging: done
+  3-3-maintenance-scheduling-rules-engine: done
+  3-4-local-maintenance-notifications: done
+  3-5-lifespan-tracking-and-cost-analysis: done
+  3-6-data-export-csv: done
   epic-3-retrospective: optional
 
-  # Epic 4: Session Planner
-  epic-4: backlog
-  4-1-tide-prediction-algorithm: backlog
-  4-2-astronomical-calculations-moon-sun-solunar: backlog
-  4-3-session-dashboard-ui: backlog
-  4-4-beach-selection-and-custom-locations: backlog
+  # Epic 4: 出行规划器
+  epic-4: done
+  4-1-tide-prediction-algorithm: done
+  4-2-astronomical-calculations-moon-sun-solunar: done
+  4-3-session-dashboard-ui: done
+  4-4-beach-selection-and-custom-locations: done
   epic-4-retrospective: optional
+
+  # Epic 5: 装备生命周期管理（V2）
+  epic-5: done
+  5-1-warranty-tracking-and-receipt-storage: done
+  5-2-maintenance-cost-tracking-and-tco-analysis: done
+  5-3-gear-depreciation-and-valuation-engine: done
+  5-4-component-level-tracking: done
+  5-5-maintenance-tutorial-library: done
+  5-6-service-status-tracking: done
+  epic-5-retrospective: optional

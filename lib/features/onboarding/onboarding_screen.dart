@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../core/settings/settings_controller.dart';
+import '../../l10n/l10n.dart';
 
 /// 引导页
 class OnboardingScreen extends StatefulWidget {
@@ -43,7 +44,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           children: [
             Align(
               alignment: Alignment.topRight,
-              child: TextButton(onPressed: _complete, child: const Text('Skip')),
+              child: TextButton(onPressed: _complete, child: Text(context.tr.skip)),
             ),
             Expanded(
               child: PageView.builder(

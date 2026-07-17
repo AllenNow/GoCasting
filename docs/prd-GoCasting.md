@@ -1,254 +1,333 @@
 ---
-title: "GoCasting PRD"
+title: "GoCasting 产品需求文档"
 status: final
 created: 2026-07-03
-updated: 2026-07-03
+updated: 2026-07-16
 ---
 
-# PRD: GoCasting — Surf Casting Equipment & Tide Tool
+# PRD：GoCasting — 远投钓鱼装备与潮汐工具
 
-## 1. Overview
+## 1. 概述
 
-GoCasting is a fully offline, free utility app for surf casting anglers built in Flutter (iOS + Android). It provides three core tools: an equipment configuration wizard, a gear maintenance tracker, and a tide/moon/solunar session planner. All data is bundled on-device with no network dependency.
+GoCasting 是一款完全离线、免费的远投钓鱼实用工具应用，基于 Flutter 构建（iOS + Android）。它提供四大核心工具：装备配置向导、装备维护追踪器、装备生命周期管理器、以及潮汐/月相/日月鱼活跃期出行规划器。所有数据均打包在设备上，无网络依赖。
 
-**Target:** English-speaking surf casters globally.  
-**Platform:** iOS & Android (Flutter).  
-**Monetization:** None in V1. Free utility.  
-**Network:** Zero. Fully offline.
-
----
-
-## 2. Functional Requirements
-
-### 2.1 Gear Intelligence Engine
-
-**FR-1** Gear Configuration Wizard  
-The app shall provide a step-by-step wizard that asks the user:
-- Target species (from predefined list: striped bass, redfish, bluefish, sharks, etc.)
-- Beach/surf conditions (open beach, jetty, inlet, rocky shore)
-- Casting distance goal (short <50m, medium 50-100m, long 100m+)
-- Budget range (entry $50-150, mid $150-400, premium $400+)
-
-Based on inputs, the wizard outputs a complete recommended setup:
-- Rod (length, power, action, material)
-- Reel (size, drag rating, gear ratio, saltwater rating)
-- Main line (type, lb test, diameter)
-- Leader (material, lb test, length)
-- Rig type (fish finder, hi-lo, Carolina, etc.)
-- Sinker (type, weight range)
-- Hook (style, size range)
-- Bait recommendations
-
-**FR-2** Gear Compatibility Check  
-The app shall validate user-selected gear combinations and flag incompatibilities:
-- Rod power vs reel size mismatch
-- Line weight exceeding rod rating
-- Reel line capacity insufficient for selected line
-- Sinker weight exceeding rod casting weight
-
-**FR-3** Gear Comparison  
-The app shall allow side-by-side comparison of up to 3 items from the gear database with surf-casting-specific criteria:
-- Corrosion resistance rating
-- Casting distance performance
-- Weight
-- Drag system (sealed vs open)
-- Price tier
-
-**FR-4** Gear Database  
-The app shall include a bundled SQLite database containing:
-- Rods: brand, model, length, power, action, material, casting weight, line rating, price tier, corrosion rating
-- Reels: brand, model, size, gear ratio, max drag, line capacity, weight, seal type, price tier
-- Lines: brand, type (mono/braid/fluoro), lb test, diameter, color, price tier
-- Terminal tackle: hooks, sinkers, swivels, leaders by type and size
-- Minimum 200+ rods, 150+ reels, 100+ lines at launch
-
-Database updates delivered exclusively via App Store version releases.
+**目标用户：** 全球英语使用的远投钓手  
+**平台：** iOS & Android (Flutter)  
+**商业模式：** 免费工具  
+**网络：** 零依赖，完全离线
 
 ---
 
-### 2.2 Maintenance Tracker
+## 2. 功能需求
 
-**FR-5** Gear Inventory  
-The app shall allow users to:
-- Add gear items to personal inventory (manual entry or select from gear database)
-- Record purchase date and price paid
-- Assign a photo (from camera or gallery)
-- Mark items as active, stored, or retired
+### 2.1 装备智能引擎
 
-**FR-6** Usage Logging  
-The app shall allow users to log sessions against gear items:
-- Date of use
-- Environment (saltwater / brackish / rinse-only day)
-- Duration (optional)
-- One-tap "used today" quick-log
+**FR-1** 装备配置向导  
+应用应提供分步向导，询问用户：
+- 目标鱼种（预定义列表：条纹鲈、红鼓、竹荚鱼、鲨鱼等）
+- 海滩/浪况条件（开放海滩、堤岸、入海口、岩石海岸）
+- 抛投距离目标（短 <50m、中 50-100m、远 100m+）
+- 预算范围（入门 $50-150、中端 $150-400、高端 $400+）
 
-**FR-7** Maintenance Scheduling  
-The app shall generate maintenance reminders based on:
-- Usage count since last maintenance
-- Days since last maintenance
-- Gear type-specific schedules:
-  - Spinning reel: full service every 15 saltwater sessions or 90 days
-  - Rod guides: inspection every 30 sessions
-  - Drag washers: grease every 10 sessions
-  - Line replacement: every 6 months or 50 sessions
-- Schedules stored in local rules engine, configurable per item
+基于输入，向导输出完整的推荐装备组合：
+- 鱼竿（长度、功率、调性、材料）
+- 渔轮（型号、拖力值、速比、海水评级）
+- 主线（类型、磅数、直径）
+- 前导线（材料、磅数、长度）
+- 钓组类型（鱼发现者、高低钩、卡罗莱纳等）
+- 铅坠（类型、重量范围）
+- 钓钩（款式、号数范围）
+- 饵料推荐
 
-**FR-8** Maintenance Notifications  
-The app shall send local push notifications when maintenance is due:
-- "Your [Reel Name] has 12 saltwater sessions since last service — time to rinse and re-grease"
-- Notifications scheduled locally, no server required
-- User can snooze (7 days) or mark complete
+**FR-2** 装备兼容性检查  
+应用应验证用户选择的装备组合并标记不兼容项：
+- 竿功率 vs 轮型号不匹配
+- 线重量超出竿额定值
+- 轮线容量不足以容纳所选线
+- 铅坠重量超出竿抛投重量范围
 
-**FR-9** Lifespan Tracking  
-The app shall display:
-- Total sessions logged per item
-- Estimated remaining lifespan (based on typical lifespan for gear type)
-- Maintenance history log
-- Cost-per-session calculation
+**FR-3** 装备对比  
+应用应允许从装备数据库中选择最多 3 件物品进行并排对比，使用远投钓鱼特定标准：
+- 抗腐蚀评级
+- 抛投距离性能
+- 重量
+- 拖力系统（密封 vs 开放）
+- 价格档次
 
----
+**FR-4** 装备数据库  
+应用应包含一个打包的 SQLite 数据库：
+- 鱼竿：品牌、型号、长度、功率、调性、材料、抛投重量、线评级、价格档次、抗腐蚀评级
+- 渔轮：品牌、型号、型号大小、速比、最大拖力、线容量、重量、密封类型、价格档次
+- 钓线：品牌、类型（尼龙/编织/碳素）、磅数、直径、颜色、价格档次
+- 末端配件：钓钩、铅坠、转环、前导线按类型和规格
+- 启动时最少 200+ 竿、150+ 轮、100+ 线
 
-### 2.3 Session Planner
-
-**FR-10** Tide Predictions  
-The app shall compute tide predictions offline using:
-- NOAA harmonic constants for tide stations (bundled)
-- Standard harmonic tide prediction algorithm
-- Display: tide height graph (24h and 7-day views), high/low times, tide state (rising/falling/slack)
-- Accuracy: within 15 minutes and 0.3m of published predictions for primary stations
-
-**FR-11** Moon Phase & Solunar  
-The app shall compute and display:
-- Current moon phase with illumination percentage
-- Moon rise/set times
-- Solunar major and minor feeding periods
-- All computed from astronomical algorithms (Jean Meeus method or equivalent)
-- No network required
-
-**FR-12** Sunrise/Sunset  
-The app shall compute and display:
-- Sunrise, sunset, and twilight times for the selected location
-- Computed from standard solar position algorithms
-- Golden hour indicators (first/last light)
-
-**FR-13** Beach Database  
-The app shall include a pre-loaded database of popular surf casting beaches:
-- Minimum 500 beaches at launch covering: US East Coast, US West Coast, Gulf Coast, UK, Australia, New Zealand, South Africa
-- Each entry: name, coordinates, nearest tide station, beach type (sandy/rocky/jetty), typical target species
-- User can add custom locations by dropping a pin on a map (offline map tiles or coordinate entry)
-
-**FR-14** Session Dashboard  
-The app shall present a unified view for a selected beach and date showing:
-- Tide graph with current position highlighted
-- Moon phase icon and solunar periods overlaid
-- Sunrise/sunset markers
-- "Best windows" highlighted (solunar major periods during tide transitions)
+数据库更新仅通过 App Store 版本发布。
 
 ---
 
-### 2.4 General / Cross-Cutting
+### 2.2 维护追踪器
 
-**FR-15** Onboarding  
-The app shall provide a 3-screen onboarding flow on first launch:
-1. "Configure your perfect setup" — entry to Gear Wizard
-2. "Track your gear health" — entry to add first item
-3. "Plan your next session" — entry to Session Planner
+**FR-5** 装备库存  
+应用应允许用户：
+- 向个人库存添加装备（手动输入或从装备数据库选择）
+- 记录购买日期和购买价格
+- 分配照片（从相机或相册）
+- 标记物品为活跃、存储或退役
 
-User can skip onboarding entirely.
+**FR-6** 使用日志  
+应用应允许用户记录装备使用情况：
+- 使用日期
+- 环境（海水 / 半咸水 / 仅冲洗日）
+- 时长（可选）
+- 一键"今日已用"快速记录
 
-**FR-16** Data Persistence  
-All user data (inventory, usage logs, maintenance records, custom beaches) stored in local SQLite database on device. No cloud sync in V1.
+**FR-7** 维护调度  
+应用应基于以下条件生成维护提醒：
+- 自上次维护以来的使用次数
+- 自上次维护以来的天数
+- 装备类型特定的计划：
+  - 纺车轮：每 15 次海水使用或 90 天完整维护
+  - 竿导环：每 30 次检查
+  - 拖力垫片：每 10 次上油
+  - 换线：每 6 个月或 50 次使用
+- 计划存储在本地规则引擎中，可按物品配置
 
-**FR-17** Data Export  
-The app shall allow export of gear inventory and maintenance logs as CSV file via system share sheet.
+**FR-8** 维护通知  
+应用应在维护到期时发送本地推送通知：
+- "您的 [渔轮名称] 自上次维护以来已使用 12 次海水——是时候清洗和重新上油了"
+- 通知在本地调度，无需服务器
+- 用户可推迟（7 天）或标记完成
 
-**FR-18** Units  
-The app shall support:
-- Metric (meters, kg, cm) and Imperial (feet, lbs, inches) unit systems
-- User selects preference in settings; persists across sessions
+**FR-9** 寿命追踪  
+应用应显示：
+- 每件物品的总使用次数
+- 预估剩余寿命（基于装备类型的典型寿命）
+- 维护历史日志
+- 每次使用成本计算
 
 ---
 
-## 3. Non-Functional Requirements
+### 2.3 装备生命周期管理（V2）
 
-**NFR-1** Offline-First Architecture  
-The app shall function with zero network connectivity. No feature shall require internet access. No network calls shall be made under any circumstance.
+**FR-19** 保修追踪  
+应用应允许用户记录和追踪装备保修信息：
+- 保修开始日期（默认为购买日期）
+- 保修时长（月）
+- 保修提供商 / 零售商名称
+- 保修条款摘要（自由文本）
+- 自动计算保修到期日期
+- 到期前 30 天和 7 天发送本地推送通知
+- 保修状态指示器：有效（绿色）/ 即将到期（黄色）/ 已过期（红色）
 
-**NFR-2** Performance  
-- App cold start: < 3 seconds on mid-range device (2022+ iPhone SE / Galaxy A53 class)
-- Gear wizard recommendation: < 1 second
-- Tide computation for 7-day view: < 500ms
-- Database query (gear search/filter): < 200ms
+**FR-20** 收据与文档存储  
+应用应允许用户为装备附加购买文档：
+- 收据照片（从相机或相册）
+- 每件物品支持多张照片（收据正反面、发票、保修卡）
+- 照片本地存储在应用文档目录
+- 可全屏查看并缩放
+- 可作为数据导出的一部分导出（FR-17）
 
-**NFR-3** Storage  
-- App bundle size (including all databases): target < 100MB
-- User data growth: negligible (text-only logs)
+**FR-21** 维护成本追踪  
+应用应允许用户记录每次维护事件的费用：
+- 费用金额（零件 + 人工）
+- 费用类别：自行维护 / 专业服务 / 零件更换
+- 服务商名称（可选）
+- 备注（可选）
+- 费用与特定维护日志条目关联
 
-**NFR-4** Platform Support  
+**FR-22** 总拥有成本(TCO)分析  
+应用应计算并显示每件装备的：
+- 购买价格
+- 累计维护费用
+- 总拥有成本（购买 + 所有维护）
+- 每次使用成本（TCO ÷ 总使用次数）
+- 按月/年维护支出明细
+- 跨装备对比（哪个维护成本最高）
+
+**FR-23** 装备折旧与估值  
+应用应为装备估算当前市场价值：
+- 折旧公式基于：装备类型、年龄、使用次数、海水暴露率、维护记录质量
+- 内置参考数据：
+  - 鱼竿：8-12 年寿命，首年贬值 12-18%，之后每年 5-8%
+  - 渔轮：6-10 年寿命，首年贬值 16-24%，之后每年 7-11%
+  - 电子设备：4-7 年寿命，首年贬值 24-35%
+- 维护良好的装备贬值率降低（激励维护）
+- 显示：原价、当前估值、保值率%、已贬值金额
+- 全部计算离线进行，使用打包的折旧表
+
+**FR-24** 零件级追踪  
+应用应支持追踪装备内的单个子组件：
+- 渔轮组件：轴承、拖力垫片、导线轮、主齿轮、逆止器
+- 鱼竿组件：导环、竿尖、轮座、握把/软木
+- 每个组件追踪：安装日期、使用次数（继承自父装备）、更换历史
+- 每个组件独立维护计划
+- 组件更换成本计入 TCO（FR-22）
+
+**FR-25** 维护教程库  
+应用应包含打包的维护指南：
+- 按装备类型和维护任务组织
+- 步骤说明配工具需求
+- 推荐维护间隔
+- 内容离线打包，通过 App Store 发布更新
+- 最低覆盖：纺车轮维护、鼓轮维护、导环检查、拖力垫片更换、换线、轴承清洗
+
+**FR-26** 维修状态追踪  
+应用应追踪送去专业维修的装备：
+- 状态流转：使用中 → 已送修 → 维修中 → 已取回
+- 记录：服务商、送出日期、预计返回日期、实际返回日期、费用
+- 每件装备可查看维修历史
+- 标记为"维修中"的装备从使用快速记录选择中排除
+
+---
+
+### 2.4 出行规划器
+
+**FR-10** 潮汐预测  
+应用应使用以下方式离线计算潮汐预测：
+- NOAA 潮汐站谐波常数（打包）
+- 标准谐波潮汐预测算法
+- 显示：潮高图（24 小时和 7 天视图）、高低潮时间、潮汐状态（涨/落/平）
+- 精度：主站点与公布预测相差在 15 分钟和 0.3m 以内
+
+**FR-11** 月相与日月鱼活跃期  
+应用应计算并显示：
+- 当前月相及照明百分比
+- 月出/月落时间
+- 日月鱼活跃期主要和次要期
+- 全部通过天文算法计算（Jean Meeus 方法或等效方法）
+- 无需网络
+
+**FR-12** 日出/日落  
+应用应计算并显示：
+- 所选位置的日出、日落和曙暮光时间
+- 通过标准太阳位置算法计算
+- 黄金时段指示器（晨光/暮光）
+
+**FR-13** 海滩数据库  
+应用应包含预加载的热门远投钓鱼海滩数据库：
+- 启动时最少 500 个海滩，覆盖：美国东海岸、西海岸、墨西哥湾、英国、澳大利亚、新西兰、南非
+- 每条记录：名称、坐标、最近潮汐站、海滩类型（沙/岩/堤）、典型目标鱼种
+- 用户可通过坐标输入添加自定义位置
+
+**FR-14** 出行仪表板  
+应用应为所选海滩和日期呈现统一视图：
+- 潮高图并高亮当前位置
+- 月相图标和日月鱼活跃期叠加
+- 日出/日落标记
+- 高亮"最佳窗口"（日月鱼活跃主要期与潮汐转换重合）
+
+---
+
+### 2.5 通用 / 横切功能
+
+**FR-15** 引导流程  
+应用应在首次启动时提供 3 屏引导流程：
+1. "配置你的完美装备" — 进入装备向导
+2. "追踪装备健康" — 进入添加第一件物品
+3. "规划下次出行" — 进入出行规划器
+
+用户可完全跳过引导。
+
+**FR-16** 数据持久化  
+所有用户数据（库存、使用日志、维护记录、自定义海滩）存储在设备本地 SQLite 数据库中。
+
+**FR-17** 数据导出  
+应用应允许通过系统分享面板将装备库存和维护日志导出为 CSV 文件。
+
+**FR-18** 单位系统  
+应用应支持：
+- 公制（米、千克、厘米）和英制（英尺、磅、英寸）单位系统
+- 用户在设置中选择偏好；跨会话持久化
+
+---
+
+## 3. 非功能需求
+
+**NFR-1** 离线优先架构  
+应用应在零网络连接下完全工作。没有功能需要互联网。不得在任何情况下发起网络调用。
+
+**NFR-2** 性能  
+- 应用冷启动：中端设备（2022+ iPhone SE / Galaxy A53 级别）< 3 秒
+- 装备向导推荐：< 1 秒
+- 7 天潮汐计算：< 500ms
+- 数据库查询（装备搜索/筛选）：< 200ms
+
+**NFR-3** 存储  
+- 应用包大小（包含所有数据库和教程内容）：目标 < 120MB
+- 用户数据增长：中等（收据照片本地存储，~200KB-1MB 每张）
+
+**NFR-4** 平台支持  
 - iOS 15.0+
 - Android 8.0+ (API 26)
-- Flutter 3.x stable channel
+- Flutter 3.x 稳定频道
 
-**NFR-5** Accessibility  
-- VoiceOver (iOS) and TalkBack (Android) support for all screens
-- Minimum touch target 44x44pt
-- Dynamic text sizing support
-- Sufficient color contrast (WCAG AA)
+**NFR-5** 无障碍  
+- 所有页面支持 VoiceOver（iOS）和 TalkBack（Android）
+- 最小触摸目标 44x44pt
+- 支持动态文本大小
+- 足够的颜色对比度（WCAG AA）
 
-**NFR-6** Localization  
-- V1: English only
-- Architecture shall support future localization (string externalization)
+**NFR-6** 本地化  
+- 当前：仅英文
+- 架构应支持未来本地化（字符串外部化）
 
-**NFR-7** Data Integrity  
-- Local database shall be resilient to app crashes (WAL mode SQLite)
-- Gear database shall be read-only (app bundle); user data in separate writable DB
-
----
-
-## 4. Technical Constraints
-
-| Constraint | Detail |
-|-----------|--------|
-| Framework | Flutter (Dart) |
-| Local DB | SQLite via drift or sqflite package |
-| Tide Algorithm | Harmonic analysis (T_TIDE port or custom Dart implementation) |
-| Astronomical | Jean Meeus algorithms for moon/sun position |
-| Map (custom pins) | Offline-capable — coordinate input or bundled lightweight tile set |
-| Notifications | flutter_local_notifications (no FCM, no server) |
-| State Management | [ASSUMPTION] Riverpod or Bloc — to be decided in architecture |
-| No network permissions | App shall not request network permission on either platform |
+**NFR-7** 数据完整性  
+- 本地数据库应对应用崩溃具有弹性（WAL 模式 SQLite）
+- 装备数据库为只读（应用包）；用户数据在独立可写 DB 中
 
 ---
 
-## 5. Out of Scope (V1)
+## 4. 技术约束
 
-- Any network connectivity or API calls
-- Real-time weather, wind, or swell data
-- Social/community features
-- Catch logging or fish diary
-- Monetization (subscription, ads, IAP, affiliate)
-- Cloud sync or backup
-- Hardware integrations
-- Multi-language support
-- AI/ML features
-
----
-
-## 6. Open Questions
-
-1. **Offline map for custom pin:** Use bundled lightweight world map tiles (increases app size ~30-50MB) or simple coordinate entry with no visual map? Trade-off: UX vs bundle size.
-2. **Tide station coverage:** NOAA covers US coasts. For UK/Australia/NZ/South Africa, need equivalent harmonic data sources (UKHO, BOM, LINZ). Licensing status to be confirmed.
-3. **State management:** Riverpod vs Bloc — decide during architecture phase.
-4. **Gear database initial seeding:** Manual curation vs scraping public sources. Effort estimate needed.
+| 约束 | 详情 |
+|------|------|
+| 框架 | Flutter (Dart) |
+| 本地数据库 | SQLite via Drift |
+| 潮汐算法 | 谐波分析（T_TIDE 移植或自定义 Dart 实现） |
+| 天文计算 | Jean Meeus 算法计算月球/太阳位置 |
+| 通知 | flutter_local_notifications（无 FCM，无服务器） |
+| 状态管理 | GetX |
+| 照片选取 | image_picker（相机 + 相册） |
+| 时区 | timezone 包（本地通知调度） |
+| 无网络权限 | 应用不得在任何平台请求网络权限 |
 
 ---
 
-## 7. Future Considerations (Post-V1)
+## 5. 排除范围
 
-- Pro subscription with expanded gear database and advanced features
-- Real-time weather/swell integration (requires network permission)
-- Affiliate links to gear retailers
-- Catch logging with condition correlation
-- Cloud backup/sync
-- Asia-Pacific localization
-- Hardware partnerships (smart rods, casting distance sensors)
+- 任何网络连接或 API 调用
+- 实时天气、风或浪涌数据
+- 社交/社区功能
+- 渔获日志或鱼类日记
+- 商业化（订阅、广告、IAP、联盟）
+- 云同步或备份
+- 硬件集成
+- 多语言支持
+- AI/ML 功能（照片识别、AI 推荐）
+- 实时市场价格查询（使用离线公式）
+
+---
+
+## 6. 待定问题
+
+1. **离线地图**：使用打包的轻量级世界地图瓦片（增加应用大小 ~30-50MB）还是简单坐标输入无视觉地图？权衡：用户体验 vs 包大小。
+2. **潮汐站覆盖**：NOAA 覆盖美国海岸。英国/澳大利亚/新西兰/南非需要等效谐波数据源（UKHO、BOM、LINZ）。许可状态待确认。
+3. **装备数据库初始填充**：手动策划 vs 爬取公开来源。工作量估算待定。
+
+---
+
+## 7. 未来考虑（V2 之后）
+
+- Pro 订阅：扩展装备数据库和高级功能
+- 实时天气/浪涌集成（需要网络权限）
+- 联盟链接到装备零售商
+- 渔获日志与条件关联
+- 云备份/同步
+- 亚太本地化
+- 硬件合作（智能竿、抛投距离传感器）
+- AI 驱动的照片装备识别（拍照入库）
+- 实时市场价格查询
+- 保险报告 PDF 导出（含照片）
+- 季节性预检清单（自动生成）
+- 维修 vs 更换决策辅助

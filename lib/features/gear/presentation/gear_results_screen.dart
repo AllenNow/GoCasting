@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../core/database/reference_db.dart';
+import '../../../l10n/l10n.dart';
 import '../domain/recommendation_engine.dart';
 import '../providers/gear_wizard_controller.dart';
 
@@ -47,7 +48,7 @@ class GearResultsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Recommendations'),
+        title: Text(context.tr.recommendations),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Get.back(),
@@ -78,7 +79,7 @@ class _ResultsBody extends StatelessWidget {
       children: [
         _SectionCard(icon: Icons.straighten, title: 'Rod', children: [
           if (recommendation.rods.isEmpty)
-            const Text('No matching rods found')
+            Text(context.tr.noMatchingRods)
           else
             ...recommendation.rods.map((rod) => _GearItem(
                   title: '${rod.brand} ${rod.model}',
@@ -89,7 +90,7 @@ class _ResultsBody extends StatelessWidget {
         const SizedBox(height: 12),
         _SectionCard(icon: Icons.settings_backup_restore, title: 'Reel', children: [
           if (recommendation.reels.isEmpty)
-            const Text('No matching reels found')
+            Text(context.tr.noMatchingReels)
           else
             ...recommendation.reels.map((reel) => _GearItem(
                   title: '${reel.brand} ${reel.model}',

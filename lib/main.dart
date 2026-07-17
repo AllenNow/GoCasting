@@ -5,12 +5,16 @@ import 'package:get/get.dart';
 import 'app/routes.dart';
 import 'app/theme.dart';
 import 'app/bindings.dart';
+import 'core/map/amap_service.dart';
+import 'core/notifications/notification_service.dart';
 import 'core/settings/locale_provider.dart';
 import 'l10n/app_localizations.dart';
 import 'l10n/l10n.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService.instance.initialize();
+  await AMapService.instance.initialize();
   runApp(const GoCastingApp());
 }
 
@@ -23,6 +27,8 @@ class GoCastingApp extends StatelessWidget {
       title: 'GoCasting',
       navigatorKey: S.navigatorKey,
       theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: ThemeMode.system, // 跟随系统暗色模式
       debugShowCheckedModeBanner: false,
       initialRoute: AppRoutes.gear,
       getPages: AppPages.pages,
