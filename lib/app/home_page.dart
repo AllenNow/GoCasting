@@ -48,7 +48,7 @@ class HomePage extends StatelessWidget {
               NavigationDestination(
                 icon: const Icon(Icons.home_outlined),
                 selectedIcon: const Icon(Icons.home),
-                label: context.tr.tabGear == 'Gear' ? 'Home' : '首页',
+                label: context.tr.tabHome,
               ),
               NavigationDestination(
                 icon: const Icon(Icons.build_outlined),
@@ -58,7 +58,7 @@ class HomePage extends StatelessWidget {
               NavigationDestination(
                 icon: const Icon(Icons.phishing_outlined),
                 selectedIcon: const Icon(Icons.phishing),
-                label: context.tr.tabGear == 'Gear' ? 'Catches' : '渔获',
+                label: context.tr.tabCatches,
               ),
               NavigationDestination(
                 icon: const Icon(Icons.water_outlined),
@@ -68,7 +68,7 @@ class HomePage extends StatelessWidget {
               NavigationDestination(
                 icon: const Icon(Icons.person_outlined),
                 selectedIcon: const Icon(Icons.person),
-                label: context.tr.tabGear == 'Gear' ? 'Me' : '我的',
+                label: context.tr.tabMe,
               ),
             ],
           ),

@@ -12,13 +12,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appTitle => 'GoCasting';
 
   @override
+  String get tabHome => '首页';
+
+  @override
   String get tabGear => '装备';
+
+  @override
+  String get tabCatches => '渔获';
 
   @override
   String get tabMaintenance => '维护';
 
   @override
   String get tabPlanner => '规划';
+
+  @override
+  String get tabMe => '我的';
 
   @override
   String get gearIntelligence => '装备智能';

@@ -104,11 +104,23 @@ abstract class AppLocalizations {
   /// **'GoCasting'**
   String get appTitle;
 
+  /// No description provided for @tabHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get tabHome;
+
   /// No description provided for @tabGear.
   ///
   /// In en, this message translates to:
   /// **'Gear'**
   String get tabGear;
+
+  /// No description provided for @tabCatches.
+  ///
+  /// In en, this message translates to:
+  /// **'Catches'**
+  String get tabCatches;
 
   /// No description provided for @tabMaintenance.
   ///
@@ -121,6 +133,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Planner'**
   String get tabPlanner;
+
+  /// No description provided for @tabMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Me'**
+  String get tabMe;
 
   /// No description provided for @gearIntelligence.
   ///

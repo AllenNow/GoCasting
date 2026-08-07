@@ -12,13 +12,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'GoCasting';
 
   @override
+  String get tabHome => 'Home';
+
+  @override
   String get tabGear => 'Gear';
+
+  @override
+  String get tabCatches => 'Catches';
 
   @override
   String get tabMaintenance => 'Maintenance';
 
   @override
   String get tabPlanner => 'Planner';
+
+  @override
+  String get tabMe => 'Me';
 
   @override
   String get gearIntelligence => 'Gear Intelligence';

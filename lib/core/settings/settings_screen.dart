@@ -10,6 +10,7 @@ import '../roles/role_controller.dart';
 import '../roles/role_selection_screen.dart';
 import '../../l10n/l10n.dart';
 import 'locale_controller.dart';
+import 'privacy_policy_screen.dart';
 import 'settings_controller.dart';
 import 'units.dart';
 
@@ -131,6 +132,13 @@ class _SettingsBody extends StatelessWidget {
           leading: Icon(Icons.wifi_off),
           title: Text('Fully Offline'),
           subtitle: Text('No internet connection required.'),
+        ),
+        ListTile(
+          leading: const Icon(Icons.privacy_tip_outlined),
+          title: const Text('隐私政策'),
+          subtitle: const Text('Privacy Policy'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Get.to(() => const PrivacyPolicyScreen()),
         ),
       ],
     );

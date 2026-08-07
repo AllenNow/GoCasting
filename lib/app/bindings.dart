@@ -11,8 +11,12 @@ import '../features/maintenance/data/maintenance_repository.dart';
 class InitialBinding extends Bindings {
   @override
   void dependencies() {
-    // 数据库 — 同步注册（Drift 内部使用 LazyDatabase，实际打开是延迟的）
-    Get.put<ReferenceDatabase>(ReferenceDatabase(), permanent: true);
+    // ReferenceDatabase 已在 main.dart 中预初始化并注册，这里仅在未注册时兜底
+    if (!Get.isRegistered<ReferenceDatabase>()) {
+      Get.put<ReferenceDatabase>(ReferenceDatabase(), permanent: true);
+    }
+
+    // 用户数据库
     Get.put<UserDatabase>(UserDatabase(), permanent: true);
 
     // 维护仓库

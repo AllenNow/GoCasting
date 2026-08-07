@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
-import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -106,27 +105,33 @@ class ReferenceDatabase extends _$ReferenceDatabase {
   ReferenceDatabase() : super(_openReferenceDb());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
-  // 参考数据库是只读的，无需迁移策略
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) async {
+          await m.createAll();
+        },
+        onUpgrade: (m, from, to) async {
+          // 参考数据库升级时重建所有表，seeder 重新填充
+          if (from < 2) {
+            for (final table in allTables) {
+              await m.deleteTable(table.actualTableName);
+            }
+            await m.createAll();
+          }
+        },
+        beforeOpen: (details) async {
+          await customStatement('PRAGMA journal_mode=WAL');
+        },
+      );
 }
 
-/// 打开参考数据库 — 从 assets 复制到本地（只读）
+/// 打开参考数据库 — 本地可写文件，由 seeder 负责填充数据
 LazyDatabase _openReferenceDb() {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dbFolder.path, 'reference.db'));
-
-    // 如果数据库不存在，从 assets 复制
-    if (!await file.exists()) {
-      // 从 App Bundle 加载预构建的数据库文件
-      final blob = await rootBundle.load('assets/db/reference.db');
-      final buffer = blob.buffer;
-      await file.writeAsBytes(
-        buffer.asUint8List(blob.offsetInBytes, blob.lengthInBytes),
-      );
-    }
-
+    final file = File(p.join(dbFolder.path, 'reference_v2.db'));
     return NativeDatabase.createInBackground(file);
   });
 }

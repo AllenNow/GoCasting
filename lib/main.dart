@@ -5,6 +5,8 @@ import 'package:get/get.dart';
 import 'app/routes.dart';
 import 'app/theme.dart';
 import 'app/bindings.dart';
+import 'core/database/reference_db.dart';
+import 'core/database/reference_seeder.dart';
 import 'core/map/amap_service.dart';
 import 'core/notifications/notification_service.dart';
 import 'core/settings/locale_provider.dart';
@@ -15,6 +17,13 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await NotificationService.instance.initialize();
   await AMapService.instance.initialize();
+
+  // 参考数据库初始化 — 首次启动时从 JSON 填充数据
+  final refDb = ReferenceDatabase();
+  await ReferenceSeeder(refDb).seedIfEmpty();
+  // 将已初始化的实例注册到 GetX（bindings 中会跳过重复注册）
+  Get.put<ReferenceDatabase>(refDb, permanent: true);
+
   runApp(const GoCastingApp());
 }
 

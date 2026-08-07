@@ -16,6 +16,7 @@ import '../features/maintenance/presentation/add_gear_screen.dart';
 import '../features/maintenance/presentation/gear_detail_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
 import '../core/settings/settings_screen.dart';
+import '../core/settings/privacy_policy_screen.dart';
 import 'home_page.dart';
 
 /// 路由名称常量
@@ -39,6 +40,7 @@ abstract class AppRoutes {
   static const funHub = '/fun';
   static const maintenanceAdd = '/maintenance/add';
   static const maintenanceDetail = '/maintenance/detail';
+  static const privacyPolicy = '/privacy-policy';
 }
 
 /// 路由页面配置
@@ -66,5 +68,6 @@ class AppPages {
         gearId: int.parse(Get.parameters['id'] ?? '0'),
       ),
     ),
+    GetPage(name: AppRoutes.privacyPolicy, page: () => const PrivacyPolicyScreen()),
   ];
 }

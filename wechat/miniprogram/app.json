@@ -1,0 +1,44 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/catch-log/catch-log",
+    "pages/spot-map/spot-map",
+    "pages/profile/profile"
+  ],
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#1a7f5a",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "渔获",
+        "iconPath": "images/tab/catch.png",
+        "selectedIconPath": "images/tab/catch-active.png"
+      },
+      {
+        "pagePath": "pages/spot-map/spot-map",
+        "text": "钓点",
+        "iconPath": "images/tab/map.png",
+        "selectedIconPath": "images/tab/map-active.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "images/tab/profile.png",
+        "selectedIconPath": "images/tab/profile-active.png"
+      }
+    ]
+  },
+  "window": {
+    "backgroundColor": "#f4f6f4",
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#1a7f5a",
+    "navigationBarTitleText": "GoCasting",
+    "navigationBarTextStyle": "white"
+  },
+  "sitemapLocation": "sitemap.json",
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents"
+}

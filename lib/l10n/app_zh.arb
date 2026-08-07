@@ -1,9 +1,12 @@
 {
   "@@locale": "zh",
   "appTitle": "GoCasting",
+  "tabHome": "首页",
   "tabGear": "装备",
+  "tabCatches": "渔获",
   "tabMaintenance": "维护",
   "tabPlanner": "规划",
+  "tabMe": "我的",
 
   "gearIntelligence": "装备智能",
   "gearIntelligenceDesc": "配置你的完美远投钓组",

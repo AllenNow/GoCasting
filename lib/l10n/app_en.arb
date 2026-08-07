@@ -1,9 +1,12 @@
 {
   "@@locale": "en",
   "appTitle": "GoCasting",
+  "tabHome": "Home",
   "tabGear": "Gear",
+  "tabCatches": "Catches",
   "tabMaintenance": "Maintenance",
   "tabPlanner": "Planner",
+  "tabMe": "Me",
 
   "gearIntelligence": "Gear Intelligence",
   "gearIntelligenceDesc": "Configure your perfect surf casting setup",
