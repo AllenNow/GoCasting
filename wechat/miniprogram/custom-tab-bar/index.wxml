@@ -1,0 +1,15 @@
+<!-- custom-tab-bar/index.wxml -->
+<view class="tab-bar">
+  <view class="tab-bar-border"></view>
+  <view
+    wx:for="{{ list }}"
+    wx:key="pagePath"
+    class="tab-bar-item {{ selected === index ? 'tab-bar-item--active' : '' }}"
+    bindtap="onTap"
+    data-index="{{ index }}"
+    data-path="{{ item.pagePath }}"
+  >
+    <text class="tab-icon">{{ selected === index ? item.iconActive : item.icon }}</text>
+    <text class="tab-label">{{ item.text }}</text>
+  </view>
+</view>

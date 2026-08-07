@@ -104,7 +104,7 @@
         </view>
         <view class="catch-meta">
           <text wx:if="{{ item.weight_g }}" class="catch-weight">
-            {{ item.weight_g >= 1000 ? (item.weight_g / 1000).toFixed(1) + 'kg' : item.weight_g + 'g' }}
+            {{ item.weight_g >= 1000 ? item.weightKg + 'kg' : item.weight_g + 'g' }}
           </text>
           <text wx:if="{{ item.location }}" class="catch-location">📍{{ item.location }}</text>
         </view>

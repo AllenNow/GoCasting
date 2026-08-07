@@ -22,6 +22,10 @@ Page({
   },
 
   onShow() {
+    // 同步自定义 tabBar 高亮状态
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().init();
+    }
     // 每次切换回来刷新列表
     this.loadCatches();
   },
@@ -36,7 +40,10 @@ Page({
         .limit(20)
         .get();
 
-      const catches = res.data;
+      const catches = res.data.map(c => ({
+        ...c,
+        weightKg: c.weight_g ? (c.weight_g / 1000).toFixed(1) : '',
+      }));
 
       // 计算统计
       const now = new Date();

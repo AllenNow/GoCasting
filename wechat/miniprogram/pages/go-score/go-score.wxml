@@ -61,7 +61,7 @@
             class="trend-bar {{ item.score >= 8 ? 'bar-great' : item.score >= 6 ? 'bar-good' : item.score >= 4 ? 'bar-ok' : 'bar-bad' }}"
             style="height:{{ 8 + item.score * 8 }}rpx;"
           ></view>
-          <text class="trend-hour">{{ item.hour.slice(0,2) }}</text>
+          <text class="trend-hour">{{ item.hourLabel }}</text>
         </view>
       </view>
     </scroll-view>

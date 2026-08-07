@@ -167,7 +167,12 @@ Page({
 
   onInput(e) {
     const field = e.currentTarget.dataset.field;
-    this.setData({ [`form.${field}`]: e.detail.value });
+    const value = e.detail.value;
+    this.setData({ [`form.${field}`]: value });
+    // 重量输入时同步计算 kg 显示
+    if (field === 'weight_g' && value) {
+      this.setData({ 'form.weightKg': (Number(value) / 1000).toFixed(2) });
+    }
   },
 
   onDateChange(e) {

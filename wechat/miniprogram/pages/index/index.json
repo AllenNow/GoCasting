@@ -1,5 +1,4 @@
 {
   "navigationBarTitleText": "GoCasting",
-  "enablePullDownRefresh": true,
-  "backgroundRefreshType": "both"
+  "enablePullDownRefresh": true
 }

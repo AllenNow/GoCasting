@@ -40,7 +40,7 @@
     </view>
     <view class="panel-body">
       <text class="coord-hint">
-        📍 {{ tapLat ? tapLat.toFixed(5) : '' }}, {{ tapLon ? tapLon.toFixed(5) : '' }}
+        📍 {{ tapLatStr }}, {{ tapLonStr }}
       </text>
       <input
         class="panel-input"
@@ -82,7 +82,7 @@
           {{ selectedSpot.is_public ? '🌐 公开' : '🔒 私有' }}
         </view>
         <text class="spot-coord">
-          {{ selectedSpot.lat.toFixed(4) }}, {{ selectedSpot.lon.toFixed(4) }}
+          {{ selectedSpot.latStr }}, {{ selectedSpot.lonStr }}
         </text>
       </view>
       <view class="spot-actions">

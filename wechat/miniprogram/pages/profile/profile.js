@@ -26,6 +26,9 @@ Page({
   },
 
   onShow() {
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().init();
+    }
     this.loadStats();
   },
 
@@ -91,11 +94,15 @@ Page({
           totalCatches: catches.length,
           totalSpecies: speciesSet.size,
           totalWeight_g: totalWeight,
+          totalWeightKg: (totalWeight / 1000).toFixed(1),
           releasedCount: released,
           topSpecies,
           thisYear: yearCount,
         },
-        recentCatches: catches.slice(0, 3),
+        recentCatches: catches.slice(0, 3).map(c => ({
+          ...c,
+          weightKg: c.weight_g ? (c.weight_g / 1000).toFixed(1) : '',
+        })),
         badges,
         monthlyData,
         maxMonthCount,

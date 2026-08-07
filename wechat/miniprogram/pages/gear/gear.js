@@ -26,13 +26,19 @@ Page({
     reelBrands: REEL_BRANDS,
     rodBrands:  ROD_BRANDS,
     priceTiers: PRICE_TIERS,
-    seeded: true,     // 乐观假设；loadReels 后若为空则设 false
+    seeded: false,    // 默认未初始化，loadReels 后若有数据则设 true
     loading: false,
   },
 
   onLoad() {
     this.loadReels();
     this.loadRods();
+  },
+
+  onShow() {
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().init();
+    }
   },
 
   onPullDownRefresh() {
@@ -56,6 +62,7 @@ Page({
       this.filterReels();
     } catch (err) {
       console.error('加载渔轮失败', err);
+      this.setData({ seeded: false });
     }
   },
 

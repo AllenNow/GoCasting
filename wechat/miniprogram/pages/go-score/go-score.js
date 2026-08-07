@@ -92,6 +92,7 @@ function buildHourlyScores(weather) {
     const s  = calcGoScore(ts, weather, mp, hour);
     scores.push({
       hour: `${String(hour).padStart(2, '0')}:00`,
+      hourLabel: String(hour).padStart(2, '0'),
       score: s,
       tideIcon: ts === 'rising' ? '🌊' : ts === 'falling' ? '↘️' : ts === 'high' ? '⬆️' : '⬇️',
       offset: i,

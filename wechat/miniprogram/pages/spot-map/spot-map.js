@@ -32,6 +32,12 @@ Page({
     this.getMyLocation();
   },
 
+  onShow() {
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().init();
+    }
+  },
+
   // 加载所有公开钓点 + 自己的私有钓点
   async loadSpots() {
     this.setData({ loading: true });
@@ -114,8 +120,13 @@ Page({
     const markerId = e.detail.markerId;
     const marker = this.data.markers.find(m => m.id === markerId);
     if (!marker) return;
+    const spot = marker._spotData;
     this.setData({
-      selectedSpot: marker._spotData,
+      selectedSpot: {
+        ...spot,
+        latStr: spot.lat.toFixed(4),
+        lonStr: spot.lon.toFixed(4),
+      },
       showDetailPanel: true,
       showAddPanel: false,
     });
@@ -127,6 +138,8 @@ Page({
     this.setData({
       tapLat: latitude,
       tapLon: longitude,
+      tapLatStr: latitude.toFixed(5),
+      tapLonStr: longitude.toFixed(5),
       'newSpot.lat': latitude,
       'newSpot.lon': longitude,
       showAddPanel: true,

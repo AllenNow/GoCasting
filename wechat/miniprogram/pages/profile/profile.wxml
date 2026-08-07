@@ -49,7 +49,7 @@
       <view class="highlight-item">
         <text class="highlight-label">累计钓获</text>
         <text class="highlight-value green">
-          {{ stats.totalWeight_g >= 1000 ? (stats.totalWeight_g / 1000).toFixed(1) + ' kg' : stats.totalWeight_g + ' g' }}
+          {{ stats.totalWeight_g >= 1000 ? stats.totalWeightKg + ' kg' : stats.totalWeight_g + ' g' }}
         </text>
       </view>
     </view>
@@ -81,7 +81,7 @@
       <view class="recent-top">
         <text class="recent-species">{{ item.species }}</text>
         <text wx:if="{{ item.weight_g }}" class="recent-weight">
-          {{ item.weight_g >= 1000 ? (item.weight_g / 1000).toFixed(1) + 'kg' : item.weight_g + 'g' }}
+          {{ item.weight_g >= 1000 ? item.weightKg + 'kg' : item.weight_g + 'g' }}
         </text>
       </view>
       <view class="recent-meta">
