@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "天气 & 潮汐",
+  "navigationBarBackgroundColor": "#1a7f5a",
+  "navigationBarTextStyle": "white",
+  "enablePullDownRefresh": true
+}

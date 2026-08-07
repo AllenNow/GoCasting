@@ -7,7 +7,7 @@ App({
     }
     wx.cloud.init({
       // 填入你的云开发环境 ID（在微信开发者工具 → 云开发控制台获取）
-      env: 'gocasting-prod',
+      env: 'cloud1-d4gkci99i21e9bfe9',
       traceUser: true,
     });
 

@@ -1,0 +1,233 @@
+<!-- pages/catch-log/catch-log.wxml — 渔获记录表单 -->
+<view class="page-container">
+
+  <!-- 照片区域 -->
+  <view class="photo-section">
+    <view wx:if="{{ photoUrl }}" class="photo-preview-wrap" bindtap="changePhoto">
+      <image class="photo-preview" src="{{ photoUrl }}" mode="aspectFill" />
+      <view class="photo-edit-badge">更换</view>
+    </view>
+    <view wx:else class="photo-upload" bindtap="choosePhoto">
+      <text class="photo-icon">📷</text>
+      <text class="photo-hint">添加渔获照片</text>
+    </view>
+  </view>
+
+  <!-- 表单主体 -->
+  <view class="form-wrap">
+
+    <!-- 鱼种 -->
+    <view class="form-group">
+      <text class="form-label required">鱼种 *</text>
+      <view class="species-picker">
+        <picker
+          mode="selector"
+          range="{{ speciesList }}"
+          value="{{ speciesIndex }}"
+          bindchange="onSpeciesChange"
+        >
+          <view class="picker-row">
+            <text class="picker-value {{ speciesIndex >= 0 ? '' : 'picker-placeholder' }}">
+              {{ speciesIndex >= 0 ? speciesList[speciesIndex] : '选择鱼种' }}
+            </text>
+            <text class="picker-arrow">›</text>
+          </view>
+        </picker>
+      </view>
+      <!-- 自定义鱼种输入 -->
+      <view wx:if="{{ speciesIndex === speciesList.length - 1 }}" class="custom-input-wrap">
+        <input
+          class="form-input"
+          placeholder="输入鱼种名称"
+          value="{{ customSpecies }}"
+          bindinput="onCustomSpeciesInput"
+          maxlength="20"
+        />
+      </view>
+    </view>
+
+    <!-- 重量 -->
+    <view class="form-group">
+      <text class="form-label">重量（克）</text>
+      <view class="weight-row">
+        <input
+          class="form-input weight-input"
+          type="digit"
+          placeholder="例：1500"
+          value="{{ form.weight_g }}"
+          bindinput="onInput"
+          data-field="weight_g"
+          maxlength="6"
+        />
+        <view class="weight-unit-wrap">
+          <text class="weight-unit">g</text>
+          <text wx:if="{{ form.weight_g >= 1000 }}" class="weight-convert">
+            ≈ {{ form.weightKg }} kg
+          </text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 日期 -->
+    <view class="form-group">
+      <text class="form-label required">日期 *</text>
+      <picker mode="date" value="{{ form.date }}" bindchange="onDateChange">
+        <view class="picker-row">
+          <text class="picker-value">{{ form.date || '选择日期' }}</text>
+          <text class="picker-arrow">›</text>
+        </view>
+      </picker>
+    </view>
+
+    <!-- 时间 -->
+    <view class="form-group">
+      <text class="form-label">时间</text>
+      <picker mode="time" value="{{ form.time }}" bindchange="onTimeChange">
+        <view class="picker-row">
+          <text class="picker-value {{ form.time ? '' : 'picker-placeholder' }}">
+            {{ form.time || '选择时间' }}
+          </text>
+          <text class="picker-arrow">›</text>
+        </view>
+      </picker>
+    </view>
+
+    <!-- 位置 -->
+    <view class="form-group">
+      <text class="form-label">钓点位置</text>
+      <view class="location-row">
+        <input
+          class="form-input location-input"
+          placeholder="例：厦门观音山"
+          value="{{ form.location }}"
+          bindinput="onInput"
+          data-field="location"
+          maxlength="30"
+        />
+        <view class="location-btn" bindtap="getLocation">
+          <text>📍</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 饵料 -->
+    <view class="form-group">
+      <text class="form-label">饵料</text>
+      <view class="bait-tags">
+        <view
+          wx:for="{{ baitOptions }}"
+          wx:key="*this"
+          class="bait-tag {{ form.bait === item ? 'bait-tag-active' : '' }}"
+          bindtap="onBaitSelect"
+          data-bait="{{ item }}"
+        >{{ item }}</view>
+      </view>
+      <input
+        class="form-input"
+        placeholder="或输入自定义饵料"
+        value="{{ form.bait }}"
+        bindinput="onInput"
+        data-field="bait"
+        maxlength="20"
+        style="margin-top: 12rpx;"
+      />
+    </view>
+
+    <!-- 钓组 -->
+    <view class="form-group">
+      <text class="form-label">钓组</text>
+      <view class="rig-tags">
+        <view
+          wx:for="{{ rigOptions }}"
+          wx:key="*this"
+          class="rig-tag {{ form.rig_type === item ? 'rig-tag-active' : '' }}"
+          bindtap="onRigSelect"
+          data-rig="{{ item }}"
+        >{{ item }}</view>
+      </view>
+    </view>
+
+    <!-- 潮汐状态 -->
+    <view class="form-group">
+      <text class="form-label">潮汐状态</text>
+      <view class="tide-row">
+        <view
+          wx:for="{{ tideOptions }}"
+          wx:key="value"
+          class="tide-option {{ form.tide_state === item.value ? 'tide-option-active' : '' }}"
+          bindtap="onTideSelect"
+          data-tide="{{ item.value }}"
+        >
+          <text class="tide-icon">{{ item.icon }}</text>
+          <text class="tide-label">{{ item.label }}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 天气 -->
+    <view class="form-group">
+      <text class="form-label">天气</text>
+      <input
+        class="form-input"
+        placeholder="例：晴，东南风3级"
+        value="{{ form.weather }}"
+        bindinput="onInput"
+        data-field="weather"
+        maxlength="30"
+      />
+    </view>
+
+    <!-- 是否放流 -->
+    <view class="form-group release-row">
+      <view class="release-info">
+        <text class="form-label" style="margin-bottom:0">放流 🐟</text>
+        <text class="release-sub">记录放流有助于保护渔业资源</text>
+      </view>
+      <switch
+        checked="{{ form.released }}"
+        bindchange="onReleaseChange"
+        color="#1a7f5a"
+      />
+    </view>
+
+    <!-- 备注 -->
+    <view class="form-group">
+      <text class="form-label">备注</text>
+      <textarea
+        class="form-input notes-area"
+        placeholder="记录一些细节或感受…"
+        value="{{ form.notes }}"
+        bindinput="onInput"
+        data-field="notes"
+        maxlength="200"
+        auto-height
+      />
+    </view>
+
+  </view>
+
+  <!-- 底部操作按钮 -->
+  <view class="action-bar safe-bottom">
+    <view wx:if="{{ isEdit }}" class="btn-danger delete-btn" bindtap="deleteCatch">
+      删除
+    </view>
+    <view wx:if="{{ isEdit }}" class="share-icon-btn" bindtap="shareCard">
+      <text>📤</text>
+    </view>
+    <view
+      class="btn-primary save-btn {{ saving ? 'btn-disabled' : '' }}"
+      bindtap="saveCatch"
+    >
+      <text wx:if="{{ saving }}">保存中…</text>
+      <text wx:else>{{ isEdit ? '更新记录' : '保存渔获' }}</text>
+    </view>
+  </view>
+
+  <!-- 隐藏 Canvas（用于生成分享卡片）-->
+  <canvas
+    type="2d"
+    id="shareCanvas"
+    class="share-canvas-hidden"
+    canvas-id="shareCanvas"
+  />
+</view>

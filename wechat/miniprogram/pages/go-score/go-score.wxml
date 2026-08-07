@@ -1,0 +1,77 @@
+<!-- pages/go-score/go-score.wxml -->
+<view class="page-container">
+
+  <!-- 顶部大分数卡片 -->
+  <view class="score-hero">
+    <view class="score-date">{{ today }}</view>
+    <view wx:if="{{ loading }}" class="hero-loading">
+      <view class="sk sk-circle"></view>
+      <view class="sk sk-label" style="margin-top:16rpx;width:200rpx;height:32rpx;"></view>
+    </view>
+    <view wx:else class="hero-content">
+      <view class="big-score-wrap">
+        <text class="big-score" style="color:{{ scoreColor }}">{{ currentScore }}</text>
+        <text class="big-score-max">/10</text>
+      </view>
+      <text class="score-level" style="color:{{ scoreColor }}">{{ scoreLevel }}</text>
+      <text wx:if="{{ errorMsg }}" class="error-hint">⚠️ {{ errorMsg }}</text>
+    </view>
+  </view>
+
+  <!-- 4因子网格 -->
+  <view wx:if="{{ !loading }}" class="factors-card card">
+    <text class="card-title">评分因子</text>
+    <view class="factors-grid">
+      <view wx:for="{{ factors }}" wx:key="label" class="factor-item">
+        <text class="factor-icon">{{ item.icon }}</text>
+        <text class="factor-label">{{ item.label }}<text class="factor-weight"> {{ item.weight }}</text></text>
+        <text class="factor-desc">{{ item.desc }}</text>
+        <view class="stars-row">
+          <view wx:for="{{ [1,2,3] }}" wx:for-item="s" wx:key="s" class="star {{ s <= item.stars ? 'star-on' : 'star-off' }}"></view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 最佳出钓时段 -->
+  <view wx:if="{{ bestSlots.length > 0 }}" class="best-card card">
+    <text class="card-title">🏆 今日最佳时段</text>
+    <view class="best-list">
+      <view wx:for="{{ bestSlots }}" wx:key="hour" class="best-item">
+        <text class="best-time">{{ item.hour }}</text>
+        <text class="best-tide">{{ item.tideIcon }}</text>
+        <view class="best-bar-wrap">
+          <view class="best-bar" style="width:{{ item.score * 10 }}%"></view>
+        </view>
+        <text class="best-score">{{ item.score }}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 24小时趋势 -->
+  <view wx:if="{{ hourlyScores.length > 0 }}" class="trend-card card">
+    <text class="card-title">24小时趋势</text>
+    <scroll-view scroll-x class="trend-scroll">
+      <view class="trend-bars">
+        <view wx:for="{{ hourlyScores }}" wx:key="hour" class="trend-col">
+          <text class="trend-score-num" style="{{ item.score >= 7 ? 'color:#1a7f5a;font-weight:700' : 'color:#999' }}">
+            {{ item.score }}
+          </text>
+          <view
+            class="trend-bar {{ item.score >= 8 ? 'bar-great' : item.score >= 6 ? 'bar-good' : item.score >= 4 ? 'bar-ok' : 'bar-bad' }}"
+            style="height:{{ 8 + item.score * 8 }}rpx;"
+          ></view>
+          <text class="trend-hour">{{ item.hour.slice(0,2) }}</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view wx:if="{{ !loading }}" class="action-row">
+    <button class="btn-secondary action-btn" open-type="share">分享今日评分</button>
+    <view class="btn-primary action-btn" bindtap="goRecord">记录渔获</view>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

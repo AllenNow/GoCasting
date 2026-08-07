@@ -1,0 +1,112 @@
+<!-- pages/weather/weather.wxml — 天气+潮汐仪表板 -->
+<view class="page-container">
+
+  <!-- 加载中 -->
+  <view wx:if="{{ loading }}" class="loading-wrap"><text>加载天气数据…</text></view>
+
+  <block wx:else>
+
+    <!-- 错误提示（不阻断潮汐展示） -->
+    <view wx:if="{{ errorMsg }}" class="error-bar">
+      <text>⚠️ {{ errorMsg }}</text>
+    </view>
+
+    <!-- 天气主卡片 -->
+    <view class="weather-card">
+      <view class="weather-top">
+        <view class="weather-location">
+          <text class="location-icon">📍</text>
+          <text class="location-name">{{ city }}</text>
+        </view>
+        <view class="weather-temp-wrap">
+          <text class="weather-temp">{{ weather ? weather.temp + '°C' : '—' }}</text>
+          <text class="weather-desc">{{ weather ? weather.desc : '天气未知' }}</text>
+        </view>
+      </view>
+      <view wx:if="{{ weather }}" class="weather-meta">
+        <view class="meta-item">
+          <text class="meta-icon">💨</text>
+          <text class="meta-val">风速 {{ weather.wind_speed }}m/s</text>
+        </view>
+        <view class="meta-item">
+          <text class="meta-icon">💧</text>
+          <text class="meta-val">湿度 {{ weather.humidity }}%</text>
+        </view>
+        <view class="meta-item">
+          <text class="meta-icon">👁️</text>
+          <text class="meta-val">能见度 {{ weather.visibility }}km</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 钓鱼适宜指数 -->
+    <view class="score-card card">
+      <text class="card-title">今日钓鱼指数</text>
+      <view class="score-row">
+        <view class="score-circle score-{{ fishScore >= 7 ? 'good' : fishScore >= 4 ? 'ok' : 'bad' }}">
+          <text class="score-num">{{ fishScore }}</text>
+          <text class="score-max">/10</text>
+        </view>
+        <view class="score-desc">
+          <text class="score-label">
+            {{ fishScore >= 8 ? '🎣 绝佳出钓！' : fishScore >= 6 ? '👍 适合出钓' : fishScore >= 4 ? '🤔 一般，可尝试' : '❌ 不建议出钓' }}
+          </text>
+          <text class="score-sub">综合潮汐 · 天气 · 风速计算</text>
+        </view>
+      </view>
+      <view class="score-actions">
+        <view class="btn-secondary score-btn" bindtap="goMap">查看钓点地图</view>
+        <view class="btn-primary score-btn" bindtap="goRecord">记录渔获</view>
+      </view>
+    </view>
+
+    <!-- 当前潮汐 -->
+    <view class="tide-card card">
+      <view class="tide-header">
+        <text class="card-title">潮汐状态</text>
+        <view class="tide-state-badge">
+          <text>{{ tideState.icon }} {{ tideState.label }}</text>
+        </view>
+      </view>
+      <view class="tide-height-row">
+        <text class="tide-height-num">{{ currentTideHeight }}</text>
+        <text class="tide-height-unit">m</text>
+        <text class="tide-hint">当前潮高（相对平均海平面）</text>
+      </view>
+
+      <!-- 简易潮汐折线图（用条形模拟）-->
+      <view class="tide-bars">
+        <view
+          wx:for="{{ tideChart }}"
+          wx:key="hour"
+          class="tide-bar-col"
+        >
+          <view
+            class="tide-bar {{ item.height > 0 ? 'tide-bar-pos' : 'tide-bar-neg' }}"
+            style="height: {{ 20 + item.height * 20 }}rpx;"
+          ></view>
+          <text class="tide-bar-label">{{ item.hour === 0 ? '现在' : item.hour + 'h' }}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 3天预报 -->
+    <view wx:if="{{ forecast.length > 0 }}" class="forecast-card card">
+      <text class="card-title">未来3天预报</text>
+      <view class="forecast-list">
+        <view wx:for="{{ forecast }}" wx:key="date" class="forecast-item">
+          <text class="forecast-date">{{ item.date }}</text>
+          <text class="forecast-icon">{{ item.icon }}</text>
+          <view class="forecast-temp">
+            <text class="temp-hi">{{ item.tempHigh }}°</text>
+            <text class="temp-lo">{{ item.tempLow }}°</text>
+          </view>
+          <text class="forecast-desc">{{ item.desc }}</text>
+        </view>
+      </view>
+    </view>
+
+  </block>
+
+  <view class="safe-bottom"></view>
+</view>

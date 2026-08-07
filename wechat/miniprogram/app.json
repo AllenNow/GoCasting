@@ -3,7 +3,11 @@
     "pages/index/index",
     "pages/catch-log/catch-log",
     "pages/spot-map/spot-map",
-    "pages/profile/profile"
+    "pages/profile/profile",
+    "pages/gear/gear",
+    "pages/weather/weather",
+    "pages/go-score/go-score",
+    "pages/species/species"
   ],
   "tabBar": {
     "color": "#999999",
@@ -16,6 +20,12 @@
         "text": "渔获",
         "iconPath": "images/tab/catch.png",
         "selectedIconPath": "images/tab/catch-active.png"
+      },
+      {
+        "pagePath": "pages/gear/gear",
+        "text": "装备",
+        "iconPath": "images/tab/gear.png",
+        "selectedIconPath": "images/tab/gear-active.png"
       },
       {
         "pagePath": "pages/spot-map/spot-map",
@@ -38,6 +48,14 @@
     "navigationBarTitleText": "GoCasting",
     "navigationBarTextStyle": "white"
   },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "钓点地图和天气功能需要获取你的位置信息"
+    }
+  },
+  "requiredPrivateInfos": [
+    "getLocation"
+  ],
   "sitemapLocation": "sitemap.json",
   "style": "v2",
   "lazyCodeLoading": "requiredComponents"

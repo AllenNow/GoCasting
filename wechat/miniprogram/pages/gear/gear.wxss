@@ -1,0 +1,125 @@
+/* pages/gear/gear.wxss */
+
+/* Tab 切换 */
+.tab-bar {
+  display: flex;
+  background: #fff;
+  border-bottom: 2rpx solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.tab-item {
+  flex: 1;
+  text-align: center;
+  padding: 24rpx 0;
+  font-size: 28rpx;
+  color: var(--color-text-secondary);
+}
+.tab-active {
+  color: var(--color-primary);
+  font-weight: 600;
+  border-bottom: 4rpx solid var(--color-primary);
+}
+
+/* 筛选栏 */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 16rpx 20rpx;
+  background: #fff;
+  border-bottom: 2rpx solid var(--color-border);
+}
+.filter-pill {
+  background: var(--color-bg);
+  border: 2rpx solid var(--color-border);
+  border-radius: 100rpx;
+  padding: 10rpx 20rpx;
+  font-size: 24rpx;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+}
+.pill-arrow { font-size: 18rpx; }
+.search-input {
+  flex: 1;
+  background: var(--color-bg);
+  border: 2rpx solid var(--color-border);
+  border-radius: 100rpx;
+  padding: 10rpx 20rpx;
+  font-size: 24rpx;
+  min-width: 0;
+}
+
+/* 装备卡片 */
+.gear-list { padding: 16rpx 20rpx; }
+.gear-card {
+  background: #fff;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+}
+.gear-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16rpx;
+}
+.gear-brand-model { display: flex; flex-direction: column; gap: 4rpx; flex: 1; }
+.gear-brand { font-size: 22rpx; color: var(--color-text-hint); }
+.gear-model { font-size: 28rpx; font-weight: 600; color: var(--color-text-primary); }
+
+/* 价格等级标签 */
+.tier-tag {
+  font-size: 20rpx;
+  padding: 4rpx 16rpx;
+  border-radius: 100rpx;
+  flex-shrink: 0;
+  margin-left: 12rpx;
+}
+.tier-1 { background: #f0f0f0; color: #666; }
+.tier-2 { background: #e6f4ef; color: #1a7f5a; }
+.tier-3 { background: #fff8e6; color: #f0a500; }
+
+/* 规格网格 */
+.spec-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12rpx;
+}
+.spec-item { display: flex; flex-direction: column; gap: 2rpx; }
+.spec-label { font-size: 20rpx; color: var(--color-text-hint); }
+.spec-val   { font-size: 26rpx; font-weight: 500; color: var(--color-text-primary); }
+
+/* JDM 行 */
+.jdm-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12rpx;
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 2rpx solid var(--color-border);
+}
+.jdm-desc {
+  font-size: 22rpx;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  flex: 1;
+}
+
+/* 初始化提示 */
+.seed-wrap {
+  margin: 24rpx 20rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12rpx;
+  padding: 40rpx 32rpx;
+}
+.seed-hint { font-size: 30rpx; font-weight: 600; }
+.seed-sub  { font-size: 24rpx; color: var(--color-text-hint); }
+.seed-btn  { margin-top: 16rpx; padding: 22rpx 60rpx; border-radius: 100rpx; font-size: 28rpx; }

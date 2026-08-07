@@ -1,0 +1,96 @@
+<!-- pages/spot-map/spot-map.wxml — 钓点地图 -->
+<view class="map-page">
+
+  <!-- 地图主体（全屏）-->
+  <map
+    id="fishingMap"
+    class="full-map"
+    latitude="{{ latitude }}"
+    longitude="{{ longitude }}"
+    scale="{{ scale }}"
+    markers="{{ markers }}"
+    show-location="{{ true }}"
+    show-scale="{{ true }}"
+    enable-rotate="{{ false }}"
+    enable-overlooking="{{ false }}"
+    bindmarkertap="onMarkerTap"
+    bindlongtap="onMapLongPress"
+  />
+
+  <!-- 顶部提示 -->
+  <view class="map-tip">
+    <text>长按地图标记钓点  |  点击标记查看详情</text>
+  </view>
+
+  <!-- 右侧工具栏 -->
+  <view class="map-toolbar">
+    <view class="tool-btn" bindtap="goToMyLocation">
+      <text>📍</text>
+    </view>
+    <view class="tool-btn" bindtap="loadSpots">
+      <text>🔄</text>
+    </view>
+  </view>
+
+  <!-- 底部：添加钓点面板 -->
+  <view wx:if="{{ showAddPanel }}" class="bottom-panel slide-up">
+    <view class="panel-header">
+      <text class="panel-title">📌 新建钓点</text>
+      <text class="panel-close" bindtap="closePanel">✕</text>
+    </view>
+    <view class="panel-body">
+      <text class="coord-hint">
+        📍 {{ tapLat ? tapLat.toFixed(5) : '' }}, {{ tapLon ? tapLon.toFixed(5) : '' }}
+      </text>
+      <input
+        class="panel-input"
+        placeholder="钓点名称（必填）"
+        value="{{ newSpot.name }}"
+        bindinput="onNewSpotNameInput"
+        maxlength="20"
+      />
+      <input
+        class="panel-input"
+        placeholder="备注（选填）"
+        value="{{ newSpot.description }}"
+        bindinput="onNewSpotDescInput"
+        maxlength="50"
+      />
+      <view class="public-row">
+        <view class="public-info">
+          <text class="public-label">公开钓点</text>
+          <text class="public-sub">公开后所有人可见</text>
+        </view>
+        <switch checked="{{ newSpot.isPublic }}" bindchange="onPublicChange" color="#1a7f5a" />
+      </view>
+      <view class="btn-primary save-spot-btn" bindtap="saveSpot">保存钓点</view>
+    </view>
+  </view>
+
+  <!-- 底部：钓点详情面板 -->
+  <view wx:if="{{ showDetailPanel && selectedSpot }}" class="bottom-panel slide-up">
+    <view class="panel-header">
+      <text class="panel-title">🎣 {{ selectedSpot.name }}</text>
+      <text class="panel-close" bindtap="closePanel">✕</text>
+    </view>
+    <view class="panel-body">
+      <text wx:if="{{ selectedSpot.description }}" class="spot-desc">
+        {{ selectedSpot.description }}
+      </text>
+      <view class="spot-meta">
+        <view class="tag {{ selectedSpot.is_public ? 'tag-green' : 'tag-gray' }}">
+          {{ selectedSpot.is_public ? '🌐 公开' : '🔒 私有' }}
+        </view>
+        <text class="spot-coord">
+          {{ selectedSpot.lat.toFixed(4) }}, {{ selectedSpot.lon.toFixed(4) }}
+        </text>
+      </view>
+      <view class="spot-actions">
+        <view class="btn-primary nav-btn" bindtap="navigateToSpot">
+          <text>🗺️ 导航到这里</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+</view>

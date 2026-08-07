@@ -1,29 +1,132 @@
-<!--index.wxml-->
-<view class="container">
-  <view class="title">快速了解云开发</view>
-  <view class="top_tip">免鉴权接口调用 免部署后台 高并发</view>
-  <view class="power" wx:key="title" wx:for="{{powerList}}" wx:for-item="power">
-    <view class="power_info" data-index="{{index}}" data-type="{{ power.type }}" bindtap="onClickPowerInfo">
-      <view class="power_info_text">
-        <view class="power_info_text_title">
-          {{power.title}}
-          <view class="power_info_text_tag" wx:if="{{power.tag}}">{{power.tag}}</view>
-        </view>
-        <view class="power_info_text_tip">{{power.tip}}</view>
+<!-- pages/index/index.wxml — 渔获首页 -->
+<view class="page-container">
+
+  <!-- 顶部统计卡片 -->
+  <view class="stats-banner">
+    <view class="stats-date">{{ today }}</view>
+    <view class="stats-row">
+      <view class="stat-item">
+        <text class="stat-num">{{ stats.total }}</text>
+        <text class="stat-label">总渔获</text>
       </view>
-      <image wx:if="{{!power.showItem && power.item.length}}" class="power_info_more" src="../../images/arrow.svg"></image>
-      <image wx:if="{{power.showItem && power.item.length}}" class="power_info_less" src="../../images/arrow.svg"></image>
-      <image wx:if="{{!power.item.length}}" class="power_item_icon" src="../../images/arrow.svg"></image>
-    </view>
-    <view wx:if="{{power.showItem}}">
-      <view wx:key="title" wx:for="{{power.item}}">
-        <view class="line"></view>
-        <view class="power_item" bindtap="jumpPage" data-type="{{ item.type }}" data-page="{{item.page}}">
-          <view class="power_item_title">{{item.title}}</view>
-          <image class="power_item_icon" src="../../images/arrow.svg"></image>
-        </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num">{{ stats.thisMonth }}</text>
+        <text class="stat-label">本月</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num species-text">{{ stats.topSpecies }}</text>
+        <text class="stat-label">最多鱼种</text>
       </view>
     </view>
   </view>
-  <cloud-tip-modal showTipProps="{{showTip}}" title="{{title}}" content="{{content}}"></cloud-tip-modal>
+
+  <!-- 快速记录按钮 -->
+  <view class="record-btn-wrap">
+    <view class="btn-primary record-btn" bindtap="goRecord">
+      <text class="record-icon">🎣</text>
+      <text>记录一次渔获</text>
+    </view>
+  </view>
+
+  <!-- 天气+潮汐快览卡片 -->
+  <view class="weather-quick-card" bindtap="goWeather">
+    <view class="wq-left">
+      <text class="wq-label">天气 & 潮汐</text>
+      <text class="wq-sub">点击查看详细仪表板</text>
+    </view>
+    <view class="wq-right">
+      <text class="wq-icon">🌤️</text>
+      <text class="wq-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 快捷工具行 -->
+  <view class="quick-tools-row">
+    <view class="quick-tool" bindtap="goGoScore">
+      <text class="qt-icon">🎯</text>
+      <text class="qt-label">Go-Score</text>
+    </view>
+    <view class="quick-tool" bindtap="goSpecies">
+      <text class="qt-icon">🐟</text>
+      <text class="qt-label">鱼种图鉴</text>
+    </view>
+    <view class="quick-tool" bindtap="goGear">
+      <text class="qt-icon">🎣</text>
+      <text class="qt-label">装备库</text>
+    </view>
+    <view class="quick-tool" bindtap="goMap">
+      <text class="qt-icon">📍</text>
+      <text class="qt-label">钓点地图</text>
+    </view>
+  </view>
+
+  <!-- 渔获列表 -->
+  <view class="section-header">
+    <text class="section-title">最近渔获</text>
+  </view>
+
+  <!-- 加载中：骨架屏 -->
+  <view wx:if="{{ loading }}" class="skeleton-wrap">
+    <!-- 骨架卡片 × 3 -->
+    <view wx:for="{{ [1,2,3] }}" wx:key="*this" class="skeleton-card">
+      <view class="skeleton-info">
+        <view class="sk sk-title"></view>
+        <view class="sk sk-meta"></view>
+        <view class="sk sk-date"></view>
+      </view>
+      <view class="sk sk-photo"></view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view wx:elif="{{ catches.length === 0 }}" class="empty-state">
+    <text class="empty-icon">🐟</text>
+    <text class="empty-text">还没有渔获记录</text>
+    <text class="empty-subtext">点击上方按钮记录你的第一次渔获</text>
+  </view>
+
+  <!-- 渔获列表 -->
+  <view wx:else class="catches-list">
+    <view
+      wx:for="{{ catches }}"
+      wx:key="_id"
+      class="catch-card"
+      bindtap="onCatchTap"
+      data-id="{{ item._id }}"
+    >
+      <!-- 左侧信息 -->
+      <view class="catch-info">
+        <view class="catch-top">
+          <text class="catch-species">{{ item.species || '未知鱼种' }}</text>
+          <text wx:if="{{ item.released }}" class="tag tag-green release-tag">放流</text>
+        </view>
+        <view class="catch-meta">
+          <text wx:if="{{ item.weight_g }}" class="catch-weight">
+            {{ item.weight_g >= 1000 ? (item.weight_g / 1000).toFixed(1) + 'kg' : item.weight_g + 'g' }}
+          </text>
+          <text wx:if="{{ item.location }}" class="catch-location">📍{{ item.location }}</text>
+        </view>
+        <view class="catch-bottom">
+          <text class="catch-date">{{ item.date }}</text>
+          <text wx:if="{{ item.bait }}" class="catch-bait">饵：{{ item.bait }}</text>
+        </view>
+      </view>
+
+      <!-- 右侧照片 -->
+      <image
+        wx:if="{{ item.photo_url }}"
+        class="catch-photo"
+        src="{{ item.photo_url }}"
+        mode="aspectFill"
+        lazy-load
+      />
+      <view wx:else class="catch-photo-placeholder">
+        <text>🐟</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="safe-bottom"></view>
 </view>

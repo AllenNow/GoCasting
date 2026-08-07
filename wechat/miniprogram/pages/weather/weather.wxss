@@ -1,0 +1,154 @@
+/* pages/weather/weather.wxss */
+
+.error-bar {
+  background: #fff8e6;
+  padding: 16rpx 24rpx;
+  font-size: 24rpx;
+  color: #b07800;
+  border-bottom: 2rpx solid #ffe0a0;
+}
+
+/* 天气主卡 */
+.weather-card {
+  background: linear-gradient(135deg, #1a7f5a, #0d5c42);
+  padding: 36rpx 32rpx 40rpx;
+  color: #fff;
+}
+.weather-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 28rpx;
+}
+.weather-location {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+.location-icon { font-size: 28rpx; }
+.location-name { font-size: 28rpx; font-weight: 600; }
+.weather-temp-wrap {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.weather-temp { font-size: 64rpx; font-weight: 700; line-height: 1; }
+.weather-desc { font-size: 24rpx; opacity: 0.8; margin-top: 6rpx; }
+.weather-meta {
+  display: flex;
+  gap: 0;
+  background: rgba(255,255,255,0.12);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.meta-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 14rpx 8rpx;
+  gap: 4rpx;
+}
+.meta-icon { font-size: 28rpx; }
+.meta-val  { font-size: 20rpx; opacity: 0.9; }
+
+/* 钓鱼指数卡 */
+.score-card { margin: 16rpx 20rpx 0; }
+.score-row {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  margin-bottom: 20rpx;
+}
+.score-circle {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  flex-shrink: 0;
+  padding-top: 20rpx;
+}
+.score-good { background: #e6f4ef; }
+.score-ok   { background: #fff8e6; }
+.score-bad  { background: #fdeaea; }
+.score-num  { font-size: 44rpx; font-weight: 700; color: var(--color-text-primary); }
+.score-max  { font-size: 22rpx; color: var(--color-text-hint); }
+.score-desc { display: flex; flex-direction: column; gap: 6rpx; }
+.score-label{ font-size: 28rpx; font-weight: 600; }
+.score-sub  { font-size: 22rpx; color: var(--color-text-hint); }
+.score-actions { display: flex; gap: 16rpx; }
+.score-btn  { flex: 1; text-align: center; padding: 18rpx; font-size: 26rpx; border-radius: var(--radius-md); }
+
+/* 潮汐卡 */
+.tide-card { margin: 16rpx 20rpx 0; }
+.tide-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16rpx; }
+.tide-state-badge {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-size: 24rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 100rpx;
+}
+.tide-height-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8rpx;
+  margin-bottom: 24rpx;
+}
+.tide-height-num { font-size: 56rpx; font-weight: 700; color: var(--color-primary); }
+.tide-height-unit{ font-size: 24rpx; color: var(--color-text-secondary); }
+.tide-hint { font-size: 22rpx; color: var(--color-text-hint); margin-left: 8rpx; }
+
+/* 潮汐条形图 */
+.tide-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6rpx;
+  height: 120rpx;
+  padding-bottom: 32rpx;
+  position: relative;
+}
+.tide-bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  position: relative;
+}
+.tide-bar {
+  width: 100%;
+  border-radius: 4rpx 4rpx 0 0;
+  min-height: 8rpx;
+  transition: height 0.3s;
+}
+.tide-bar-pos { background: var(--color-primary); opacity: 0.7; }
+.tide-bar-neg { background: #aaa; opacity: 0.5; border-radius: 0 0 4rpx 4rpx; }
+.tide-bar-label {
+  position: absolute;
+  bottom: -28rpx;
+  font-size: 18rpx;
+  color: var(--color-text-hint);
+  white-space: nowrap;
+}
+
+/* 3天预报 */
+.forecast-card { margin: 16rpx 20rpx 0; }
+.forecast-list { display: flex; flex-direction: column; gap: 0; }
+.forecast-item {
+  display: flex;
+  align-items: center;
+  padding: 18rpx 0;
+  border-bottom: 2rpx solid var(--color-border);
+  gap: 0;
+}
+.forecast-item:last-child { border-bottom: none; }
+.forecast-date  { flex: 2; font-size: 26rpx; color: var(--color-text-secondary); }
+.forecast-icon  { flex: 1; font-size: 36rpx; text-align: center; }
+.forecast-temp  { flex: 2; display: flex; gap: 8rpx; align-items: center; }
+.temp-hi { font-size: 28rpx; font-weight: 600; color: var(--color-text-primary); }
+.temp-lo { font-size: 24rpx; color: var(--color-text-hint); }
+.forecast-desc  { flex: 2; font-size: 24rpx; color: var(--color-text-secondary); text-align: right; }

@@ -1,0 +1,114 @@
+<!-- pages/gear/gear.wxml — 装备参考数据库 -->
+<view class="page-container">
+
+  <!-- Tab 切换 -->
+  <view class="tab-bar">
+    <view class="tab-item {{ activeTab === 'reel' ? 'tab-active' : '' }}"
+          bindtap="switchTab" data-tab="reel">🎣 渔轮</view>
+    <view class="tab-item {{ activeTab === 'rod'  ? 'tab-active' : '' }}"
+          bindtap="switchTab" data-tab="rod">🪄 渔竿</view>
+  </view>
+
+  <!-- ===== 渔轮面板 ===== -->
+  <block wx:if="{{ activeTab === 'reel' }}">
+
+    <view class="filter-bar">
+      <picker mode="selector" range="{{ reelBrands }}" value="{{ reelBrandIdx }}" bindchange="onReelBrandChange">
+        <view class="filter-pill">{{ reelBrands[reelBrandIdx] }} <text class="pill-arrow">▾</text></view>
+      </picker>
+      <picker mode="selector" range="{{ priceTiers }}" range-key="label" value="{{ reelPriceIdx }}" bindchange="onReelPriceChange">
+        <view class="filter-pill">{{ priceTiers[reelPriceIdx].label }} <text class="pill-arrow">▾</text></view>
+      </picker>
+      <input class="search-input" placeholder="搜索型号…" value="{{ reelKeyword }}" bindinput="onReelKeyword" />
+    </view>
+
+    <!-- 数据库为空 → 初始化 -->
+    <view wx:if="{{ !seeded && reels.length === 0 }}" class="seed-wrap card">
+      <text class="seed-hint">📦 装备数据库为空</text>
+      <text class="seed-sub">点击下方按钮从内置数据初始化</text>
+      <view class="btn-primary seed-btn" bindtap="seedData">初始化装备数据</view>
+    </view>
+
+    <view wx:elif="{{ reelFiltered.length === 0 }}" class="empty-state">
+      <text class="empty-icon">🔍</text><text class="empty-text">没有符合条件的渔轮</text>
+    </view>
+
+    <view wx:else class="gear-list">
+      <view wx:for="{{ reelFiltered }}" wx:key="_id" class="gear-card">
+        <view class="gear-header">
+          <view class="gear-brand-model">
+            <text class="gear-brand">{{ item.brand }}</text>
+            <text class="gear-model">{{ item.model }}</text>
+          </view>
+          <view class="tier-tag tier-{{ item.price_tier }}">
+            {{ item.price_tier === 1 ? '入门' : item.price_tier === 2 ? '中端' : '高端' }}
+          </view>
+        </view>
+        <view class="spec-grid">
+          <view class="spec-item"><text class="spec-label">齿比</text><text class="spec-val">{{ item.gear_ratio }}:1</text></view>
+          <view class="spec-item"><text class="spec-label">最大刹车</text><text class="spec-val">{{ item.max_drag_lb }}lb</text></view>
+          <view class="spec-item"><text class="spec-label">重量</text><text class="spec-val">{{ item.weight_oz }}oz</text></view>
+          <view class="spec-item">
+            <text class="spec-label">防腐</text>
+            <text class="spec-val">{{ item.seal_type === 'sealed' ? '全密封' : item.seal_type === 'shielded' ? '防护' : '开放' }}</text>
+          </view>
+          <view wx:if="{{ item.bearings }}" class="spec-item"><text class="spec-label">轴承</text><text class="spec-val">{{ item.bearings }}BB</text></view>
+          <view wx:if="{{ item.year }}" class="spec-item"><text class="spec-label">年份</text><text class="spec-val">{{ item.year }}</text></view>
+        </view>
+        <view wx:if="{{ item.market === 'JDM' }}" class="jdm-row">
+          <view class="tag tag-gold">JDM</view>
+          <text wx:if="{{ item.description }}" class="jdm-desc">{{ item.description }}</text>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <!-- ===== 渔竿面板 ===== -->
+  <block wx:if="{{ activeTab === 'rod' }}">
+
+    <view class="filter-bar">
+      <picker mode="selector" range="{{ rodBrands }}" value="{{ rodBrandIdx }}" bindchange="onRodBrandChange">
+        <view class="filter-pill">{{ rodBrands[rodBrandIdx] }} <text class="pill-arrow">▾</text></view>
+      </picker>
+      <picker mode="selector" range="{{ priceTiers }}" range-key="label" value="{{ rodPriceIdx }}" bindchange="onRodPriceChange">
+        <view class="filter-pill">{{ priceTiers[rodPriceIdx].label }} <text class="pill-arrow">▾</text></view>
+      </picker>
+      <input class="search-input" placeholder="搜索型号…" value="{{ rodKeyword }}" bindinput="onRodKeyword" />
+    </view>
+
+    <view wx:if="{{ rodFiltered.length === 0 }}" class="empty-state">
+      <text class="empty-icon">🔍</text><text class="empty-text">没有符合条件的渔竿</text>
+    </view>
+
+    <view wx:else class="gear-list">
+      <view wx:for="{{ rodFiltered }}" wx:key="_id" class="gear-card">
+        <view class="gear-header">
+          <view class="gear-brand-model">
+            <text class="gear-brand">{{ item.brand }}</text>
+            <text class="gear-model">{{ item.model }}</text>
+          </view>
+          <view class="tier-tag tier-{{ item.price_tier }}">
+            {{ item.price_tier === 1 ? '入门' : item.price_tier === 2 ? '中端' : '高端' }}
+          </view>
+        </view>
+        <view class="spec-grid">
+          <view class="spec-item">
+            <text class="spec-label">长度</text>
+            <text class="spec-val">{{ item.length_m ? item.length_m + 'm' : item.length_ft + 'ft' }}</text>
+          </view>
+          <view class="spec-item"><text class="spec-label">硬度</text><text class="spec-val">{{ item.power }}</text></view>
+          <view class="spec-item"><text class="spec-label">调性</text><text class="spec-val">{{ item.action }}</text></view>
+          <view wx:if="{{ item.sinker_load }}" class="spec-item"><text class="spec-label">铅负荷</text><text class="spec-val">{{ item.sinker_load }}</text></view>
+          <view wx:if="{{ item.weight_g }}" class="spec-item"><text class="spec-label">竿重</text><text class="spec-val">{{ item.weight_g }}g</text></view>
+          <view wx:if="{{ item.pieces }}" class="spec-item"><text class="spec-label">节数</text><text class="spec-val">{{ item.pieces }}节</text></view>
+        </view>
+        <view wx:if="{{ item.market === 'JDM' }}" class="jdm-row">
+          <view class="tag tag-gold">JDM</view>
+          <text wx:if="{{ item.description }}" class="jdm-desc">{{ item.description }}</text>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <view class="safe-bottom"></view>
+</view>

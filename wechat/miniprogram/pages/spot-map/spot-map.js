@@ -1,0 +1,216 @@
+// pages/spot-map/spot-map.js — 钓点地图
+const app = getApp();
+
+Page({
+  data: {
+    latitude: 24.45,          // 默认中心：厦门
+    longitude: 118.07,
+    scale: 13,
+    markers: [],              // 地图标记点
+    myLocation: null,         // 我的当前位置
+    selectedSpot: null,       // 当前选中的钓点
+    showAddPanel: false,      // 添加钓点面板
+    showDetailPanel: false,   // 详情面板
+    loading: false,
+
+    // 新钓点表单
+    newSpot: {
+      name: '',
+      description: '',
+      isPublic: false,
+      lat: null,
+      lon: null,
+    },
+
+    // 长按选取的临时坐标
+    tapLat: null,
+    tapLon: null,
+  },
+
+  onLoad() {
+    this.loadSpots();
+    this.getMyLocation();
+  },
+
+  // 加载所有公开钓点 + 自己的私有钓点
+  async loadSpots() {
+    this.setData({ loading: true });
+    try {
+      const db = app.globalData.db;
+
+      // 查询所有公开钓点（所有人）
+      const publicRes = await db.collection('fishing_spots')
+        .where({ is_public: true })
+        .orderBy('created_at', 'desc')
+        .limit(200)
+        .get();
+
+      // 查询我的私有钓点（云数据库权限自动过滤为仅自己的）
+      const privateRes = await db.collection('fishing_spots')
+        .where({ is_public: false })
+        .orderBy('created_at', 'desc')
+        .limit(50)
+        .get();
+
+      // 合并，去重（按 _id）
+      const all = [...publicRes.data, ...privateRes.data]
+        .filter((v, i, a) => a.findIndex(t => t._id === v._id) === i);
+
+      const markers = all.map((spot, i) => ({
+        id: i,
+        _id: spot._id,
+        latitude: spot.lat,
+        longitude: spot.lon,
+        title: spot.name,
+        // 区分自己的 vs 钓友的公开钓点
+        iconPath: spot.is_public ? '/images/marker-public.png' : '/images/marker-private.png',
+        width: 44,
+        height: 52,
+        callout: {
+          content: spot.name,
+          color: spot.is_public ? '#1a7f5a' : '#666666',
+          fontSize: 13,
+          borderRadius: 8,
+          bgColor: '#ffffff',
+          padding: 8,
+          display: 'BYCLICK',
+        },
+        _spotData: spot,
+      }));
+
+      this.setData({
+        markers,
+        loading: false,
+        totalPublic: publicRes.data.length,
+      });
+    } catch (err) {
+      console.error('加载钓点失败', err);
+      this.setData({ loading: false });
+    }
+  },
+
+  // 获取我的当前位置
+  getMyLocation() {
+    wx.getLocation({
+      type: 'gcj02',
+      success: (pos) => {
+        const { latitude, longitude } = pos;
+        this.setData({
+          latitude,
+          longitude,
+          scale: 14,
+          myLocation: { latitude, longitude },
+        });
+      },
+      fail: () => {
+        // 用户未授权，保持默认位置
+        console.log('位置获取失败，使用默认位置');
+      },
+    });
+  },
+
+  // 点击标记点 → 显示详情
+  onMarkerTap(e) {
+    const markerId = e.detail.markerId;
+    const marker = this.data.markers.find(m => m.id === markerId);
+    if (!marker) return;
+    this.setData({
+      selectedSpot: marker._spotData,
+      showDetailPanel: true,
+      showAddPanel: false,
+    });
+  },
+
+  // 长按地图 → 选取坐标准备添加钓点
+  onMapLongPress(e) {
+    const { latitude, longitude } = e.detail;
+    this.setData({
+      tapLat: latitude,
+      tapLon: longitude,
+      'newSpot.lat': latitude,
+      'newSpot.lon': longitude,
+      showAddPanel: true,
+      showDetailPanel: false,
+    });
+  },
+
+  // 收起面板
+  closePanel() {
+    this.setData({ showAddPanel: false, showDetailPanel: false, selectedSpot: null });
+  },
+
+  // ========== 添加钓点 ==========
+
+  onNewSpotNameInput(e) {
+    this.setData({ 'newSpot.name': e.detail.value });
+  },
+
+  onNewSpotDescInput(e) {
+    this.setData({ 'newSpot.description': e.detail.value });
+  },
+
+  onPublicChange(e) {
+    this.setData({ 'newSpot.isPublic': e.detail.value });
+  },
+
+  async saveSpot() {
+    const { newSpot } = this.data;
+    if (!newSpot.name.trim()) {
+      wx.showToast({ title: '请输入钓点名称', icon: 'none' }); return;
+    }
+    if (!newSpot.lat) {
+      wx.showToast({ title: '请在地图上长按选取位置', icon: 'none' }); return;
+    }
+
+    wx.showLoading({ title: '保存中…' });
+    try {
+      const db = app.globalData.db;
+      await db.collection('fishing_spots').add({
+        data: {
+          name: newSpot.name.trim(),
+          description: newSpot.description || '',
+          lat: newSpot.lat,
+          lon: newSpot.lon,
+          is_public: newSpot.isPublic,
+          created_at: db.serverDate(),
+        },
+      });
+      wx.showToast({ title: '钓点已保存', icon: 'success' });
+      this.setData({
+        showAddPanel: false,
+        newSpot: { name: '', description: '', isPublic: false, lat: null, lon: null },
+      });
+      this.loadSpots();
+    } catch (err) {
+      console.error('保存钓点失败', err);
+      wx.showToast({ title: '保存失败', icon: 'error' });
+    } finally {
+      wx.hideLoading();
+    }
+  },
+
+  // 以该钓点为起点导航（调起微信内置导航）
+  navigateToSpot() {
+    const spot = this.data.selectedSpot;
+    if (!spot) return;
+    wx.openLocation({
+      latitude: spot.lat,
+      longitude: spot.lon,
+      name: spot.name,
+      address: spot.description || '钓点',
+    });
+  },
+
+  // 移回我的位置
+  goToMyLocation() {
+    if (this.data.myLocation) {
+      this.setData({
+        latitude: this.data.myLocation.latitude,
+        longitude: this.data.myLocation.longitude,
+        scale: 15,
+      });
+    } else {
+      this.getMyLocation();
+    }
+  },
+});

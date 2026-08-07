@@ -1,0 +1,106 @@
+/* pages/species/species.wxss */
+
+.search-bar {
+  padding: 16rpx 24rpx;
+  background: #fff;
+  border-bottom: 2rpx solid var(--color-border);
+}
+.search-input-full {
+  background: var(--color-bg);
+  border: 2rpx solid var(--color-border);
+  border-radius: 100rpx;
+  padding: 14rpx 24rpx;
+  font-size: 26rpx;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 鱼种网格 */
+.species-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16rpx;
+  padding: 20rpx;
+}
+.species-card {
+  background: #fff;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 20rpx 12rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+.species-icon-wrap {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.species-icon { font-size: 44rpx; }
+.species-card-name { font-size: 26rpx; font-weight: 600; color: var(--color-text-primary); }
+.species-card-en   { font-size: 18rpx; color: var(--color-text-hint); text-align: center; }
+.species-category  {
+  font-size: 18rpx;
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+  padding: 2rpx 12rpx;
+  border-radius: 100rpx;
+}
+
+/* 详情弹窗 */
+.detail-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: flex-end;
+  z-index: 100;
+}
+.detail-panel {
+  width: 100%;
+  background: #fff;
+  border-radius: 32rpx 32rpx 0 0;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 28rpx 28rpx 28rpx;
+  border-radius: 32rpx 32rpx 0 0;
+  color: #fff;
+  flex-shrink: 0;
+}
+.detail-icon { font-size: 56rpx; }
+.detail-title-group { flex: 1; display: flex; flex-direction: column; }
+.detail-name { font-size: 36rpx; font-weight: 700; }
+.detail-en   { font-size: 22rpx; opacity: 0.8; }
+.detail-close { font-size: 28rpx; padding: 8rpx 12rpx; }
+
+.detail-body { flex: 1; padding: 24rpx; }
+.detail-row {
+  display: flex;
+  padding: 14rpx 0;
+  border-bottom: 2rpx solid var(--color-border);
+  gap: 16rpx;
+}
+.dr-label { font-size: 24rpx; color: var(--color-text-hint); width: 120rpx; flex-shrink: 0; }
+.dr-val   { font-size: 26rpx; color: var(--color-text-primary); flex: 1; }
+.tips-box {
+  background: var(--color-primary-light);
+  border-radius: var(--radius-sm);
+  padding: 20rpx;
+  margin: 20rpx 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+.tips-label { font-size: 24rpx; font-weight: 600; color: var(--color-primary); }
+.tips-text  { font-size: 24rpx; color: var(--color-text-primary); line-height: 1.6; }
+.detail-action { padding: 8rpx 0 24rpx; }

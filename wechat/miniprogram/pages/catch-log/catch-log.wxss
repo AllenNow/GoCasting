@@ -1,0 +1,304 @@
+/* pages/catch-log/catch-log.wxss */
+
+/* ===== 照片区 ===== */
+.photo-section {
+  background: var(--color-primary);
+  padding: 24rpx;
+  display: flex;
+  justify-content: center;
+}
+
+.photo-upload {
+  width: 100%;
+  height: 280rpx;
+  background: rgba(255, 255, 255, 0.15);
+  border: 3rpx dashed rgba(255, 255, 255, 0.5);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+}
+
+.photo-icon {
+  font-size: 64rpx;
+}
+
+.photo-hint {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 26rpx;
+}
+
+.photo-preview-wrap {
+  width: 100%;
+  height: 280rpx;
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.photo-preview {
+  width: 100%;
+  height: 100%;
+}
+
+.photo-edit-badge {
+  position: absolute;
+  bottom: 16rpx;
+  right: 16rpx;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 22rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 100rpx;
+}
+
+/* ===== 表单主体 ===== */
+.form-wrap {
+  padding: 24rpx 24rpx 0;
+}
+
+.form-group {
+  background: var(--color-card);
+  border-radius: var(--radius-md);
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+}
+
+.form-label {
+  font-size: 24rpx;
+  color: var(--color-text-secondary);
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.required {
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+/* Picker 行 */
+.picker-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8rpx 0;
+}
+
+.picker-value {
+  font-size: 30rpx;
+  color: var(--color-text-primary);
+}
+
+.picker-placeholder {
+  color: var(--color-text-hint);
+}
+
+.picker-arrow {
+  font-size: 36rpx;
+  color: var(--color-text-hint);
+  transform: rotate(90deg);
+}
+
+/* 自定义鱼种输入 */
+.custom-input-wrap {
+  margin-top: 16rpx;
+}
+
+/* 重量行 */
+.weight-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.weight-input {
+  flex: 1;
+}
+
+.weight-unit-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 100rpx;
+}
+
+.weight-unit {
+  font-size: 26rpx;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.weight-convert {
+  font-size: 20rpx;
+  color: var(--color-primary);
+  margin-top: 4rpx;
+}
+
+/* 位置行 */
+.location-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.location-input {
+  flex: 1;
+}
+
+.location-btn {
+  width: 72rpx;
+  height: 72rpx;
+  background: var(--color-primary-light);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+  flex-shrink: 0;
+}
+
+/* 饵料标签 */
+.bait-tags, .rig-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-bottom: 4rpx;
+}
+
+.bait-tag, .rig-tag {
+  padding: 10rpx 24rpx;
+  border-radius: 100rpx;
+  font-size: 26rpx;
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  border: 2rpx solid var(--color-border);
+}
+
+.bait-tag-active, .rig-tag-active {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+/* 潮汐选项 */
+.tide-row {
+  display: flex;
+  gap: 16rpx;
+}
+
+.tide-option {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16rpx 8rpx;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  border: 2rpx solid var(--color-border);
+  gap: 8rpx;
+}
+
+.tide-option-active {
+  background: var(--color-primary-light);
+  border-color: var(--color-primary);
+}
+
+.tide-icon { font-size: 36rpx; }
+
+.tide-label {
+  font-size: 22rpx;
+  color: var(--color-text-secondary);
+}
+
+.tide-option-active .tide-label {
+  color: var(--color-primary);
+}
+
+/* 放流开关 */
+.release-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.release-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.release-sub {
+  font-size: 22rpx;
+  color: var(--color-text-hint);
+}
+
+/* 备注 */
+.notes-area {
+  min-height: 120rpx;
+  resize: none;
+}
+
+/* ===== 底部操作栏 ===== */
+.action-bar {
+  display: flex;
+  gap: 16rpx;
+  padding: 24rpx;
+  background: var(--color-card);
+  border-top: 2rpx solid var(--color-border);
+  position: sticky;
+  bottom: 0;
+}
+
+.save-btn {
+  flex: 1;
+  font-size: 30rpx;
+  padding: 26rpx;
+  border-radius: var(--radius-md);
+}
+
+.delete-btn {
+  width: 140rpx;
+  font-size: 28rpx;
+  padding: 26rpx 0;
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.btn-disabled {
+  opacity: 0.6;
+}
+
+/* 通用输入 */
+.form-input {
+  background: var(--color-bg);
+  border: 2rpx solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 18rpx 20rpx;
+  font-size: 28rpx;
+  color: var(--color-text-primary);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ===== 分享按钮 ===== */
+.share-icon-btn {
+  width: 80rpx;
+  height: 80rpx;
+  background: var(--color-primary-light);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+  flex-shrink: 0;
+}
+
+.share-canvas-hidden {
+  position: fixed;
+  left: -9999rpx;
+  top: -9999rpx;
+  width: 750rpx;
+  height: 1000rpx;
+}

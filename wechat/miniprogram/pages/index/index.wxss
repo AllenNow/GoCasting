@@ -1,142 +1,280 @@
-/**index.wxss**/
+/* pages/index/index.wxss */
 
-page {
-  padding-top: 54rpx;
-  background-color: #f6f6f6;
-  padding-bottom: 60rpx;
+/* 顶部统计横幅 */
+.stats-banner {
+  background: linear-gradient(135deg, #1a7f5a, #0d5c42);
+  padding: 36rpx 32rpx 40rpx;
+  color: #ffffff;
 }
 
-.container {
-  font-family: PingFang SC;
-}
-
-.title {
-  font-family: PingFang SC;
-  font-weight: 500;
-  color: #000000;
-  font-size: 44rpx;
-  margin-bottom: 40rpx;
-}
-.function_title {
-  font-family: PingFang SC;
-  font-weight: 500;
-  color: #000000;
-  font-size: 36rpx;
-  text-align: left;
-  width: 93%;
-  margin-top: 50rpx;
-}
-
-.top_tip {
-  font-size: 28rpx;
-  font-family: PingFang SC;
-  font-weight: 400;
-  color: #888888;
-  margin-bottom: 28rpx;
-}
-
-.examples_container {
-  display: flex;
-  flex-direction: column;
-  gap: 16rpx;
-  width: 100%;
-  align-items: center;
-}
-
-.example_item {
-  border: 3rpx solid #e5e5e5;
-  border-radius: 10rpx;
-  padding: 24rpx;
-  width: 90%;
-  background-color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.power {
-  margin-top: 30rpx;
-  border-radius: 5px;
-  background-color: white;
-  width: 93%;
-  padding-bottom: 1rpx;
-}
-
-.power_info {
-  display: flex;
-  padding: 30rpx 25rpx;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.power_info_more {
-  width: 30rpx;
-  height: 30rpx;
-  transform: rotate(90deg);
-}
-
-.power_info_less {
-  width: 30rpx;
-  height: 30rpx;
-  transform: rotate(270deg);
-}
-
-.power_info_text {
-  display: flex;
-  flex-direction: column;
-}
-
-.power_info_text_title {
-  margin-bottom: 10rpx;
-  font-weight: 400;
-  font-size: 32rpx;
-  display: flex;
-  align-items: center;
-  font-family: 'PingFang SC';
-  color: #000;
-}
-
-.power_info_text_tag {
-  margin-left: 20rpx;
-  background-color: #fbe0e0;
-  color: #e54545;
-  padding: 0 7px;
-  font-size: 14px;
-  vertical-align: middle;
-  border-radius: 3px;
-}
-
-.power_info_text_tip {
-  color: rgba(0, 0, 0, 0.6);
-  font-size: 28rpx;
-  padding-right: 30rpx;
-}
-
-.power_item {
-  padding: 30rpx 25rpx;
-  display: flex;
-  justify-content: space-between;
-}
-
-.power_item_title {
-  font-size: 28rpx;
-  color: rgba(0, 0, 0, 0.9);
-}
-
-.power_item_icon {
-  width: 30rpx;
-  height: 30rpx;
-}
-
-.line {
-  width: 95%;
-  margin: 0 auto;
-  height: 2rpx;
-  background-color: rgba(0, 0, 0, 0.1);
-}
-
-.environment {
-  color: rgba(0, 0, 0, 0.4);
+.stats-date {
   font-size: 24rpx;
-  margin-top: 25%;
+  opacity: 0.8;
+  margin-bottom: 24rpx;
 }
+
+.stats-row {
+  display: flex;
+  align-items: center;
+}
+
+.stat-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-num {
+  font-size: 44rpx;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.species-text {
+  font-size: 30rpx;
+}
+
+.stat-label {
+  font-size: 22rpx;
+  opacity: 0.75;
+  margin-top: 4rpx;
+}
+
+.stat-divider {
+  width: 2rpx;
+  height: 60rpx;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* 快速记录按钮 */
+.record-btn-wrap {
+  padding: 24rpx 32rpx 0;
+}
+
+.record-btn {
+  gap: 12rpx;
+  padding: 24rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 20rpx rgba(26, 127, 90, 0.25);
+}
+
+.record-icon {
+  font-size: 36rpx;
+}
+
+/* 天气快览卡片 */
+.weather-quick-card {
+  margin: 16rpx 32rpx 0;
+  background: #fff;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 20rpx 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.wq-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.wq-label {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.wq-sub {
+  font-size: 22rpx;
+  color: var(--color-text-hint);
+}
+
+.wq-right {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.wq-icon  { font-size: 44rpx; }
+.wq-arrow { font-size: 36rpx; color: var(--color-text-hint); }
+
+/* 分组标题 */
+.section-header {
+  padding: 28rpx 32rpx 12rpx;
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* 渔获列表 */
+.catches-list {
+  padding: 0 24rpx;
+}
+
+.catch-card {
+  background: var(--color-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.catch-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.catch-top {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 8rpx;
+}
+
+.catch-species {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.release-tag {
+  font-size: 20rpx;
+  padding: 2rpx 12rpx;
+}
+
+.catch-meta {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 8rpx;
+}
+
+.catch-weight {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.catch-location {
+  font-size: 24rpx;
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.catch-bottom {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.catch-date {
+  font-size: 22rpx;
+  color: var(--color-text-hint);
+}
+
+.catch-bait {
+  font-size: 22rpx;
+  color: var(--color-text-hint);
+}
+
+/* 渔获照片 */
+.catch-photo {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.catch-photo-placeholder {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 52rpx;
+}
+
+/* ===== 骨架屏 ===== */
+.skeleton-wrap {
+  padding: 0 24rpx;
+}
+
+.skeleton-card {
+  background: #fff;
+  border-radius: var(--radius-md);
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.skeleton-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+}
+
+/* 通用骨架块 */
+.sk {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 400% 100%;
+  border-radius: 8rpx;
+  animation: shimmer 1.4s infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 100% 50%; }
+  100% { background-position: 0%   50%; }
+}
+
+.sk-title  { width: 55%;  height: 32rpx; }
+.sk-meta   { width: 38%;  height: 24rpx; }
+.sk-date   { width: 48%;  height: 22rpx; }
+.sk-photo  {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+/* ===== 快捷工具行 ===== */
+.quick-tools-row {
+  display: flex;
+  gap: 0;
+  padding: 16rpx 24rpx 0;
+  justify-content: space-between;
+}
+.quick-tool {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #fff;
+  border-radius: var(--radius-md);
+  padding: 20rpx 8rpx;
+  margin: 0 6rpx;
+  box-shadow: var(--shadow-card);
+  gap: 8rpx;
+}
+.qt-icon  { font-size: 40rpx; }
+.qt-label { font-size: 20rpx; color: var(--color-text-secondary); text-align: center; }
