@@ -1,0 +1,37 @@
+<!-- pages/admin/user-manage.wxml — 用户管理 -->
+<view class="page-container">
+
+  <view wx:if="{{loading}}" class="loading-wrap"><text>加载中…</text></view>
+
+  <view wx:elif="{{users.length === 0}}" class="empty-state">
+    <text class="empty-icon">👥</text>
+    <text class="empty-text">暂无用户数据</text>
+    <text class="empty-subtext">需要建立管理员读取云函数</text>
+  </view>
+
+  <view wx:else class="user-list">
+    <view wx:for="{{users}}" wx:key="_id" class="user-item card">
+
+      <image wx:if="{{item.avatar_url}}" class="user-avatar" src="{{item.avatar_url}}" mode="aspectFill" />
+      <view wx:else class="user-avatar-placeholder">👤</view>
+
+      <view class="user-info">
+        <text class="user-name">{{item.nick_name || '未设置昵称'}}</text>
+        <text class="user-meta">{{item._openid ? item._openid.slice(0, 12) + '…' : '—'}}</text>
+        <text wx:if="{{item.banned}}" class="user-banned-badge">已封禁</text>
+      </view>
+
+      <view class="user-action"
+            bindtap="banUser"
+            data-id="{{item._id}}"
+            data-banned="{{item.banned}}">
+        <text class="{{item.banned ? 'unbtn' : 'banbtn'}}">
+          {{item.banned ? '解封' : '封禁'}}
+        </text>
+      </view>
+
+    </view>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

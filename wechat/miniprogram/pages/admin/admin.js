@@ -47,4 +47,20 @@ Page({
   goSpotList() {
     wx.navigateTo({ url: '/pages/admin/spot-list' });
   },
+
+  goSpotReview() {
+    wx.navigateTo({ url: '/pages/admin/spot-review' });
+  },
+
+  goGearManage() {
+    wx.navigateTo({ url: '/pages/admin/gear-manage' });
+  },
+
+  goUserManage() {
+    wx.navigateTo({ url: '/pages/admin/user-manage' });
+  },
+
+  goDashboard() {
+    wx.navigateTo({ url: '/pages/admin/dashboard' });
+  },
 });

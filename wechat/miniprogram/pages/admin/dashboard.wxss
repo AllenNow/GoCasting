@@ -1,0 +1,96 @@
+/* pages/admin/dashboard.wxss */
+
+.db-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+  padding: 24rpx;
+}
+
+.db-cell {
+  background: var(--color-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 28rpx 24rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.db-num {
+  font-size: 52rpx;
+  font-weight: 700;
+  color: var(--color-primary);
+  line-height: 1.1;
+}
+
+.db-label {
+  font-size: 22rpx;
+  color: var(--color-text-hint);
+}
+
+.db-section {
+  margin: 0 24rpx 16rpx;
+}
+
+.db-section-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  display: block;
+  margin-bottom: 20rpx;
+}
+
+.rank-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 10rpx 0;
+  border-bottom: 2rpx solid var(--color-border);
+}
+
+.rank-row:last-child { border-bottom: none; }
+
+.rank-no {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: var(--color-text-hint);
+  width: 28rpx;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.rank-name {
+  font-size: 26rpx;
+  color: var(--color-text-primary);
+  width: 160rpx;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rank-bar-wrap {
+  flex: 1;
+  height: 12rpx;
+  background: var(--color-bg);
+  border-radius: 100rpx;
+  overflow: hidden;
+}
+
+.rank-bar {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 100rpx;
+  min-width: 4rpx;
+}
+
+.rank-count {
+  font-size: 24rpx;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  width: 40rpx;
+  text-align: right;
+  flex-shrink: 0;
+}

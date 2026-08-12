@@ -20,7 +20,7 @@
     <view wx:for="{{spots}}" wx:key="_id" class="spot-item">
       <!-- 封面图 -->
       <view class="spot-cover">
-        <image wx:if="{{item.cover_image}}" src="{{item.cover_image}}" mode="aspectFill" class="cover-img" />
+        <image wx:if="{{item.cover_preview}}" src="{{item.cover_preview}}" mode="aspectFill" class="cover-img" />
         <view wx:else class="cover-placeholder">
           <text>📍</text>
         </view>

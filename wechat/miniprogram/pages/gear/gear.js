@@ -30,7 +30,7 @@ const REEL_PRICE_OPTIONS = [
 Page({
   data: {
     // Tab 状态
-    activeTab: 'reel', // 'reel' | 'rod'
+    activeTab: 'rod', // 'rod' | 'reel'
 
     // 数据
     seriesList: [],      // 当前 Tab 原始数据

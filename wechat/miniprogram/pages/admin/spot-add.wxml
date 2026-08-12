@@ -60,24 +60,26 @@
                 maxlength="500" auto-height />
     </view>
 
-    <!-- 推荐钓法（多选） -->
+    <!-- 推荐钓法（多选，横向滚动） -->
     <view class="form-group">
       <text class="form-label">推荐钓法</text>
-      <scroll-view class="tag-scroll" scroll-x enable-flex>
-        <view wx:for="{{methodOptions}}" wx:key="*this"
-              class="tag {{form.methods.indexOf(item) !== -1 ? 'tag-active' : ''}}"
-              bindtap="toggleMethod" data-val="{{item}}">{{item}}</view>
+      <scroll-view class="tag-scroll-outer" scroll-x enable-flex>
+        <view class="tag-row">
+          <view wx:for="{{methodOptions}}" wx:key="*this"
+                class="tag {{form.methods.indexOf(item) !== -1 ? 'tag-active' : ''}}"
+                bindtap="toggleMethod" data-val="{{item}}">{{item}}</view>
+        </view>
       </scroll-view>
     </view>
 
-    <!-- 目标鱼种（多选） -->
+    <!-- 目标鱼种（多选，换行 wrap 布局，因为名字较长） -->
     <view class="form-group">
       <text class="form-label">主要目标鱼</text>
-      <scroll-view class="tag-scroll" scroll-x enable-flex>
+      <view class="tag-wrap">
         <view wx:for="{{speciesOptions}}" wx:key="*this"
-              class="tag {{form.species.indexOf(item) !== -1 ? 'tag-active' : ''}}"
+              class="tag tag-sm {{form.species.indexOf(item) !== -1 ? 'tag-active' : ''}}"
               bindtap="toggleSpecies" data-val="{{item}}">{{item}}</view>
-      </scroll-view>
+      </view>
     </view>
 
     <!-- 难度 -->

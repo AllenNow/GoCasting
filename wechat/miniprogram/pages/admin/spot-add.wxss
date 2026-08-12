@@ -69,9 +69,27 @@
   box-sizing: border-box;
 }
 
-/* 标签选择 */
-.tag-scroll {
+/* 标签横向滚动（突破 form-body padding，全宽显示）*/
+.tag-scroll-outer {
+  margin: 0 -24rpx;
+  padding: 4rpx 0;
   white-space: nowrap;
+}
+
+/* scroll-view 内部需要一个不换行的行容器 */
+.tag-row {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0 24rpx;
+  gap: 12rpx;
+}
+
+/* 标签换行布局（目标鱼种用，文字较长）*/
+.tag-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
   padding: 4rpx 0;
 }
 
@@ -84,7 +102,14 @@
   background: var(--color-bg);
   color: var(--color-text-secondary);
   border: 2rpx solid var(--color-border);
-  margin-right: 12rpx;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* 小号标签（用于换行布局，内容较长时） */
+.tag-sm {
+  padding: 8rpx 20rpx;
+  font-size: 24rpx;
 }
 
 .tag-active {

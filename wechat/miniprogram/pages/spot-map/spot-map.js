@@ -38,37 +38,71 @@ Page({
     }
   },
 
-  // 加载所有公开钓点 + 自己的私有钓点
+  // 加载所有公开钓点 + 官方钓点 + 自己的私有钓点
   async loadSpots() {
     this.setData({ loading: true });
     try {
       const db = app.globalData.db;
 
-      // 查询所有公开钓点（所有人）
-      const publicRes = await db.collection('fishing_spots')
-        .where({ is_public: true })
-        .orderBy('created_at', 'desc')
-        .limit(200)
-        .get();
+      // 并行查询三类钓点
+      const [officialRes, publicRes, privateRes] = await Promise.all([
+        // 官方钓点（所有人可读）
+        db.collection('official_spots')
+          .where({ status: 'active' })
+          .limit(200)
+          .get(),
+        // 用户公开钓点
+        db.collection('fishing_spots')
+          .where({ is_public: true })
+          .orderBy('created_at', 'desc')
+          .limit(200)
+          .get(),
+        // 我的私有钓点
+        db.collection('fishing_spots')
+          .where({ is_public: false })
+          .orderBy('created_at', 'desc')
+          .limit(50)
+          .get(),
+      ]);
 
-      // 查询我的私有钓点（云数据库权限自动过滤为仅自己的）
-      const privateRes = await db.collection('fishing_spots')
-        .where({ is_public: false })
-        .orderBy('created_at', 'desc')
-        .limit(50)
-        .get();
+      // 官方钓点封面图转临时 URL（用于 callout 展示，marker 图标统一用星标）
+      const officialSpots = officialRes.data;
 
-      // 合并，去重（按 _id）
-      const all = [...publicRes.data, ...privateRes.data]
+      // 合并用户钓点，去重
+      const userSpots = [...publicRes.data, ...privateRes.data]
         .filter((v, i, a) => a.findIndex(t => t._id === v._id) === i);
 
-      const markers = all.map((spot, i) => ({
-        id: i,
+      // 生成 markers：官方钓点 + 用户钓点
+      let markerId = 0;
+      const officialMarkers = officialSpots.map(spot => ({
+        id: markerId++,
         _id: spot._id,
         latitude: spot.lat,
         longitude: spot.lon,
         title: spot.name,
-        // 区分自己的 vs 钓友的公开钓点
+        isOfficial: true,
+        iconPath: '/images/marker-official.png',
+        width: 48,
+        height: 56,
+        callout: {
+          content: '⭐ ' + spot.name,
+          color: '#1a1a2e',
+          fontSize: 13,
+          borderRadius: 8,
+          bgColor: '#ffffff',
+          padding: 8,
+          display: 'BYCLICK',
+        },
+        _spotData: { ...spot, isOfficial: true },
+      }));
+
+      const userMarkers = userSpots.map(spot => ({
+        id: markerId++,
+        _id: spot._id,
+        latitude: spot.lat,
+        longitude: spot.lon,
+        title: spot.name,
+        isOfficial: false,
         iconPath: spot.is_public ? '/images/marker-public.png' : '/images/marker-private.png',
         width: 44,
         height: 52,
@@ -84,10 +118,13 @@ Page({
         _spotData: spot,
       }));
 
+      const markers = [...officialMarkers, ...userMarkers];
+
       this.setData({
         markers,
         loading: false,
         totalPublic: publicRes.data.length,
+        totalOfficial: officialSpots.length,
       });
     } catch (err) {
       console.error('加载钓点失败', err);

@@ -1,0 +1,74 @@
+<!-- pages/admin/gear-edit.wxml — 装备系列在线编辑 -->
+<view class="page-container">
+
+  <!-- Banner 图 -->
+  <view class="cover-section" bindtap="chooseBanner">
+    <image wx:if="{{bannerPreview}}" src="{{bannerPreview}}" mode="aspectFill" class="cover-preview" />
+    <view wx:else class="cover-placeholder">
+      <text class="cover-plus">🖼️</text>
+      <text class="cover-hint">点击上传宽幅 Banner 图</text>
+    </view>
+    <view class="cover-tip">宽幅横版图，建议 750×300px</view>
+  </view>
+
+  <view class="form-body">
+
+    <view class="form-group">
+      <text class="form-label">系列名称 <text class="required">*</text></text>
+      <input class="form-input" value="{{form.series_name}}"
+             bindinput="onInput" data-field="series_name"
+             placeholder-class="input-placeholder" placeholder="系列名称" />
+    </view>
+
+    <view class="form-group">
+      <text class="form-label">品牌</text>
+      <input class="form-input" value="{{form.brand}}"
+             bindinput="onInput" data-field="brand"
+             placeholder-class="input-placeholder" placeholder="如：Shimano" />
+    </view>
+
+    <view class="form-group">
+      <text class="form-label">年份</text>
+      <input class="form-input" type="number" value="{{form.year}}"
+             bindinput="onInput" data-field="year"
+             placeholder-class="input-placeholder" placeholder="如：2024（留空表示未知）" />
+    </view>
+
+    <view class="form-group">
+      <text class="form-label">价格区间（元）</text>
+      <view class="price-row">
+        <input class="form-input price-input" type="digit" value="{{form.price_min}}"
+               bindinput="onInput" data-field="price_min"
+               placeholder-class="input-placeholder" placeholder="最低价" />
+        <text class="price-dash">~</text>
+        <input class="form-input price-input" type="digit" value="{{form.price_max}}"
+               bindinput="onInput" data-field="price_max"
+               placeholder-class="input-placeholder" placeholder="最高价" />
+      </view>
+    </view>
+
+    <view class="form-group">
+      <text class="form-label">价位档次</text>
+      <view class="tier-row">
+        <view wx:for="{{[{v:1,l:'入门'},{v:2,l:'中端'},{v:3,l:'高端'}]}}" wx:key="v"
+              class="tier-btn {{form.price_tier === item.v ? 'tier-active' : ''}}"
+              bindtap="selectTier" data-val="{{item.v}}">{{item.l}}</view>
+      </view>
+    </view>
+
+    <view class="form-group">
+      <text class="form-label">系列描述</text>
+      <textarea class="form-textarea" value="{{form.description}}"
+                bindinput="onInput" data-field="description"
+                placeholder="介绍系列特色、技术亮点等…"
+                maxlength="800" auto-height />
+    </view>
+
+    <view class="submit-btn {{saving ? 'btn-disabled' : ''}}" bindtap="submit">
+      {{saving ? '保存中…' : '保存修改'}}
+    </view>
+
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

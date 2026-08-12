@@ -3,6 +3,12 @@
 
   <!-- 用户信息头部 -->
   <view class="profile-header">
+
+    <!-- 管理员入口：右上角图标（仅管理员可见）-->
+    <view wx:if="{{ isAdmin }}" class="admin-corner-btn" bindtap="goAdmin">
+      <text class="admin-corner-icon">⚙️</text>
+    </view>
+
     <view wx:if="{{ userInfo && userInfo.nickName }}" class="user-info">
       <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
         <image class="avatar" src="{{ userInfo.avatarUrl }}" mode="aspectFill" />
@@ -174,16 +180,6 @@
       <text class="menu-label">分享给钓友</text>
       <text class="menu-arrow">›</text>
     </button>
-  </view>
-
-  <!-- 管理员入口（仅管理员可见） -->
-  <view wx:if="{{isAdmin}}" class="card admin-entry" bindtap="goAdmin"
-        style="margin:0 24rpx 16rpx;padding:0;overflow:hidden;">
-    <view class="menu-item">
-      <text class="menu-icon">⚙️</text>
-      <text class="menu-label admin-label">管理后台</text>
-      <text class="menu-arrow">›</text>
-    </view>
   </view>
 
   <view class="safe-bottom"></view>

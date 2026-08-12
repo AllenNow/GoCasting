@@ -1,0 +1,151 @@
+/* pages/admin/spot-review.wxss */
+
+.review-tabs {
+  display: flex;
+  background: var(--color-card);
+  border-bottom: 2rpx solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.rtab {
+  flex: 1;
+  text-align: center;
+  padding: 24rpx 0;
+  font-size: 26rpx;
+  color: var(--color-text-secondary);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+}
+
+.rtab-active {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.rtab-active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48rpx;
+  height: 4rpx;
+  border-radius: 2rpx;
+  background: var(--color-primary);
+}
+
+.badge {
+  background: var(--color-danger);
+  color: #fff;
+  font-size: 18rpx;
+  padding: 2rpx 10rpx;
+  border-radius: 100rpx;
+  font-weight: 700;
+}
+
+.badge-gray {
+  background: var(--color-bg);
+  color: var(--color-text-hint);
+  font-size: 18rpx;
+  padding: 2rpx 10rpx;
+  border-radius: 100rpx;
+}
+
+.review-list {
+  padding: 16rpx 24rpx;
+}
+
+.review-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
+}
+
+.review-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.review-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.review-desc {
+  font-size: 24rpx;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.review-meta {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.review-coord {
+  font-size: 20rpx;
+  color: var(--color-text-hint);
+}
+
+.review-public {
+  font-size: 20rpx;
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+  padding: 2rpx 12rpx;
+  border-radius: 100rpx;
+}
+
+.review-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  flex-shrink: 0;
+}
+
+.rbtn {
+  font-size: 24rpx;
+  padding: 10rpx 22rpx;
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
+
+.rbtn-approve {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.rbtn-reject {
+  background: #fdeaea;
+  color: var(--color-danger);
+}
+
+.review-status {
+  font-size: 22rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 100rpx;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.status-passed {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.status-rejected {
+  background: #fdeaea;
+  color: var(--color-danger);
+}

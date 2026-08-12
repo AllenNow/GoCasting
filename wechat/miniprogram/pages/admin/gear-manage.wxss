@@ -1,0 +1,154 @@
+/* pages/admin/gear-manage.wxss */
+
+.gear-tabs {
+  display: flex;
+  background: var(--color-card);
+  border-bottom: 2rpx solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.gtab {
+  flex: 1;
+  text-align: center;
+  padding: 24rpx 0;
+  font-size: 28rpx;
+  color: var(--color-text-secondary);
+  position: relative;
+}
+
+.gtab-active {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.gtab-active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48rpx;
+  height: 4rpx;
+  border-radius: 2rpx;
+  background: var(--color-primary);
+}
+
+.count-hint {
+  font-size: 22rpx;
+  color: var(--color-text-hint);
+  padding: 10rpx 24rpx 4rpx;
+}
+
+.gear-list {
+  padding: 8rpx 24rpx 16rpx;
+}
+
+.gear-item {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  background: var(--color-card);
+  border-radius: var(--radius-md);
+  padding: 20rpx;
+  margin-bottom: 12rpx;
+  box-shadow: var(--shadow-card);
+}
+
+.gear-item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+  min-width: 0;
+}
+
+.gear-item-top {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  flex-wrap: wrap;
+}
+
+.gear-brand {
+  font-size: 22rpx;
+  color: var(--color-text-hint);
+}
+
+.gear-market {
+  font-size: 18rpx;
+  padding: 2rpx 12rpx;
+  border-radius: 100rpx;
+}
+
+.pill-market-cn {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.pill-market-jdm {
+  background: #fff8e6;
+  color: var(--color-accent);
+}
+
+.gear-hidden-badge {
+  font-size: 18rpx;
+  color: var(--color-text-hint);
+  background: #f0f0f0;
+  padding: 2rpx 12rpx;
+  border-radius: 100rpx;
+}
+
+.gear-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+}
+
+.gear-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.gear-price {
+  font-size: 24rpx;
+  color: var(--color-accent);
+  font-weight: 500;
+}
+
+.gear-models {
+  font-size: 22rpx;
+  color: var(--color-text-hint);
+}
+
+.gear-item-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  flex-shrink: 0;
+}
+
+.gaction-edit, .gaction-toggle {
+  font-size: 22rpx;
+  padding: 8rpx 20rpx;
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
+
+.gaction-edit {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.gaction-hide {
+  background: #f0f0f0;
+  color: var(--color-text-secondary);
+}
+
+.gaction-show {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}

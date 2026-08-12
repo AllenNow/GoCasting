@@ -1,0 +1,66 @@
+<!-- pages/admin/dashboard.wxml — 数据看板 -->
+<view class="page-container">
+
+  <view wx:if="{{loading}}" class="loading-wrap"><text>加载中…</text></view>
+
+  <view wx:else>
+
+    <!-- 核心数字 -->
+    <view class="db-grid">
+      <view class="db-cell">
+        <text class="db-num">{{stats.totalCatches}}</text>
+        <text class="db-label">总渔获记录</text>
+      </view>
+      <view class="db-cell">
+        <text class="db-num">{{stats.totalOfficialSpots}}</text>
+        <text class="db-label">官方钓点</text>
+      </view>
+      <view class="db-cell">
+        <text class="db-num">{{stats.totalUserSpots}}</text>
+        <text class="db-label">用户钓点</text>
+      </view>
+      <view class="db-cell">
+        <text class="db-num">{{stats.gearSeries}}</text>
+        <text class="db-label">装备系列</text>
+      </view>
+    </view>
+
+    <!-- 热门鱼种 -->
+    <view wx:if="{{topSpecies.length > 0}}" class="db-section card">
+      <text class="db-section-title">🐟 热门钓获鱼种 Top 5</text>
+      <view wx:for="{{topSpecies}}" wx:key="name" class="rank-row">
+        <text class="rank-no">{{index + 1}}</text>
+        <text class="rank-name">{{item.name}}</text>
+        <view class="rank-bar-wrap">
+          <view class="rank-bar"
+            style="width:{{topSpecies[0].count > 0 ? (item.count / topSpecies[0].count * 100) : 0}}%">
+          </view>
+        </view>
+        <text class="rank-count">{{item.count}}</text>
+      </view>
+    </view>
+
+    <!-- 热门钓点 -->
+    <view wx:if="{{topSpots.length > 0}}" class="db-section card">
+      <text class="db-section-title">📍 热门钓点 Top 5</text>
+      <view wx:for="{{topSpots}}" wx:key="name" class="rank-row">
+        <text class="rank-no">{{index + 1}}</text>
+        <text class="rank-name">{{item.name}}</text>
+        <view class="rank-bar-wrap">
+          <view class="rank-bar"
+            style="width:{{topSpots[0].count > 0 ? (item.count / topSpots[0].count * 100) : 0}}%">
+          </view>
+        </view>
+        <text class="rank-count">{{item.count}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{topSpecies.length === 0 && topSpots.length === 0}}" class="empty-state">
+      <text class="empty-icon">📊</text>
+      <text class="empty-text">暂无渔获数据</text>
+    </view>
+
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

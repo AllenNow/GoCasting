@@ -5,10 +5,10 @@
 
   <!-- 顶部 Tab 切换栏 -->
   <view class="gear-tab-bar">
-    <view class="gear-tab-item {{activeTab === 'reel' ? 'gear-tab-active' : ''}}"
-          bindtap="switchTab" data-tab="reel">渔轮</view>
     <view class="gear-tab-item {{activeTab === 'rod' ? 'gear-tab-active' : ''}}"
           bindtap="switchTab" data-tab="rod">渔竿</view>
+    <view class="gear-tab-item {{activeTab === 'reel' ? 'gear-tab-active' : ''}}"
+          bindtap="switchTab" data-tab="reel">渔轮</view>
   </view>
 
   <!-- 搜索栏 -->

@@ -22,23 +22,23 @@
       <text class="admin-card-arrow">›</text>
     </view>
 
-    <view class="admin-card admin-card-disabled">
+    <view class="admin-card" bindtap="goSpotReview">
       <view class="admin-card-left">
         <text class="admin-card-icon">🎣</text>
         <view class="admin-card-info">
           <text class="admin-card-title">用户钓点审核</text>
-          <text class="admin-card-sub">Phase 2 · 待开发</text>
+          <text class="admin-card-sub">审核用户提交的公开钓点</text>
         </view>
       </view>
       <text class="admin-card-arrow">›</text>
     </view>
 
-    <view class="admin-card admin-card-disabled">
+    <view class="admin-card" bindtap="goGearManage">
       <view class="admin-card-left">
         <text class="admin-card-icon">🏷️</text>
         <view class="admin-card-info">
           <text class="admin-card-title">装备数据管理</text>
-          <text class="admin-card-sub">Phase 3 · 待开发</text>
+          <text class="admin-card-sub">编辑系列信息、隐藏/显示</text>
         </view>
       </view>
       <text class="admin-card-arrow">›</text>
@@ -48,23 +48,23 @@
   <view class="admin-section">
     <text class="section-label">用户 & 数据</text>
 
-    <view class="admin-card admin-card-disabled">
+    <view class="admin-card" bindtap="goUserManage">
       <view class="admin-card-left">
         <text class="admin-card-icon">👥</text>
         <view class="admin-card-info">
           <text class="admin-card-title">用户管理</text>
-          <text class="admin-card-sub">Phase 4 · 待开发</text>
+          <text class="admin-card-sub">查看用户列表、封禁管理</text>
         </view>
       </view>
       <text class="admin-card-arrow">›</text>
     </view>
 
-    <view class="admin-card admin-card-disabled">
+    <view class="admin-card" bindtap="goDashboard">
       <view class="admin-card-left">
         <text class="admin-card-icon">📊</text>
         <view class="admin-card-info">
           <text class="admin-card-title">数据看板</text>
-          <text class="admin-card-sub">Phase 5 · 待开发</text>
+          <text class="admin-card-sub">渔获统计 · 热门钓点 · 热门鱼种</text>
         </view>
       </view>
       <text class="admin-card-arrow">›</text>

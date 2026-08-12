@@ -17,6 +17,10 @@ Page({
     this.loadSpots();
   },
 
+  onPullDownRefresh() {
+    this.loadSpots().finally(() => wx.stopPullDownRefresh());
+  },
+
   async loadSpots() {
     this.setData({ loading: true });
     try {
@@ -25,7 +29,28 @@ Page({
         data: { action: 'list' },
       });
       const all = (res.result.data || []).filter(s => s.status !== 'deleted');
-      this.setData({ spots: all, loading: false });
+
+      // 封面图 cloud:// 转临时 URL
+      const cloudIds = all
+        .map(s => s.cover_image)
+        .filter(url => url && url.startsWith('cloud://'));
+
+      let urlMap = {};
+      if (cloudIds.length > 0) {
+        try {
+          const urlRes = await wx.cloud.getTempFileURL({ fileList: [...new Set(cloudIds)] });
+          (urlRes.fileList || []).forEach(item => {
+            if (item.tempFileURL) urlMap[item.fileID] = item.tempFileURL;
+          });
+        } catch (e) { /* 转换失败不影响列表展示 */ }
+      }
+
+      const spots = all.map(s => ({
+        ...s,
+        cover_preview: (s.cover_image && urlMap[s.cover_image]) ? urlMap[s.cover_image] : (s.cover_image || ''),
+      }));
+
+      this.setData({ spots, loading: false });
     } catch (e) {
       console.error('加载钓点列表失败', e);
       this.setData({ loading: false });

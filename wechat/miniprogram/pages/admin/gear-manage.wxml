@@ -1,0 +1,63 @@
+<!-- pages/admin/gear-manage.wxml — 装备系列管理 -->
+<view class="page-container">
+
+  <!-- Tab: 渔轮 / 渔竿 -->
+  <view class="gear-tabs">
+    <view class="gtab {{tab === 'reel' ? 'gtab-active' : ''}}"
+          bindtap="switchTab" data-tab="reel">渔轮</view>
+    <view class="gtab {{tab === 'rod' ? 'gtab-active' : ''}}"
+          bindtap="switchTab" data-tab="rod">渔竿</view>
+  </view>
+
+  <!-- 搜索 -->
+  <view class="search-bar">
+    <input class="search-input" placeholder="搜索系列名、品牌…"
+           value="{{keyword}}" bindinput="onSearch" />
+  </view>
+
+  <!-- 计数 -->
+  <view class="count-hint">共 {{filteredSeries.length}} 个系列</view>
+
+  <view wx:if="{{loading}}" class="loading-wrap"><text>加载中…</text></view>
+
+  <view wx:elif="{{filteredSeries.length === 0}}" class="empty-state">
+    <text class="empty-icon">🏷️</text>
+    <text class="empty-text">暂无数据</text>
+  </view>
+
+  <view wx:else class="gear-list">
+    <view wx:for="{{filteredSeries}}" wx:key="_id" class="gear-item">
+
+      <view class="gear-item-info" bindtap="goEdit" data-id="{{item._id}}">
+        <view class="gear-item-top">
+          <text class="gear-brand">{{item.brand}}</text>
+          <view class="gear-market pill-market-{{item.market === 'CN' ? 'cn' : 'jdm'}}">
+            {{item.market === 'CN' ? '行货' : 'JDM'}}
+          </view>
+          <view wx:if="{{item.hidden}}" class="gear-hidden-badge">已隐藏</view>
+        </view>
+        <text class="gear-name">{{item.series_name}}</text>
+        <view class="gear-meta-row">
+          <text class="gear-price">
+            {{item.price_min ? '¥' + item.price_min : '价格待定'}}
+            {{item.price_max && item.price_max !== item.price_min ? ' ~ ¥' + item.price_max : ''}}
+          </text>
+          <text class="gear-models">{{item.model_count || 0}}个型号</text>
+        </view>
+      </view>
+
+      <view class="gear-item-actions">
+        <view class="gaction-edit" bindtap="goEdit" data-id="{{item._id}}">编辑</view>
+        <view class="gaction-toggle {{item.hidden ? 'gaction-show' : 'gaction-hide'}}"
+              bindtap="toggleHidden"
+              data-id="{{item._id}}"
+              data-hidden="{{item.hidden}}">
+          {{item.hidden ? '显示' : '隐藏'}}
+        </view>
+      </view>
+
+    </view>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

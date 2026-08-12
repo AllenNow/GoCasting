@@ -1,0 +1,56 @@
+<!-- pages/admin/spot-review.wxml — 用户钓点审核 -->
+<view class="page-container">
+
+  <!-- Tab 切换 -->
+  <view class="review-tabs">
+    <view class="rtab {{tab === 'pending' ? 'rtab-active' : ''}}"
+          bindtap="switchTab" data-tab="pending">
+      待审核
+      <text wx:if="{{counts.pending > 0}}" class="badge">{{counts.pending}}</text>
+    </view>
+    <view class="rtab {{tab === 'passed' ? 'rtab-active' : ''}}"
+          bindtap="switchTab" data-tab="passed">
+      已通过 <text class="badge-gray">{{counts.passed}}</text>
+    </view>
+    <view class="rtab {{tab === 'rejected' ? 'rtab-active' : ''}}"
+          bindtap="switchTab" data-tab="rejected">
+      已拒绝 <text class="badge-gray">{{counts.rejected}}</text>
+    </view>
+  </view>
+
+  <view wx:if="{{loading}}" class="loading-wrap"><text>加载中…</text></view>
+
+  <view wx:elif="{{spots.length === 0}}" class="empty-state">
+    <text class="empty-icon">✅</text>
+    <text class="empty-text">暂无{{tab === 'pending' ? '待审核' : tab === 'passed' ? '已通过' : '已拒绝'}}钓点</text>
+  </view>
+
+  <view wx:else class="review-list">
+    <view wx:for="{{spots}}" wx:key="_id" class="review-item card">
+
+      <!-- 钓点信息 -->
+      <view class="review-info">
+        <text class="review-name">{{item.name}}</text>
+        <text class="review-desc">{{item.description || '无描述'}}</text>
+        <view class="review-meta">
+          <text class="review-coord">📍 {{item.lat.toFixed(4)}}, {{item.lon.toFixed(4)}}</text>
+          <text class="review-public">{{item.is_public ? '公开' : '私有'}}</text>
+        </view>
+      </view>
+
+      <!-- 操作按钮（仅待审核显示） -->
+      <view wx:if="{{tab === 'pending'}}" class="review-actions">
+        <view class="rbtn rbtn-approve" bindtap="approve" data-id="{{item._id}}">通过</view>
+        <view class="rbtn rbtn-reject" bindtap="reject" data-id="{{item._id}}">拒绝</view>
+      </view>
+
+      <!-- 已通过/已拒绝状态标签 -->
+      <view wx:else class="review-status status-{{tab}}">
+        {{tab === 'passed' ? '✓ 已通过' : '✕ 已拒绝'}}
+      </view>
+
+    </view>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

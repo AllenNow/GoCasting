@@ -8,6 +8,27 @@
   flex-direction: column;
   align-items: center;
   gap: 16rpx;
+  position: relative;   /* 让右上角按钮能绝对定位 */
+}
+
+/* 管理员右上角入口 */
+.admin-corner-btn {
+  position: absolute;
+  top: 20rpx;
+  right: 20rpx;
+  width: 72rpx;
+  height: 72rpx;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2rpx solid rgba(255, 255, 255, 0.25);
+}
+
+.admin-corner-icon {
+  font-size: 36rpx;
+  line-height: 1;
 }
 
 /* 已登录态 & 未设置态：都居中竖排 */
@@ -398,12 +419,3 @@
 .species-bar  { height: 100%; border-radius: 100rpx; transition: width 0.4s ease; }
 .species-count{ font-size: 22rpx; color: var(--color-text-hint); width: 32rpx; text-align: right; flex-shrink: 0; }
 
-/* 管理员入口 */
-.admin-entry {
-  border: 2rpx solid rgba(26, 26, 46, 0.15);
-}
-
-.admin-label {
-  color: #1a1a2e;
-  font-weight: 600;
-}

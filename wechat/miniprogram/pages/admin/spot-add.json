@@ -1,3 +1,9 @@
 {
-  "navigationBarTitleText": "新增钓点"
+  "navigationBarTitleText": "新增钓点",
+  "permission": {
+    "scope.userLocation": {
+      "desc": "录入钓点坐标需要获取位置信息"
+    }
+  },
+  "requiredPrivateInfos": ["chooseLocation"]
 }

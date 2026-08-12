@@ -1,0 +1,71 @@
+/* pages/admin/user-manage.wxss */
+.user-list { padding: 16rpx 24rpx; }
+
+.user-item {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.user-avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.user-avatar-placeholder {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background: var(--color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40rpx;
+  flex-shrink: 0;
+}
+
+.user-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.user-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.user-meta {
+  font-size: 20rpx;
+  color: var(--color-text-hint);
+  font-family: monospace;
+}
+
+.user-banned-badge {
+  font-size: 20rpx;
+  color: var(--color-danger);
+  background: #fdeaea;
+  padding: 2rpx 12rpx;
+  border-radius: 100rpx;
+  align-self: flex-start;
+}
+
+.banbtn {
+  font-size: 22rpx;
+  color: var(--color-danger);
+  background: #fdeaea;
+  padding: 10rpx 20rpx;
+  border-radius: var(--radius-sm);
+}
+
+.unbtn {
+  font-size: 22rpx;
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+  padding: 10rpx 20rpx;
+  border-radius: var(--radius-sm);
+}
