@@ -106,9 +106,13 @@
   background: var(--color-bg);
   border: 2rpx solid var(--color-border);
   border-radius: var(--radius-sm);
-  padding: 18rpx 20rpx;
+  padding: 16rpx 24rpx;
   font-size: 28rpx;
+  line-height: 1.5;
   color: var(--color-text-primary);
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 12rpx;
 }
 
 .public-row {
@@ -161,4 +165,87 @@
   font-size: 30rpx;
   border-radius: var(--radius-md);
   gap: 8rpx;
+}
+
+/* ===== 钓点关联渔获 ===== */
+.spot-catches-section {
+  margin-top: 8rpx;
+  padding-top: 16rpx;
+  border-top: 2rpx solid var(--color-border);
+}
+
+.spot-catches-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
+.spot-catches-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.spot-catches-count {
+  font-size: 22rpx;
+  color: var(--color-text-hint);
+}
+
+.spot-catches-loading,
+.spot-catches-empty {
+  font-size: 24rpx;
+  color: var(--color-text-hint);
+  padding: 16rpx 0;
+}
+
+.spot-catches-list {
+  max-height: 320rpx;
+  overflow-y: auto;
+}
+
+.spot-catch-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14rpx 0;
+  border-bottom: 1rpx solid var(--color-border);
+}
+
+.spot-catch-item:last-child {
+  border-bottom: none;
+}
+
+.sc-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.sc-species {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.sc-date {
+  font-size: 22rpx;
+  color: var(--color-text-hint);
+}
+
+.sc-right {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.sc-weight {
+  font-size: 24rpx;
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.sc-arrow {
+  font-size: 28rpx;
+  color: var(--color-text-hint);
 }

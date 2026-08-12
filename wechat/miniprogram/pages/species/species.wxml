@@ -3,64 +3,88 @@
 
   <!-- 搜索框 -->
   <view class="search-bar">
-    <input
-      class="search-input-full"
-      placeholder="搜索鱼种名称…"
-      value="{{ keyword }}"
-      bindinput="onSearch"
-    />
+    <input class="search-input-full" placeholder="搜索名称、俗称、拉丁学名…"
+           placeholder-class="input-placeholder"
+           value="{{ keyword }}" bindinput="onSearch" />
   </view>
 
+  <!-- 科目 Tab 横滑 -->
+  <scroll-view class="category-scroll" scroll-x enable-flex>
+    <view wx:for="{{ categories }}" wx:key="key"
+          class="cat-tab {{activeCategory === item.key ? 'cat-tab-active' : ''}}"
+          bindtap="onCategoryTap" data-key="{{ item.key }}">
+      {{ item.label }}
+    </view>
+  </scroll-view>
+
+  <!-- 计数提示 -->
+  <view class="count-hint">共 {{ filtered.length }} 种</view>
+
   <!-- 鱼种网格 -->
-  <view class="species-grid">
-    <view
-      wx:for="{{ filtered }}"
-      wx:key="id"
-      class="species-card"
-      bindtap="onTap"
-      data-id="{{ item.id }}"
-    >
+  <view wx:if="{{ filtered.length > 0 }}" class="species-grid">
+    <view wx:for="{{ filtered }}" wx:key="id"
+          class="species-card" bindtap="onTap" data-id="{{ item.id }}">
       <view class="species-icon-wrap" style="background:{{ item.color }}22">
         <text class="species-icon">{{ item.icon }}</text>
       </view>
       <text class="species-card-name">{{ item.name }}</text>
-      <text class="species-card-en">{{ item.en }}</text>
-      <view class="species-category">{{ item.category }}</view>
+      <text class="species-card-pinyin">{{ item.pinyin }}</text>
+      <text class="species-card-latin">{{ item.latin }}</text>
+      <view class="species-category-tag">{{ item.category }}</view>
     </view>
   </view>
 
-  <view wx:if="{{ filtered.length === 0 }}" class="empty-state">
+  <view wx:else class="empty-state">
     <text class="empty-icon">🔍</text>
     <text class="empty-text">未找到「{{ keyword }}」</text>
+    <text class="empty-subtext">试试俗称或拉丁学名</text>
   </view>
 
   <!-- 详情底层弹窗 -->
   <view wx:if="{{ selectedItem }}" class="detail-mask" bindtap="closeDetail">
     <view class="detail-panel" catchtap="">
+
+      <!-- 头部：色块 + 名称 -->
       <view class="detail-header" style="background:{{ selectedItem.color }}">
         <text class="detail-icon">{{ selectedItem.icon }}</text>
         <view class="detail-title-group">
           <text class="detail-name">{{ selectedItem.name }}</text>
+          <text class="detail-pinyin">{{ selectedItem.pinyin }}</text>
+          <text class="detail-latin">{{ selectedItem.latin }}</text>
           <text class="detail-en">{{ selectedItem.en }}</text>
         </view>
         <view class="detail-close" bindtap="closeDetail">✕</view>
       </view>
+
       <scroll-view scroll-y class="detail-body">
+
+        <!-- 俗称（有值才显示） -->
+        <view wx:if="{{ selectedItem.alias }}" class="alias-row">
+          <text class="alias-label">福建俗称</text>
+          <text class="alias-val">{{ selectedItem.alias }}</text>
+        </view>
+
+        <!-- 基础信息 -->
+        <view class="section-title-sm">📍 栖息与体型</view>
         <view class="detail-row"><text class="dr-label">栖息地</text><text class="dr-val">{{ selectedItem.habitat }}</text></view>
         <view class="detail-row"><text class="dr-label">最佳季节</text><text class="dr-val">{{ selectedItem.season }}</text></view>
-        <view class="detail-row"><text class="dr-label">常见体型</text><text class="dr-val">{{ selectedItem.size }}</text></view>
+        <view class="detail-row"><text class="dr-label">常见体长</text><text class="dr-val">{{ selectedItem.size }}</text></view>
         <view class="detail-row"><text class="dr-label">常见重量</text><text class="dr-val">{{ selectedItem.weight }}</text></view>
-        <view class="divider"></view>
+
+        <!-- 钓法信息 -->
+        <view class="section-title-sm">🎣 钓法参考</view>
         <view class="detail-row"><text class="dr-label">推荐饵料</text><text class="dr-val">{{ selectedItem.bait }}</text></view>
         <view class="detail-row"><text class="dr-label">推荐钓组</text><text class="dr-val">{{ selectedItem.rig }}</text></view>
         <view class="detail-row"><text class="dr-label">推荐竿力</text><text class="dr-val">{{ selectedItem.rodPower }}</text></view>
-        <view class="divider"></view>
+
+        <!-- 心得 -->
         <view class="tips-box">
           <text class="tips-label">💡 钓手心得</text>
           <text class="tips-text">{{ selectedItem.tips }}</text>
         </view>
+
         <view class="detail-action" bindtap="goRecord">
-          <view class="btn-primary" style="width:100%;text-align:center;padding:22rpx">记录一次渔获</view>
+          <view class="btn-primary" style="text-align:center;padding:22rpx">记录一次渔获</view>
         </view>
       </scroll-view>
     </view>

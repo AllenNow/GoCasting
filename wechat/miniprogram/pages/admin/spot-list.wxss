@@ -1,0 +1,132 @@
+/* pages/admin/spot-list.wxss */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 24rpx;
+  background: var(--color-card);
+  border-bottom: 2rpx solid var(--color-border);
+}
+
+.toolbar-count {
+  font-size: 26rpx;
+  color: var(--color-text-hint);
+}
+
+.btn-add {
+  background: var(--color-primary);
+  color: #ffffff;
+  font-size: 26rpx;
+  padding: 12rpx 28rpx;
+  border-radius: 100rpx;
+}
+
+.spot-list {
+  padding: 16rpx 24rpx;
+}
+
+.spot-item {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  background: var(--color-card);
+  border-radius: var(--radius-md);
+  padding: 20rpx;
+  margin-bottom: 12rpx;
+  box-shadow: var(--shadow-card);
+}
+
+.spot-cover {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.cover-img {
+  width: 100%;
+  height: 100%;
+}
+
+.cover-placeholder {
+  width: 100%;
+  height: 100%;
+  background: var(--color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40rpx;
+}
+
+.spot-info {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.spot-name-row {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  flex-wrap: wrap;
+}
+
+.spot-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.status-badge {
+  font-size: 20rpx;
+  padding: 3rpx 12rpx;
+  border-radius: 100rpx;
+}
+
+.status-active {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.status-hidden {
+  background: #f0f0f0;
+  color: var(--color-text-hint);
+}
+
+.spot-terrain {
+  font-size: 24rpx;
+  color: var(--color-text-secondary);
+}
+
+.spot-coords {
+  font-size: 20rpx;
+  color: var(--color-text-hint);
+}
+
+.spot-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  flex-shrink: 0;
+}
+
+.action-btn {
+  font-size: 22rpx;
+  padding: 8rpx 20rpx;
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
+
+.btn-edit {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.btn-toggle {
+  background: #f0f0f0;
+  color: var(--color-text-secondary);
+}

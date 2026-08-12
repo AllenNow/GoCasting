@@ -1,42 +1,6 @@
 // pages/weather/weather.js — 天气+潮汐仪表板
 const app = getApp();
-
-// 简化谐波潮汐预测（M2+S2+K1+O1，厦门默认参数）
-const DEFAULT_TIDE_PARAMS = {
-  M2:  { amp: 2.15, phase: 215.0, speed: 28.9841042 },
-  S2:  { amp: 0.78, phase: 248.0, speed: 30.0 },
-  K1:  { amp: 0.62, phase: 185.0, speed: 15.0410686 },
-  O1:  { amp: 0.45, phase: 168.0, speed: 13.9430356 },
-};
-
-function predictTide(hourOffset = 0, params = DEFAULT_TIDE_PARAMS) {
-  const now = new Date();
-  const t = (now.getTime() / 3600000) + hourOffset;  // 小时
-  let h = 0;
-  Object.values(params).forEach(c => {
-    h += c.amp * Math.cos((c.speed * t - c.phase) * Math.PI / 180);
-  });
-  return h;
-}
-
-// 生成未来 12 小时潮高数据
-function buildTideChart() {
-  const points = [];
-  for (let i = 0; i <= 12; i++) {
-    points.push({ hour: i, height: parseFloat(predictTide(i).toFixed(2)) });
-  }
-  return points;
-}
-
-// 计算当前潮汐状态
-function getTideState() {
-  const h0 = predictTide(0);
-  const h1 = predictTide(0.5);
-  if (h1 > h0 + 0.05) return { label: '涨潮', icon: '🌊', value: 'rising' };
-  if (h1 < h0 - 0.05) return { label: '退潮', icon: '↘️', value: 'falling' };
-  if (h0 > 1.5)       return { label: '高潮', icon: '⬆️', value: 'high' };
-  return               { label: '低潮', icon: '⬇️', value: 'low' };
-}
+const { predictTide, getTideState, getTideDisplay, buildTideChart } = require('../../utils/tide');
 
 // 钓鱼适宜指数（0-10）
 function calcFishScore(weather, tideState) {
@@ -77,8 +41,8 @@ Page({
   async loadAll() {
     this.setData({ loading: true, errorMsg: '' });
     // 并行：获取位置 + 计算潮汐
-    const tideChart   = buildTideChart();
-    const tideState   = getTideState();
+    const tideChart   = buildTideChart(12);
+    const tideState   = getTideDisplay(getTideState(0));
     const currentH    = parseFloat(predictTide(0).toFixed(2));
     this.setData({ tideChart, tideState, currentTideHeight: currentH });
 

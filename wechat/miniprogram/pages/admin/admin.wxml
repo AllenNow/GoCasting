@@ -1,0 +1,75 @@
+<!-- pages/admin/admin.wxml — 管理员后台首页 -->
+<view class="admin-page">
+
+  <!-- 顶部 header -->
+  <view class="admin-header">
+    <text class="admin-title">⚙️ 管理后台</text>
+    <text class="admin-sub">GoCasting · 仅管理员可见</text>
+  </view>
+
+  <!-- 功能模块入口 -->
+  <view class="admin-section">
+    <text class="section-label">内容管理</text>
+
+    <view class="admin-card" bindtap="goSpotList">
+      <view class="admin-card-left">
+        <text class="admin-card-icon">📍</text>
+        <view class="admin-card-info">
+          <text class="admin-card-title">官方钓点管理</text>
+          <text class="admin-card-sub">当前共 {{spotCount}} 个官方钓点</text>
+        </view>
+      </view>
+      <text class="admin-card-arrow">›</text>
+    </view>
+
+    <view class="admin-card admin-card-disabled">
+      <view class="admin-card-left">
+        <text class="admin-card-icon">🎣</text>
+        <view class="admin-card-info">
+          <text class="admin-card-title">用户钓点审核</text>
+          <text class="admin-card-sub">Phase 2 · 待开发</text>
+        </view>
+      </view>
+      <text class="admin-card-arrow">›</text>
+    </view>
+
+    <view class="admin-card admin-card-disabled">
+      <view class="admin-card-left">
+        <text class="admin-card-icon">🏷️</text>
+        <view class="admin-card-info">
+          <text class="admin-card-title">装备数据管理</text>
+          <text class="admin-card-sub">Phase 3 · 待开发</text>
+        </view>
+      </view>
+      <text class="admin-card-arrow">›</text>
+    </view>
+  </view>
+
+  <view class="admin-section">
+    <text class="section-label">用户 & 数据</text>
+
+    <view class="admin-card admin-card-disabled">
+      <view class="admin-card-left">
+        <text class="admin-card-icon">👥</text>
+        <view class="admin-card-info">
+          <text class="admin-card-title">用户管理</text>
+          <text class="admin-card-sub">Phase 4 · 待开发</text>
+        </view>
+      </view>
+      <text class="admin-card-arrow">›</text>
+    </view>
+
+    <view class="admin-card admin-card-disabled">
+      <view class="admin-card-left">
+        <text class="admin-card-icon">📊</text>
+        <view class="admin-card-info">
+          <text class="admin-card-title">数据看板</text>
+          <text class="admin-card-sub">Phase 5 · 待开发</text>
+        </view>
+      </view>
+      <text class="admin-card-arrow">›</text>
+    </view>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

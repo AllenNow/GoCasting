@@ -1,0 +1,87 @@
+<!-- pages/catch-detail/catch-detail.wxml — 渔获详情页 -->
+<view class="page-container" wx:if="{{!loading && record}}">
+
+  <!-- 照片区域 -->
+  <view class="photo-section" bindtap="onPhotoTap">
+    <image wx:if="{{record.photo_url}}" class="detail-photo" src="{{record.photo_url}}" mode="aspectFill" />
+    <view wx:else class="photo-placeholder">
+      <text class="photo-placeholder-icon">🐟</text>
+    </view>
+    <!-- 放流标签 -->
+    <view wx:if="{{record.released}}" class="released-badge">
+      <text>🐟 已放流</text>
+    </view>
+  </view>
+
+  <!-- 主信息区 -->
+  <view class="info-section">
+    <!-- 鱼种 + 重量 -->
+    <view class="species-row">
+      <text class="species-name">{{record.species || '未知鱼种'}}</text>
+      <text wx:if="{{record.weightDisplay}}" class="weight-text">{{record.weightDisplay}}</text>
+    </view>
+
+    <!-- 日期时间 -->
+    <view class="meta-row">
+      <text class="meta-icon">📅</text>
+      <text class="meta-value">{{record.dateDisplay}}</text>
+    </view>
+
+    <!-- 钓点 -->
+    <view wx:if="{{record.location}}" class="meta-row">
+      <text class="meta-icon">📍</text>
+      <text class="meta-value">{{record.location}}</text>
+    </view>
+  </view>
+
+  <!-- 条件信息卡片 -->
+  <view class="conditions-card" wx:if="{{record.bait || record.rig_type || record.tide_state || record.weather}}">
+    <view class="card-title">钓况条件</view>
+
+    <view class="condition-grid">
+      <view wx:if="{{record.bait}}" class="condition-item">
+        <text class="cond-label">饵料</text>
+        <text class="cond-value">{{record.bait}}</text>
+      </view>
+      <view wx:if="{{record.rig_type}}" class="condition-item">
+        <text class="cond-label">钓组</text>
+        <text class="cond-value">{{record.rig_type}}</text>
+      </view>
+      <view wx:if="{{record.tideDisplay}}" class="condition-item">
+        <text class="cond-label">潮汐</text>
+        <text class="cond-value">{{record.tideDisplay.icon}} {{record.tideDisplay.label}}</text>
+      </view>
+      <view wx:if="{{record.weather}}" class="condition-item">
+        <text class="cond-label">天气</text>
+        <text class="cond-value">{{record.weather}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 备注 -->
+  <view wx:if="{{record.notes}}" class="notes-card">
+    <view class="card-title">备注</view>
+    <text class="notes-text">{{record.notes}}</text>
+  </view>
+
+  <!-- 底部操作栏 -->
+  <view class="action-bar safe-bottom">
+    <view class="action-btn action-delete" bindtap="onDelete">
+      <text>🗑️</text>
+      <text class="action-label">删除</text>
+    </view>
+    <view class="action-btn action-share" bindtap="onShare">
+      <text>📤</text>
+      <text class="action-label">分享</text>
+    </view>
+    <view class="action-btn-primary" bindtap="onEdit">
+      <text>✏️ 编辑</text>
+    </view>
+  </view>
+
+</view>
+
+<!-- 加载中 -->
+<view wx:if="{{loading}}" class="loading-wrap">
+  <text>加载中…</text>
+</view>

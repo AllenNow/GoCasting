@@ -1,28 +1,6 @@
 // pages/go-score/go-score.js — Go-Score 钓鱼出行综合评分
 const app = getApp();
-
-// ─── 潮汐算法（复用 weather.js 相同参数）───────────────
-const TIDE_PARAMS = {
-  M2: { amp: 2.15, phase: 215.0, speed: 28.9841042 },
-  S2: { amp: 0.78, phase: 248.0, speed: 30.0 },
-  K1: { amp: 0.62, phase: 185.0, speed: 15.0410686 },
-  O1: { amp: 0.45, phase: 168.0, speed: 13.9430356 },
-};
-
-function predictTide(hourOffset = 0) {
-  const t = (Date.now() / 3600000) + hourOffset;
-  return Object.values(TIDE_PARAMS).reduce(
-    (h, c) => h + c.amp * Math.cos((c.speed * t - c.phase) * Math.PI / 180), 0
-  );
-}
-
-function tideState(offset = 0) {
-  const h0 = predictTide(offset);
-  const h1 = predictTide(offset + 0.5);
-  if (h1 > h0 + 0.05) return 'rising';
-  if (h1 < h0 - 0.05) return 'falling';
-  return h0 > 1.5 ? 'high' : 'low';
-}
+const { predictTide, getTideState, getTideDisplay } = require('../../utils/tide');
 
 // ─── 月相计算 ────────────────────────────────────────
 function moonPhase(dateOffset = 0) {
@@ -87,7 +65,7 @@ function buildHourlyScores(weather) {
   const now = new Date();
   for (let i = 0; i < 24; i++) {
     const hour = (now.getHours() + i) % 24;
-    const ts = tideState(i);
+    const ts = getTideState(i);
     const mp = moonPhase(i / 24);
     const s  = calcGoScore(ts, weather, mp, hour);
     scores.push({
@@ -143,26 +121,35 @@ Page({
 
     const now    = new Date();
     const hour   = now.getHours();
-    const ts     = tideState(0);
+    const ts     = getTideState(0);
     const mp     = moonPhase(0);
     const moon   = moonLabel(mp);
-    const tideIcon = ts === 'rising' ? '🌊' : ts === 'falling' ? '↘️' : ts === 'high' ? '⬆️' : '⬇️';
-    const tideLabel = ts === 'rising' ? '涨潮' : ts === 'falling' ? '退潮' : ts === 'high' ? '高潮' : '低潮';
+    const tideDisp = getTideDisplay(ts);
+    const tideIcon = tideDisp.icon;
+    const tideLabel = tideDisp.label;
 
     let weather = null;
 
-    // 尝试获取天气
-    try {
-      const pos = await new Promise((res, rej) =>
-        wx.getLocation({ type: 'gcj02', success: res, fail: rej })
-      );
-      const res = await wx.cloud.callFunction({
-        name: 'getWeather',
-        data: { lat: pos.latitude, lon: pos.longitude },
-      });
-      if (res.result?.success) weather = res.result.data.current;
-    } catch (e) {
-      this.setData({ errorMsg: '天气获取失败，仅使用潮汐+月相评分' });
+    // 尝试获取天气（使用缓存，5分钟内不重复请求）
+    const cached = app.globalData.weatherCache;
+    if (cached && Date.now() - cached.ts < 5 * 60 * 1000) {
+      weather = cached.data;
+    } else {
+      try {
+        const pos = await new Promise((res, rej) =>
+          wx.getLocation({ type: 'gcj02', success: res, fail: rej })
+        );
+        const res = await wx.cloud.callFunction({
+          name: 'getWeather',
+          data: { lat: pos.latitude, lon: pos.longitude },
+        });
+        if (res.result?.success) {
+          weather = res.result.data.current;
+          app.globalData.weatherCache = { ts: Date.now(), data: weather };
+        }
+      } catch (e) {
+        this.setData({ errorMsg: '天气获取失败，仅使用潮汐+月相评分' });
+      }
     }
 
     const score = calcGoScore(ts, weather, mp, hour);

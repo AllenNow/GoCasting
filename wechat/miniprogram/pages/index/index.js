@@ -102,7 +102,7 @@ Page({
   // 点击渔获条目查看详情
   onCatchTap(e) {
     const id = e.currentTarget.dataset.id;
-    wx.navigateTo({ url: `/pages/catch-log/catch-log?id=${id}` });
+    wx.navigateTo({ url: `/pages/catch-detail/catch-detail?id=${id}` });
   },
 
   // 下拉刷新

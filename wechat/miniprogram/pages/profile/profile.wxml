@@ -3,19 +3,44 @@
 
   <!-- 用户信息头部 -->
   <view class="profile-header">
-    <view wx:if="{{ userInfo }}" class="user-info">
-      <image class="avatar" src="{{ userInfo.avatarUrl }}" mode="aspectFill" />
-      <view class="user-text">
+    <view wx:if="{{ userInfo && userInfo.nickName }}" class="user-info">
+      <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+        <image class="avatar" src="{{ userInfo.avatarUrl }}" mode="aspectFill" />
+      </button>
+      <view wx:if="{{ editingNickname }}" class="nickname-edit-wrap">
+        <input
+          class="nickname-input"
+          type="nickname"
+          value="{{ userInfo.nickName }}"
+          bindinput="onNicknameInput"
+          bindblur="onNicknameBlur"
+          placeholder="输入昵称"
+          focus="{{true}}"
+        />
+      </view>
+      <view wx:else class="nickname-display" bindtap="startEditNickname">
         <text class="username">{{ userInfo.nickName }}</text>
-        <text class="user-sub">钓鱼爱好者</text>
+        <text class="edit-hint">✎</text>
       </view>
+      <text class="user-sub">钓鱼爱好者</text>
     </view>
-    <view wx:else class="user-unlogged" bindtap="getUserProfile">
-      <view class="avatar-placeholder">🎣</view>
-      <view class="user-text">
-        <text class="username">点击登录</text>
-        <text class="user-sub">获取个人统计数据</text>
-      </view>
+
+    <!-- 未设置态 -->
+    <view wx:else class="user-setup">
+      <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+        <view wx:if="{{ userInfo && userInfo.avatarUrl }}" class="avatar-wrap">
+          <image class="avatar" src="{{ userInfo.avatarUrl }}" mode="aspectFill" />
+        </view>
+        <view wx:else class="avatar-placeholder">🎣</view>
+      </button>
+      <text class="setup-hint">点击头像选择</text>
+      <input
+        class="nickname-input"
+        type="nickname"
+        bindinput="onNicknameInput"
+        bindblur="onNicknameBlur"
+        placeholder="输入昵称完成设置"
+      />
     </view>
   </view>
 
@@ -149,6 +174,16 @@
       <text class="menu-label">分享给钓友</text>
       <text class="menu-arrow">›</text>
     </button>
+  </view>
+
+  <!-- 管理员入口（仅管理员可见） -->
+  <view wx:if="{{isAdmin}}" class="card admin-entry" bindtap="goAdmin"
+        style="margin:0 24rpx 16rpx;padding:0;overflow:hidden;">
+    <view class="menu-item">
+      <text class="menu-icon">⚙️</text>
+      <text class="menu-label admin-label">管理后台</text>
+      <text class="menu-arrow">›</text>
+    </view>
   </view>
 
   <view class="safe-bottom"></view>

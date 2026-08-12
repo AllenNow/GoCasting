@@ -113,13 +113,55 @@ view, text, image { box-sizing: border-box; }
   background: var(--color-bg);
   border: 2rpx solid var(--color-border);
   border-radius: var(--radius-sm);
-  padding: 18rpx 20rpx;
+  padding: 0 24rpx;
+  height: 88rpx;           /* 固定高度，彻底避免文字截断 */
   font-size: 28rpx;
+  line-height: 88rpx;      /* 与 height 一致，文字垂直居中 */
   color: var(--color-text-primary);
+  box-sizing: border-box;
 }
 
 .form-input:focus {
   border-color: var(--color-primary);
+}
+
+/* textarea 继承 form-input 基础样式，补充最小高度 */
+.form-textarea {
+  width: 100%;
+  background: var(--color-bg);
+  border: 2rpx solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 16rpx 24rpx;
+  font-size: 28rpx;
+  line-height: 1.6;
+  color: var(--color-text-primary);
+  box-sizing: border-box;
+  min-height: 120rpx;
+}
+
+/* placeholder 专用类（微信小程序通过 placeholder-class 属性应用）*/
+.input-placeholder {
+  color: var(--color-text-hint);
+  font-size: 28rpx;
+}
+
+/* ===== 搜索栏（通用）===== */
+.search-bar {
+  padding: 16rpx 20rpx;
+  background: var(--color-card);
+}
+
+.search-input {
+  width: 100%;
+  background: var(--color-bg);
+  border: 2rpx solid var(--color-border);
+  border-radius: 100rpx;
+  padding: 0 28rpx;
+  height: 72rpx;           /* 固定高度，彻底避免文字截断 */
+  font-size: 26rpx;
+  line-height: 72rpx;      /* 与 height 一致，文字垂直居中 */
+  color: var(--color-text-primary);
+  box-sizing: border-box;
 }
 
 /* ===== 标签 ===== */
@@ -185,4 +227,15 @@ view, text, image { box-sizing: border-box; }
   padding: 60rpx;
   color: var(--color-text-hint);
   font-size: 26rpx;
+}
+
+/* ===== 区块标题 ===== */
+.section-header {
+  padding: 28rpx 32rpx 12rpx;
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--color-text-primary);
 }

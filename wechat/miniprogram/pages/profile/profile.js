@@ -4,6 +4,8 @@ const app = getApp();
 Page({
   data: {
     userInfo: null,
+    editingNickname: false,
+    isAdmin: false,
     stats: {
       totalCatches: 0,
       totalSpecies: 0,
@@ -13,34 +15,99 @@ Page({
       thisYear: 0,
     },
     recentCatches: [],
-    badges: [],           // 已解锁成就徽章
+    badges: [],
     loading: true,
-    // 图表数据
-    monthlyData: [],      // 月度趋势
+    monthlyData: [],
     maxMonthCount: 1,
-    speciesData: [],      // 鱼种分布
+    speciesData: [],
   },
 
   onLoad() {
+    const info = app.globalData.userInfo || wx.getStorageSync('userInfo');
+    if (info) this.setData({ userInfo: info });
+    this.setData({ isAdmin: app.globalData.isAdmin || false });
     this.loadStats();
+    this._lastLoadTime = Date.now();
   },
 
   onShow() {
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
       this.getTabBar().init();
     }
-    this.loadStats();
+    // isAdmin 依赖异步 openid，用轮询确保刷新
+    const checkAdmin = () => {
+      if (app.globalData.openid) {
+        this.setData({ isAdmin: app.globalData.isAdmin || false });
+      } else {
+        setTimeout(checkAdmin, 500);
+      }
+    };
+    checkAdmin();
+
+    if (Date.now() - (this._lastLoadTime || 0) > 60000) {
+      this.loadStats();
+      this._lastLoadTime = Date.now();
+    }
   },
 
-  // 获取用户信息（微信头像/昵称）
-  getUserProfile() {
-    wx.getUserProfile({
-      desc: '展示在个人主页',
-      success: (res) => {
-        this.setData({ userInfo: res.userInfo });
-        app.globalData.userInfo = res.userInfo;
-      },
-    });
+  // ──────────────────────────────────────────
+  // 登录：选择头像（微信新规范 open-type="chooseAvatar"）
+  // ──────────────────────────────────────────
+  onChooseAvatar(e) {
+    const avatarUrl = e.detail.avatarUrl;
+    const current = this.data.userInfo || {};
+    const updated = { ...current, avatarUrl };
+    this._saveUserInfo(updated);
+  },
+
+  // 昵称输入（type="nickname" 会弹出带微信昵称填充的键盘）
+  onNicknameInput(e) {
+    this._pendingNickname = e.detail.value;
+  },
+
+  // 昵称确认（失焦时保存）
+  onNicknameBlur() {
+    const nick = this._pendingNickname;
+    if (!nick || !nick.trim()) {
+      this.setData({ editingNickname: false });
+      return;
+    }
+    const current = this.data.userInfo || {};
+    const updated = { ...current, nickName: nick.trim() };
+    this._saveUserInfo(updated);
+    this.setData({ editingNickname: false });
+  },
+
+  startEditNickname() {
+    this.setData({ editingNickname: true });
+  },
+
+  // 统一保存用户信息到 globalData + 本地缓存 + 云数据库 users 集合
+  async _saveUserInfo(info) {
+    app.globalData.userInfo = info;
+    wx.setStorageSync('userInfo', info);
+    this.setData({ userInfo: info });
+
+    // 同步到云数据库 users 集合
+    // 云 DB 权限规则设为"仅创建者可读写"，查询自动只返回当前用户的记录
+    try {
+      const db = app.globalData.db;
+      const record = {
+        nick_name: info.nickName || '',
+        avatar_url: info.avatarUrl || '',
+        updated_at: db.serverDate(),
+      };
+      const res = await db.collection('users').limit(1).get();
+      if (res.data.length > 0) {
+        // 已有记录，更新
+        await db.collection('users').doc(res.data[0]._id).update({ data: record });
+      } else {
+        // 首次设置，新建（_openid 自动注入）
+        await db.collection('users').add({ data: { ...record, created_at: db.serverDate() } });
+      }
+    } catch (e) {
+      console.warn('用户信息同步到云数据库失败', e);
+    }
   },
 
   // 加载统计数据
@@ -112,6 +179,7 @@ Page({
     } catch (err) {
       console.error('加载统计失败', err);
       this.setData({ loading: false });
+      wx.showToast({ title: '数据加载失败', icon: 'none' });
     }
   },
 
@@ -143,6 +211,10 @@ Page({
   // 跳转到记录页
   goRecord() {
     wx.navigateTo({ url: '/pages/catch-log/catch-log' });
+  },
+
+  goAdmin() {
+    wx.navigateTo({ url: '/pages/admin/admin' });
   },
 
   goGoScore() {

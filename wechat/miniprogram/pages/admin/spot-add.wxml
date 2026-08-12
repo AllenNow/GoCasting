@@ -1,0 +1,121 @@
+<!-- pages/admin/spot-add.wxml — 官方钓点录入/编辑 -->
+<view class="page-container">
+
+  <!-- 封面图 -->
+  <view class="cover-section" bindtap="chooseCover">
+    <image wx:if="{{coverPreview}}" src="{{coverPreview}}" mode="aspectFill" class="cover-preview" />
+    <view wx:else class="cover-placeholder">
+      <text class="cover-plus">＋</text>
+      <text class="cover-hint">点击上传封面图（必填）</text>
+    </view>
+  </view>
+
+  <view class="form-body">
+
+    <!-- 名称 -->
+    <view class="form-group">
+      <text class="form-label">钓点名称 <text class="required">*</text></text>
+      <input class="form-input" placeholder="如：厦门曾厝垵矶岩"
+             placeholder-class="input-placeholder"
+             value="{{form.name}}" bindinput="onInput" data-field="name" />
+    </view>
+
+    <!-- 地形类型 -->
+    <view class="form-group">
+      <text class="form-label">地形类型 <text class="required">*</text></text>
+      <scroll-view class="tag-scroll" scroll-x enable-flex>
+        <view wx:for="{{terrainOptions}}" wx:key="*this"
+              class="tag {{form.terrain === item ? 'tag-active' : ''}}"
+              bindtap="selectTerrain" data-val="{{item}}">{{item}}</view>
+      </scroll-view>
+    </view>
+
+    <!-- 坐标选择 -->
+    <view class="form-group">
+      <text class="form-label">坐标定位 <text class="required">*</text></text>
+      <view class="location-row">
+        <view class="btn-location" bindtap="chooseLocation">
+          📍 {{form.lat ? '已定位，点击重选' : '选择位置'}}
+        </view>
+        <view wx:if="{{form.lat}}" class="coords-display">
+          <text class="coords-text">{{form.lat.toFixed(5)}}, {{form.lon.toFixed(5)}}</text>
+        </view>
+      </view>
+      <!-- 微信地图预览已选位置 -->
+      <map wx:if="{{form.lat}}"
+           class="location-map"
+           latitude="{{form.lat}}"
+           longitude="{{form.lon}}"
+           scale="15"
+           show-location
+           markers="{{mapMarkers}}">
+      </map>
+    </view>
+
+    <!-- 描述 -->
+    <view class="form-group">
+      <text class="form-label">钓点描述</text>
+      <textarea class="form-textarea" placeholder="介绍钓点特色、水文、礁石分布等…"
+                value="{{form.description}}" bindinput="onInput" data-field="description"
+                maxlength="500" auto-height />
+    </view>
+
+    <!-- 推荐钓法（多选） -->
+    <view class="form-group">
+      <text class="form-label">推荐钓法</text>
+      <scroll-view class="tag-scroll" scroll-x enable-flex>
+        <view wx:for="{{methodOptions}}" wx:key="*this"
+              class="tag {{form.methods.indexOf(item) !== -1 ? 'tag-active' : ''}}"
+              bindtap="toggleMethod" data-val="{{item}}">{{item}}</view>
+      </scroll-view>
+    </view>
+
+    <!-- 目标鱼种（多选） -->
+    <view class="form-group">
+      <text class="form-label">主要目标鱼</text>
+      <scroll-view class="tag-scroll" scroll-x enable-flex>
+        <view wx:for="{{speciesOptions}}" wx:key="*this"
+              class="tag {{form.species.indexOf(item) !== -1 ? 'tag-active' : ''}}"
+              bindtap="toggleSpecies" data-val="{{item}}">{{item}}</view>
+      </scroll-view>
+    </view>
+
+    <!-- 难度 -->
+    <view class="form-group">
+      <text class="form-label">难度等级</text>
+      <view class="difficulty-row">
+        <view wx:for="{{difficultyOptions}}" wx:key="value"
+              class="diff-btn {{form.difficulty === item.value ? 'diff-active' : ''}}"
+              bindtap="selectDifficulty" data-val="{{item.value}}">
+          {{item.label}}
+        </view>
+      </view>
+    </view>
+
+    <!-- 停车信息 -->
+    <view class="form-group">
+      <text class="form-label">停车信息</text>
+      <input class="form-input" placeholder="如：路边免费，约10个位"
+             placeholder-class="input-placeholder"
+             value="{{form.parking}}" bindinput="onInput" data-field="parking" />
+    </view>
+
+    <!-- 注意事项 -->
+    <view class="form-group">
+      <text class="form-label">注意事项</text>
+      <textarea class="form-textarea" placeholder="危险提示、涨潮风险、禁止事项等…"
+                value="{{form.cautions}}" bindinput="onInput" data-field="cautions"
+                maxlength="300" auto-height />
+    </view>
+
+    <!-- 提交按钮 -->
+    <view class="submit-btn {{saving ? 'btn-disabled' : ''}}" bindtap="submit">
+      {{saving ? '保存中…' : (isEdit ? '保存修改' : '发布钓点')}}
+    </view>
+
+    <view wx:if="{{isEdit}}" class="delete-btn" bindtap="deleteSpot">删除该钓点</view>
+
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

@@ -1,0 +1,44 @@
+/* 装备详情页格式化工具 */
+function formatPrice(price) {
+  if (!price && price !== 0) return '-';
+  var str = '' + price;
+  var result = '';
+  var count = 0;
+  var i = str.length - 1;
+  while (i >= 0) {
+    result = str[i] + result;
+    count++;
+    if (count % 3 === 0 && i > 0) {
+      result = ',' + result;
+    }
+    i--;
+  }
+  return result;
+}
+
+function priceRange(min, max) {
+  if (!min && !max) return '价格待定';
+  if (min === max) return '¥' + formatPrice(min);
+  return '¥' + formatPrice(min) + ' ~ ¥' + formatPrice(max);
+}
+
+function tierLabel(tier) {
+  if (tier === 1) return '入门';
+  if (tier === 2) return '中端';
+  if (tier === 3) return '高端';
+  return '';
+}
+
+function cellValue(model, key) {
+  var val = model[key];
+  if (val === null || val === undefined || val === '') return '-';
+  if (key === 'price_cn') return '¥' + formatPrice(val);
+  return '' + val;
+}
+
+module.exports = {
+  formatPrice: formatPrice,
+  priceRange: priceRange,
+  tierLabel: tierLabel,
+  cellValue: cellValue
+};

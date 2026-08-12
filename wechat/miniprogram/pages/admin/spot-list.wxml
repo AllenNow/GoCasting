@@ -1,0 +1,55 @@
+<!-- pages/admin/spot-list.wxml — 官方钓点列表 -->
+<view class="page-container">
+
+  <!-- 顶部操作栏 -->
+  <view class="toolbar">
+    <text class="toolbar-count">共 {{spots.length}} 个钓点</text>
+    <view class="btn-add" bindtap="goAdd">＋ 新增钓点</view>
+  </view>
+
+  <view wx:if="{{loading}}" class="loading-wrap"><text>加载中…</text></view>
+
+  <view wx:elif="{{spots.length === 0}}" class="empty-state">
+    <text class="empty-icon">📍</text>
+    <text class="empty-text">还没有官方钓点</text>
+    <text class="empty-subtext">点击右上角新增</text>
+  </view>
+
+  <!-- 钓点列表 -->
+  <view wx:else class="spot-list">
+    <view wx:for="{{spots}}" wx:key="_id" class="spot-item">
+      <!-- 封面图 -->
+      <view class="spot-cover">
+        <image wx:if="{{item.cover_image}}" src="{{item.cover_image}}" mode="aspectFill" class="cover-img" />
+        <view wx:else class="cover-placeholder">
+          <text>📍</text>
+        </view>
+      </view>
+
+      <!-- 信息 -->
+      <view class="spot-info">
+        <view class="spot-name-row">
+          <text class="spot-name">{{item.name}}</text>
+          <view class="status-badge status-{{item.status}}">
+            {{item.status === 'active' ? '已上架' : '已下架'}}
+          </view>
+        </view>
+        <text class="spot-terrain">{{item.terrain || '暂无地形'}}</text>
+        <text class="spot-coords">{{item.lat.toFixed(4)}}, {{item.lon.toFixed(4)}}</text>
+      </view>
+
+      <!-- 操作按钮 -->
+      <view class="spot-actions">
+        <view class="action-btn btn-edit" bindtap="goEdit" data-id="{{item._id}}">编辑</view>
+        <view class="action-btn btn-toggle"
+              bindtap="toggleStatus"
+              data-id="{{item._id}}"
+              data-status="{{item.status}}">
+          {{item.status === 'active' ? '下架' : '上架'}}
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

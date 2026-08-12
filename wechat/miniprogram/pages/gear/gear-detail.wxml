@@ -1,0 +1,199 @@
+<!-- pages/gear/gear-detail.wxml — 系列详情页 -->
+<wxs module="fmt" src="./fmt.wxs"></wxs>
+
+<view class="detail-page" wx:if="{{!loading && series}}">
+
+  <!-- ===== A. Hero 大图区 ===== -->
+  <view class="hero-section">
+    <!-- 有 banner_image 时展示宽幅大图，无则用渐变占位 -->
+    <block wx:if="{{series.banner_image}}">
+      <view class="hero-banner-wrap" bindtap="onPreviewBanner" data-url="{{series.banner_image}}">
+        <image class="hero-banner" src="{{series.banner_image}}" mode="aspectFill" />
+        <!-- 品牌名叠加在左下角 -->
+        <view class="hero-overlay">
+          <text class="hero-brand-label">{{series.series_name}}</text>
+        </view>
+      </view>
+    </block>
+    <view wx:else class="hero-placeholder">
+      <text class="hero-placeholder-text">{{series.series_name}}</text>
+    </view>
+
+    <!-- 商品轮播图（小图横滑） -->
+    <view wx:if="{{series.images && series.images.length > 0}}" class="product-gallery">
+      <swiper class="gallery-swiper"
+              indicator-dots="{{series.images.length > 1}}"
+              indicator-color="rgba(0,0,0,0.2)"
+              indicator-active-color="#1a7f5a"
+              circular
+              bindchange="onSwiperChange">
+        <swiper-item wx:for="{{series.images}}" wx:key="*this">
+          <image class="gallery-image" src="{{item}}" mode="aspectFit"
+                 bindtap="onPreviewImage"
+                 data-urls="{{series.images}}" data-current="{{item}}" />
+        </swiper-item>
+      </swiper>
+    </view>
+  </view>
+
+  <!-- ===== B. 系列信息头 ===== -->
+  <view class="info-header">
+    <view class="info-top-row">
+      <text class="info-brand">{{series.brand}}</text>
+      <view class="info-tier tier-{{series.price_tier}}">{{fmt.tierLabel(series.price_tier)}}</view>
+    </view>
+    <text class="info-name">{{series.series_name}}</text>
+    <text class="info-price">{{fmt.priceRange(series.price_min, series.price_max)}}</text>
+    <view class="info-meta-row">
+      <text class="info-meta">{{series.year ? series.year + '款' : ''}}</text>
+      <view class="info-market pill-market-{{series.market === 'CN' ? 'cn' : 'jdm'}}">
+        {{series.market === 'CN' ? '中国行货' : 'JDM'}}
+      </view>
+    </view>
+
+    <!-- 描述 -->
+    <view wx:if="{{series.description}}" class="info-desc-wrap">
+      <view class="divider"></view>
+      <text class="info-desc {{descExpanded ? '' : 'desc-clamp'}}">{{series.description}}</text>
+      <text class="desc-toggle" bindtap="toggleDesc">{{descExpanded ? '收起 ▴' : '展开全文 ▾'}}</text>
+    </view>
+  </view>
+
+  <!-- ===== C. 详情 Tab 栏 ===== -->
+  <view class="detail-tab-bar">
+    <view wx:for="{{detailTabs}}" wx:key="*this"
+          class="detail-tab-item {{detailTab === index ? 'detail-tab-active' : ''}}"
+          bindtap="onDetailTabChange" data-idx="{{index}}">{{item}}</view>
+  </view>
+
+  <!-- ===== C1. 产品技术 ===== -->
+  <view wx:if="{{detailTab === 0}}" class="section tech-section">
+    <block wx:if="{{series.technologies && series.technologies.length > 0}}">
+      <!-- 技术 Logo 网格 -->
+      <view class="tech-grid">
+        <view wx:for="{{series.technologies}}" wx:key="tech_id"
+              class="tech-grid-item {{activeTechIdx === index ? 'tech-grid-active' : ''}}"
+              bindtap="onTechTap" data-idx="{{index}}">
+          <view class="tech-logo-box">
+            <image wx:if="{{item.logo_url}}" class="tech-logo-img" src="{{item.logo_url}}" mode="aspectFit" />
+            <text wx:else class="tech-logo-text">{{item.name}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 技术详情 Swiper -->
+      <swiper class="tech-swiper" current="{{activeTechIdx}}"
+              bindchange="onTechSwiperChange" duration="300">
+        <swiper-item wx:for="{{series.technologies}}" wx:key="tech_id">
+          <view class="tech-detail-card">
+            <view class="tech-detail-img-wrap">
+              <image wx:if="{{item.image_url}}" class="tech-detail-img" src="{{item.image_url}}" mode="aspectFill" />
+              <view wx:else class="tech-detail-img-placeholder"></view>
+            </view>
+            <view class="tech-detail-info">
+              <text class="tech-detail-name">{{item.name}}</text>
+              <text class="tech-detail-desc">{{item.description}}</text>
+            </view>
+          </view>
+        </swiper-item>
+      </swiper>
+    </block>
+    <view wx:else class="empty-state">
+      <text class="empty-text">暂无技术信息</text>
+    </view>
+  </view>
+
+  <!-- ===== C2. 产品阵容(渔轮) / 产品特性(渔竿) ===== -->
+  <view wx:if="{{detailTab === 1}}" class="section">
+    <!-- 渔轮：产品阵容 -->
+    <block wx:if="{{series.category === 'reel'}}">
+      <view class="section-title">产品阵容 · 规格</view>
+      <scroll-view class="lineup-scroll" scroll-x enable-flex>
+        <view wx:for="{{models}}" wx:key="_id" class="lineup-card">
+          <text class="lineup-model">{{item.model}}</text>
+          <view class="lineup-divider"></view>
+          <view class="lineup-img-wrap" bindtap="onModelImageTap" data-url="{{item.model_image}}">
+            <image wx:if="{{item.model_image}}" class="lineup-img" src="{{item.model_image}}" mode="aspectFit" />
+            <view wx:else class="lineup-img-placeholder">
+              <text class="lineup-img-placeholder-text">{{item.model}}</text>
+            </view>
+            <text class="lineup-zoom">🔍</text>
+          </view>
+          <view class="lineup-btn" bindtap="onGoToSpec">规格对比 ></view>
+        </view>
+      </scroll-view>
+      <view wx:if="{{models.length === 0}}" class="empty-state">
+        <text class="empty-text">暂无型号数据</text>
+      </view>
+    </block>
+
+    <!-- 渔竿：产品特性 -->
+    <block wx:else>
+      <view class="section-title">产品特性</view>
+      <view wx:if="{{series.features && series.features.length > 0}}" class="feature-grid">
+        <view wx:for="{{series.features}}" wx:key="name" class="feature-item"
+              bindtap="onFeatureImageTap" data-url="{{item.image_url}}">
+          <view class="feature-img-wrap">
+            <image wx:if="{{item.image_url}}" class="feature-img" src="{{item.image_url}}" mode="aspectFill" />
+            <view wx:else class="feature-img-placeholder"></view>
+          </view>
+          <text class="feature-name">{{item.name}}</text>
+        </view>
+      </view>
+      <view wx:else class="empty-state">
+        <text class="empty-text">暂无特性信息</text>
+      </view>
+    </block>
+  </view>
+
+  <!-- ===== C3. 产品规格 ===== -->
+  <view wx:if="{{detailTab === 2}}" class="section spec-section">
+    <view class="section-title">产品规格</view>
+
+    <view wx:if="{{models.length > 0}}" class="spec-table-wrap">
+      <!-- 右侧渐变阴影提示 -->
+      <view class="spec-scroll-hint"></view>
+
+      <scroll-view class="spec-table-scroll" scroll-x>
+        <view class="spec-table">
+          <!-- 表头 -->
+          <view class="spec-row spec-header">
+            <view wx:for="{{specColumns}}" wx:key="key"
+                  class="spec-cell {{item.sticky ? 'spec-cell-sticky spec-header-sticky' : ''}}">
+              {{item.label}}
+            </view>
+          </view>
+          <!-- 数据行 -->
+          <view wx:for="{{models}}" wx:for-item="model" wx:key="_id"
+                class="spec-row {{index % 2 === 1 ? 'spec-row-alt' : ''}}">
+            <view wx:for="{{specColumns}}" wx:for-item="col" wx:key="key"
+                  class="spec-cell {{col.sticky ? 'spec-cell-sticky' : ''}} {{col.key === 'price_cn' ? 'spec-cell-price' : ''}}">
+              {{fmt.cellValue(model, col.key)}}
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+
+    <view wx:else class="empty-state">
+      <text class="empty-text">暂无规格数据</text>
+    </view>
+
+    <!-- 补充资料 -->
+    <view wx:if="{{series.documents && series.documents.length > 0}}" class="docs-section">
+      <view class="divider"></view>
+      <view wx:for="{{series.documents}}" wx:key="title"
+            class="doc-row" bindtap="onDocTap" data-doc="{{item}}">
+        <text class="doc-icon">{{item.type === 'pdf' ? '📄' : '🔗'}}</text>
+        <text class="doc-title">{{item.title}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>
+
+<!-- 加载状态 -->
+<view wx:if="{{loading}}" class="loading-wrap">
+  <text>加载中…</text>
+</view>

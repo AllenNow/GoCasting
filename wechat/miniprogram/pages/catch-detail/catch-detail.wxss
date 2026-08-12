@@ -1,0 +1,189 @@
+/* pages/catch-detail/catch-detail.wxss — 渔获详情页样式 */
+
+/* 照片区域 */
+.photo-section {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 75%; /* 4:3 */
+  overflow: hidden;
+}
+
+.detail-photo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.photo-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #1a7f5a 0%, #0d5c42 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.photo-placeholder-icon {
+  font-size: 120rpx;
+  opacity: 0.5;
+}
+
+.released-badge {
+  position: absolute;
+  top: 24rpx;
+  right: 24rpx;
+  background: rgba(26, 127, 90, 0.9);
+  color: #ffffff;
+  font-size: 24rpx;
+  padding: 8rpx 20rpx;
+  border-radius: 100rpx;
+}
+
+/* 主信息区 */
+.info-section {
+  padding: 32rpx;
+  background: var(--color-card);
+}
+
+.species-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 20rpx;
+}
+
+.species-name {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.weight-text {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.meta-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 12rpx;
+}
+
+.meta-icon {
+  font-size: 28rpx;
+}
+
+.meta-value {
+  font-size: 28rpx;
+  color: var(--color-text-secondary);
+}
+
+/* 条件信息卡片 */
+.conditions-card {
+  margin: 16rpx 20rpx;
+  background: var(--color-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 24rpx;
+}
+
+.card-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 20rpx;
+}
+
+.condition-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20rpx;
+}
+
+.condition-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.cond-label {
+  font-size: 22rpx;
+  color: var(--color-text-hint);
+}
+
+.cond-value {
+  font-size: 28rpx;
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+/* 备注卡片 */
+.notes-card {
+  margin: 16rpx 20rpx;
+  background: var(--color-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 24rpx;
+}
+
+.notes-text {
+  font-size: 28rpx;
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+/* 底部操作栏 */
+.action-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 20rpx 32rpx;
+  background: var(--color-card);
+  border-top: 2rpx solid var(--color-border);
+  z-index: 100;
+}
+
+.action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4rpx;
+  padding: 12rpx 24rpx;
+}
+
+.action-label {
+  font-size: 20rpx;
+  color: var(--color-text-hint);
+}
+
+.action-delete .action-label {
+  color: var(--color-danger);
+}
+
+.action-btn-primary {
+  flex: 1;
+  background: var(--color-primary);
+  color: #ffffff;
+  border-radius: var(--radius-md);
+  padding: 22rpx 0;
+  font-size: 28rpx;
+  font-weight: 500;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+}

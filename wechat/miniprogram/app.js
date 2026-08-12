@@ -6,17 +6,32 @@ App({
       return;
     }
     wx.cloud.init({
-      // 填入你的云开发环境 ID（在微信开发者工具 → 云开发控制台获取）
       env: 'cloud1-d4gkci99i21e9bfe9',
       traceUser: true,
     });
 
     this.globalData.db = wx.cloud.database();
+
+    // 从本地缓存恢复用户信息（免去每次重新授权）
+    const cached = wx.getStorageSync('userInfo');
+    if (cached) this.globalData.userInfo = cached;
+
+    // 通过 checkAdmin 云函数获取 openid + 管理员身份
+    // openid 不再出现在前端源码中，由服务端返回
+    wx.cloud.callFunction({ name: 'checkAdmin' })
+      .then(res => {
+        this.globalData.openid  = res.result.openid;
+        this.globalData.isAdmin = res.result.isAdmin === true;
+      })
+      .catch(err => { console.warn('checkAdmin 失败', err); });
   },
 
   globalData: {
-    db: null,           // 云数据库引用
-    userInfo: null,     // 微信用户信息（昵称/头像）
-    openid: null,       // 用户 openid（由云函数获取）
+    db: null,
+    userInfo: null,
+    openid: null,
+    isAdmin: false,
+    weatherCache: null,
+    catchesNeedRefresh: false,
   },
 });

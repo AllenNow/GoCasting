@@ -85,6 +85,37 @@
           {{ selectedSpot.latStr }}, {{ selectedSpot.lonStr }}
         </text>
       </view>
+
+      <!-- 钓点关联渔获 -->
+      <view class="spot-catches-section">
+        <view class="spot-catches-header">
+          <text class="spot-catches-title">📋 历史渔获</text>
+          <text wx:if="{{spotCatches.length > 0}}" class="spot-catches-count">{{spotCatches.length}}条</text>
+        </view>
+
+        <view wx:if="{{spotCatchesLoading}}" class="spot-catches-loading">
+          <text>加载中…</text>
+        </view>
+
+        <view wx:elif="{{spotCatches.length === 0}}" class="spot-catches-empty">
+          <text>该钓点暂无渔获记录</text>
+        </view>
+
+        <view wx:else class="spot-catches-list">
+          <view wx:for="{{spotCatches}}" wx:key="_id" class="spot-catch-item"
+                bindtap="onSpotCatchTap" data-id="{{item._id}}">
+            <view class="sc-left">
+              <text class="sc-species">{{item.species}}</text>
+              <text class="sc-date">{{item.date}}</text>
+            </view>
+            <view class="sc-right">
+              <text wx:if="{{item.weightDisplay}}" class="sc-weight">{{item.weightDisplay}}</text>
+              <text class="sc-arrow">›</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
       <view class="spot-actions">
         <view class="btn-primary nav-btn" bindtap="navigateToSpot">
           <text>🗺️ 导航到这里</text>

@@ -2,12 +2,17 @@
   "pages": [
     "pages/index/index",
     "pages/catch-log/catch-log",
+    "pages/catch-detail/catch-detail",
     "pages/spot-map/spot-map",
     "pages/profile/profile",
     "pages/gear/gear",
+    "pages/gear/gear-detail",
     "pages/weather/weather",
     "pages/go-score/go-score",
-    "pages/species/species"
+    "pages/species/species",
+    "pages/admin/admin",
+    "pages/admin/spot-list",
+    "pages/admin/spot-add"
   ],
   "tabBar": {
     "custom": true,

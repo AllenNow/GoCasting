@@ -1,125 +1,262 @@
-/* pages/gear/gear.wxss */
+/* pages/gear/gear.wxss — 装备列表页样式 */
 
-/* Tab 切换 */
-.tab-bar {
+/* ===== Tab 切换栏 ===== */
+.gear-tab-bar {
   display: flex;
-  background: #fff;
+  background: var(--color-card);
   border-bottom: 2rpx solid var(--color-border);
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 100;
 }
-.tab-item {
+
+.gear-tab-item {
   flex: 1;
   text-align: center;
-  padding: 24rpx 0;
-  font-size: 28rpx;
+  padding: 26rpx 0;
+  font-size: 30rpx;
   color: var(--color-text-secondary);
+  position: relative;
+  transition: color 0.2s;
 }
-.tab-active {
+
+.gear-tab-active {
   color: var(--color-primary);
   font-weight: 600;
-  border-bottom: 4rpx solid var(--color-primary);
 }
 
-/* 筛选栏 */
-.filter-bar {
+.gear-tab-active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 64rpx;
+  height: 6rpx;
+  border-radius: 3rpx;
+  background: var(--color-primary);
+}
+
+/* ===== 筛选 Pills ===== */
+.filter-scroll {
   display: flex;
-  align-items: center;
-  gap: 12rpx;
-  padding: 16rpx 20rpx;
-  background: #fff;
+  white-space: nowrap;
+  padding: 12rpx 20rpx 16rpx;
+  background: var(--color-card);
   border-bottom: 2rpx solid var(--color-border);
 }
+
 .filter-pill {
-  background: var(--color-bg);
-  border: 2rpx solid var(--color-border);
+  display: inline-flex;
+  align-items: center;
+  padding: 10rpx 24rpx;
   border-radius: 100rpx;
-  padding: 10rpx 20rpx;
   font-size: 24rpx;
   color: var(--color-text-secondary);
-  white-space: nowrap;
-  display: flex;
-  align-items: center;
-  gap: 6rpx;
-}
-.pill-arrow { font-size: 18rpx; }
-.search-input {
-  flex: 1;
   background: var(--color-bg);
   border: 2rpx solid var(--color-border);
-  border-radius: 100rpx;
-  padding: 10rpx 20rpx;
-  font-size: 24rpx;
-  min-width: 0;
+  margin-right: 12rpx;
+  flex-shrink: 0;
+  transition: all 0.2s;
 }
 
-/* 装备卡片 */
-.gear-list { padding: 16rpx 20rpx; }
-.gear-card {
-  background: #fff;
+.pill-active {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  font-weight: 500;
+}
+
+.pill-divider {
+  display: inline-block;
+  width: 2rpx;
+  height: 32rpx;
+  background: var(--color-border);
+  margin: 0 8rpx;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+/* ===== 系列卡片列表 ===== */
+.series-list {
+  padding: 16rpx 20rpx;
+}
+
+.series-card {
+  background: var(--color-card);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
-  padding: 24rpx;
-  margin-bottom: 16rpx;
+  margin-bottom: 24rpx;
+  overflow: hidden;
 }
-.gear-header {
+
+/* 卡片图片区域 */
+.card-image-wrap {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 56.25%; /* 16:9 */
+  overflow: hidden;
+}
+
+.card-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.card-image-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #1a7f5a 0%, #0d5c42 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.placeholder-text {
+  color: #ffffff;
+  font-size: 36rpx;
+  font-weight: 700;
+  text-align: center;
+  padding: 0 40rpx;
+  opacity: 0.9;
+}
+
+/* 右上角标签组 */
+.card-pills {
+  position: absolute;
+  top: 16rpx;
+  right: 16rpx;
+  display: flex;
+  gap: 8rpx;
+}
+
+.card-pill {
+  padding: 4rpx 16rpx;
+  border-radius: 100rpx;
+  font-size: 20rpx;
+  font-weight: 500;
+}
+
+.pill-type {
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--color-text-secondary);
+}
+
+.pill-market-cn {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.pill-market-jdm {
+  background: #fff8e6;
+  color: var(--color-accent);
+}
+
+/* 卡片信息区 */
+.card-info {
+  padding: 20rpx 24rpx 24rpx;
+}
+
+.card-info-top {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 16rpx;
 }
-.gear-brand-model { display: flex; flex-direction: column; gap: 4rpx; flex: 1; }
-.gear-brand { font-size: 22rpx; color: var(--color-text-hint); }
-.gear-model { font-size: 28rpx; font-weight: 600; color: var(--color-text-primary); }
 
-/* 价格等级标签 */
-.tier-tag {
-  font-size: 20rpx;
-  padding: 4rpx 16rpx;
-  border-radius: 100rpx;
-  flex-shrink: 0;
-  margin-left: 12rpx;
-}
-.tier-1 { background: #f0f0f0; color: #666; }
-.tier-2 { background: #e6f4ef; color: #1a7f5a; }
-.tier-3 { background: #fff8e6; color: #f0a500; }
-
-/* 规格网格 */
-.spec-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12rpx;
-}
-.spec-item { display: flex; flex-direction: column; gap: 2rpx; }
-.spec-label { font-size: 20rpx; color: var(--color-text-hint); }
-.spec-val   { font-size: 26rpx; font-weight: 500; color: var(--color-text-primary); }
-
-/* JDM 行 */
-.jdm-row {
+.card-meta {
   display: flex;
-  align-items: flex-start;
-  gap: 12rpx;
-  margin-top: 16rpx;
-  padding-top: 16rpx;
-  border-top: 2rpx solid var(--color-border);
-}
-.jdm-desc {
-  font-size: 22rpx;
-  color: var(--color-text-secondary);
-  line-height: 1.5;
+  flex-direction: column;
+  gap: 4rpx;
   flex: 1;
 }
 
-/* 初始化提示 */
+.card-brand {
+  font-size: 22rpx;
+  color: var(--color-text-hint);
+}
+
+.card-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.4;
+}
+
+.card-price {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: var(--color-accent);
+  margin-top: 4rpx;
+}
+
+.card-sub {
+  font-size: 22rpx;
+  color: var(--color-text-secondary);
+  margin-top: 4rpx;
+}
+
+/* 价位标签 */
+.card-tier {
+  font-size: 20rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 100rpx;
+  flex-shrink: 0;
+  margin-left: 16rpx;
+  margin-top: 4rpx;
+}
+
+.tier-1 {
+  background: #f0f0f0;
+  color: #666666;
+}
+
+.tier-2 {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.tier-3 {
+  background: #fff8e6;
+  color: var(--color-accent);
+}
+
+/* ===== 初始化提示 ===== */
 .seed-wrap {
-  margin: 24rpx 20rpx;
+  margin: 40rpx 20rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12rpx;
-  padding: 40rpx 32rpx;
+  gap: 16rpx;
+  padding: 60rpx 32rpx;
 }
-.seed-hint { font-size: 30rpx; font-weight: 600; }
-.seed-sub  { font-size: 24rpx; color: var(--color-text-hint); }
-.seed-btn  { margin-top: 16rpx; padding: 22rpx 60rpx; border-radius: 100rpx; font-size: 28rpx; }
+
+.seed-icon {
+  font-size: 64rpx;
+}
+
+.seed-hint {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.seed-sub {
+  font-size: 24rpx;
+  color: var(--color-text-hint);
+}
+
+.seed-btn {
+  margin-top: 24rpx;
+  padding: 22rpx 60rpx;
+  border-radius: 100rpx;
+  font-size: 28rpx;
+}

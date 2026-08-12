@@ -92,6 +92,7 @@ Page({
     } catch (err) {
       console.error('加载钓点失败', err);
       this.setData({ loading: false });
+      wx.showToast({ title: '加载钓点失败', icon: 'none' });
     }
   },
 
@@ -127,9 +128,43 @@ Page({
         latStr: spot.lat.toFixed(4),
         lonStr: spot.lon.toFixed(4),
       },
+      spotCatches: [],
+      spotCatchesLoading: true,
       showDetailPanel: true,
       showAddPanel: false,
     });
+    // 加载该钓点关联的渔获记录
+    this.loadSpotCatches(spot.name);
+  },
+
+  // 加载钓点关联渔获
+  async loadSpotCatches(spotName) {
+    try {
+      const db = app.globalData.db;
+      const res = await db.collection('catch_logs')
+        .where({ location: spotName })
+        .orderBy('date', 'desc')
+        .limit(10)
+        .get();
+
+      const catches = res.data.map(c => ({
+        ...c,
+        weightDisplay: c.weight_g
+          ? (c.weight_g >= 1000 ? (c.weight_g / 1000).toFixed(1) + 'kg' : c.weight_g + 'g')
+          : '',
+      }));
+
+      this.setData({ spotCatches: catches, spotCatchesLoading: false });
+    } catch (err) {
+      console.error('加载钓点渔获失败', err);
+      this.setData({ spotCatchesLoading: false });
+    }
+  },
+
+  // 点击钓点渔获条目 → 跳转详情
+  onSpotCatchTap(e) {
+    const id = e.currentTarget.dataset.id;
+    wx.navigateTo({ url: `/pages/catch-detail/catch-detail?id=${id}` });
   },
 
   // 长按地图 → 选取坐标准备添加钓点
@@ -185,6 +220,7 @@ Page({
           lat: newSpot.lat,
           lon: newSpot.lon,
           is_public: newSpot.isPublic,
+          openid: app.globalData.openid || null,   // 显式记录用户 openid
           created_at: db.serverDate(),
         },
       });
