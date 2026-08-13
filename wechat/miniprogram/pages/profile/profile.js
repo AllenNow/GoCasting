@@ -116,10 +116,10 @@ Page({
     try {
       const db = app.globalData.db;
 
-      // 获取全部渔获（最多 1000 条）
+      // 获取全部渔获（云数据库前端单次最多1000条）
       const res = await db.collection('catch_logs')
         .orderBy('date', 'desc')
-        .limit(100)
+        .limit(1000)
         .get();
 
       const catches = res.data;

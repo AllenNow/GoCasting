@@ -22,6 +22,22 @@ App({
       .then(res => {
         this.globalData.openid  = res.result.openid;
         this.globalData.isAdmin = res.result.isAdmin === true;
+
+        // 检查用户是否被封禁
+        if (res.result.openid) {
+          this.globalData.db.collection('users').limit(1).get()
+            .then(r => {
+              if (r.data.length > 0 && r.data[0].banned) {
+                wx.showModal({
+                  title: '账号已被封禁',
+                  content: '您的账号因违规已被封禁，如有疑问请联系管理员。',
+                  showCancel: false,
+                  confirmText: '知道了',
+                });
+              }
+            })
+            .catch(() => {});
+        }
       })
       .catch(err => { console.warn('checkAdmin 失败', err); });
   },
