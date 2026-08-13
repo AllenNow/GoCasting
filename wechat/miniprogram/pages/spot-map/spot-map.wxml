@@ -78,8 +78,8 @@
         {{ selectedSpot.description }}
       </text>
       <view class="spot-meta">
-        <view class="tag {{ selectedSpot.is_public ? 'tag-green' : 'tag-gray' }}">
-          {{ selectedSpot.is_public ? '🌐 公开' : '🔒 私有' }}
+        <view class="tag {{ selectedSpot.isOfficial ? 'tag-gold' : (selectedSpot.is_public ? 'tag-green' : 'tag-gray') }}">
+          {{ selectedSpot.isOfficial ? '⭐ 官方钓点' : (selectedSpot.is_public ? '🌐 公开' : '🔒 私有') }}
         </view>
         <text class="spot-coord">
           {{ selectedSpot.latStr }}, {{ selectedSpot.lonStr }}

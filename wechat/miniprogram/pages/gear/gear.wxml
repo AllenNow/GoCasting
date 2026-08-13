@@ -1,9 +1,10 @@
 <!-- pages/gear/gear.wxml — 装备列表页 -->
 <wxs module="utils" src="./fmt.wxs"></wxs>
 
-<view class="page-container">
+<!-- 顶部固定区域：直接作为页面根级元素，sticky 才能对 page 滚动生效 -->
+<view class="header-sticky">
 
-  <!-- 顶部 Tab 切换栏 -->
+  <!-- Tab 切换栏 -->
   <view class="gear-tab-bar">
     <view class="gear-tab-item {{activeTab === 'rod' ? 'gear-tab-active' : ''}}"
           bindtap="switchTab" data-tab="rod">渔竿</view>
@@ -18,39 +19,50 @@
            confirm-type="search" />
   </view>
 
-  <!-- 筛选 Pills -->
-  <scroll-view class="filter-scroll" scroll-x enable-flex>
-    <!-- 品牌 -->
-    <view wx:for="{{brands}}" wx:key="*this"
-          class="filter-pill {{brandIdx === index ? 'pill-active' : ''}}"
-          catchtap="onBrandChange" data-idx="{{index}}">{{item}}</view>
-    <!-- 分隔符 -->
-    <view class="pill-divider"></view>
-    <!-- 类型（仅渔竿显示） -->
-    <block wx:if="{{showTypePill}}">
-      <view wx:for="{{types}}" wx:key="value"
-            class="filter-pill {{typeIdx === index ? 'pill-active' : ''}}"
-            catchtap="onTypeChange" data-idx="{{index}}">{{item.label}}</view>
-      <view class="pill-divider"></view>
-    </block>
-    <!-- 价位 -->
-    <view wx:for="{{prices}}" wx:key="value"
-          class="filter-pill {{priceIdx === index ? 'pill-active' : ''}}"
-          catchtap="onPriceChange" data-idx="{{index}}">{{item.label}}</view>
-    <!-- 分隔符 -->
-    <view class="pill-divider"></view>
-    <!-- 市场 -->
-    <view wx:for="{{markets}}" wx:key="value"
-          class="filter-pill {{marketIdx === index ? 'pill-active' : ''}}"
-          catchtap="onMarketChange" data-idx="{{index}}">{{item.label}}</view>
-  </scroll-view>
+  <!-- 第一行：价位筛选 -->
+  <view class="filter-row-price">
+    <scroll-view scroll-x class="filter-scroll-inner" enable-flex>
+      <view wx:for="{{prices}}" wx:key="value"
+            class="price-pill {{priceIdx === index ? 'price-pill-active' : ''}}"
+            bindtap="onPriceChange" data-idx="{{index}}">{{item.label}}</view>
+    </scroll-view>
+  </view>
 
-  <!-- 加载中 -->
+  <!-- 第二行：品牌 + 市场 + 类型 -->
+  <view class="filter-row-sub">
+    <scroll-view scroll-x class="filter-scroll-inner" enable-flex>
+      <view wx:for="{{brands}}" wx:key="*this"
+            class="sub-pill {{brandIdx === index ? 'sub-pill-active' : ''}}"
+            bindtap="onBrandChange" data-idx="{{index}}">{{item}}</view>
+      <view class="sub-divider"></view>
+      <view wx:for="{{markets}}" wx:key="value"
+            class="sub-pill {{marketIdx === index ? 'sub-pill-active' : ''}}"
+            bindtap="onMarketChange" data-idx="{{index}}">{{item.label}}</view>
+      <block wx:if="{{showTypePill}}">
+        <view class="sub-divider"></view>
+        <view wx:for="{{types}}" wx:key="value"
+              class="sub-pill {{typeIdx === index ? 'sub-pill-active' : ''}}"
+              bindtap="onTypeChange" data-idx="{{index}}">{{item.label}}</view>
+      </block>
+    </scroll-view>
+  </view>
+
+  <!-- 已筛选提示 + 重置 -->
+  <view wx:if="{{brandIdx > 0 || typeIdx > 0 || priceIdx > 0 || marketIdx > 0}}"
+        class="filter-active-bar">
+    <text class="filter-active-text">已筛选 · {{filteredList.length}} 个结果</text>
+    <view class="filter-reset" bindtap="resetFilters">重置</view>
+  </view>
+
+</view>
+
+<!-- 内容区：独立容器，不包在 header-sticky 里 -->
+<view class="gear-content">
+
   <view wx:if="{{loading}}" class="loading-wrap">
     <text>加载中…</text>
   </view>
 
-  <!-- 数据库为空 → 初始化提示 -->
   <view wx:elif="{{!seeded}}" class="seed-wrap card">
     <text class="seed-icon">📦</text>
     <text class="seed-hint">装备数据库为空</text>
@@ -58,25 +70,21 @@
     <view class="btn-primary seed-btn" bindtap="seedData">初始化装备数据</view>
   </view>
 
-  <!-- 筛选无结果 -->
   <view wx:elif="{{filteredList.length === 0}}" class="empty-state">
     <text class="empty-icon">🔍</text>
     <text class="empty-text">没有符合条件的装备</text>
     <text class="empty-subtext" wx:if="{{keyword}}">未找到相关装备，试试其他关键词</text>
   </view>
 
-  <!-- 系列卡片列表 -->
   <view wx:else class="series-list">
     <view wx:for="{{filteredList}}" wx:key="series_id"
           class="series-card" bindtap="onCardTap" data-id="{{item.series_id}}">
-      <!-- 顶部代表图 -->
       <view class="card-image-wrap">
         <image wx:if="{{item.images && item.images.length > 0 && item.images[0]}}"
                class="card-image" src="{{item.images[0]}}" mode="aspectFill" lazy-load />
         <view wx:else class="card-image-placeholder">
           <text class="placeholder-text">{{item.series_name}}</text>
         </view>
-        <!-- 右上角标签 -->
         <view class="card-pills">
           <view wx:if="{{item.type_label && showTypePill}}" class="card-pill pill-type">{{item.type_label}}</view>
           <view class="card-pill pill-market-{{item.market === 'CN' ? 'cn' : 'jdm'}}">
@@ -84,7 +92,6 @@
           </view>
         </view>
       </view>
-      <!-- 下方信息区 -->
       <view class="card-info">
         <view class="card-info-top">
           <view class="card-meta">

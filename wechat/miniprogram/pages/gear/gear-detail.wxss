@@ -109,20 +109,12 @@
   border-radius: 100rpx;
 }
 
-.tier-1 {
-  background: #f0f0f0;
-  color: #666666;
-}
-
-.tier-2 {
-  background: var(--color-primary-light);
-  color: var(--color-primary);
-}
-
-.tier-3 {
-  background: #fff8e6;
-  color: var(--color-accent);
-}
+.tier-1 { background: #f0f0f0; color: #666666; }
+.tier-2 { background: #e6f0ff; color: #3a7bd5; }
+.tier-3 { background: var(--color-primary-light); color: var(--color-primary); }
+.tier-4 { background: #fff8e6; color: var(--color-accent); }
+.tier-5 { background: #fdeaea; color: #c0392b; }
+.tier-6 { background: #1a1a2e; color: #ffffff; }
 
 .info-name {
   font-size: 36rpx;

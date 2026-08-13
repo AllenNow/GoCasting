@@ -514,3 +514,65 @@ const MODELS_DATA_SPINJOY_CN = [
 ];
 
 module.exports.MODELS_DATA_SPINJOY_CN = MODELS_DATA_SPINJOY_CN;
+
+
+// ============================================================
+// 渔轮型号 — ACTIVECAST (CN行货) — 5 个型号
+// 数据来源：禧玛诺官网产品规格表
+// 注：细线/标准为无刹车规格，SD系列为带刹车规格
+// ============================================================
+
+const MODELS_DATA_ACTIVECAST_CN = [
+  {
+    series_id: 'shimano_activecast_reel_cn',
+    model: '细线', model_image: '', category: 'reel',
+    gear_ratio: 3.5, max_drag_kg: 20, weight_g: 590,
+    spool_spec: '73.5/35',
+    line_capacity_nylon: '1.2-250, 1.5-200, 2-150',
+    line_capacity_pe: '0.8-250, 1-200, 1.2-165',
+    max_retrieve_cm: 83, handle_length_mm: 85, bearings: '3/1',
+    price_cn: 541, product_code: '048233'
+  },
+  {
+    series_id: 'shimano_activecast_reel_cn',
+    model: '标准', model_image: '', category: 'reel',
+    gear_ratio: 3.5, max_drag_kg: 20, weight_g: 595,
+    spool_spec: '73.5/35',
+    line_capacity_nylon: '2-300, 3-200, 4-150',
+    line_capacity_pe: '1.5-250, 2-200, 3-130',
+    max_retrieve_cm: 83, handle_length_mm: 85, bearings: '3/1',
+    price_cn: 541, product_code: '048240'
+  },
+  {
+    series_id: 'shimano_activecast_reel_cn',
+    model: 'SD 1120', model_image: '', category: 'reel',
+    gear_ratio: 3.5, max_drag_kg: 20, weight_g: 650,
+    spool_spec: '76/35',
+    line_capacity_nylon: '10-240, 12-200, 14-170',
+    line_capacity_pe: '8-200, 10-160, 12-130',
+    max_retrieve_cm: 84, handle_length_mm: 85, bearings: '3/1',
+    price_cn: 563, product_code: '048257'
+  },
+  {
+    series_id: 'shimano_activecast_reel_cn',
+    model: 'SD 1060', model_image: '', category: 'reel',
+    gear_ratio: 3.5, max_drag_kg: 20, weight_g: 650,
+    spool_spec: '76/35',
+    line_capacity_nylon: '5-250, 6-200, 8-160',
+    line_capacity_pe: '4-225, 5-175, 6-140',
+    max_retrieve_cm: 84, handle_length_mm: 85, bearings: '3/1',
+    price_cn: 563, product_code: '048264'
+  },
+  {
+    series_id: 'shimano_activecast_reel_cn',
+    model: 'SD 1080', model_image: '', category: 'reel',
+    gear_ratio: 3.5, max_drag_kg: 20, weight_g: 650,
+    spool_spec: '76/35',
+    line_capacity_nylon: '6-275, 8-200, 10-150',
+    line_capacity_pe: '5-225, 6-185, 8-140',
+    max_retrieve_cm: 84, handle_length_mm: 85, bearings: '3/1',
+    price_cn: 563, product_code: '048271'
+  },
+];
+
+module.exports.MODELS_DATA_ACTIVECAST_CN = MODELS_DATA_ACTIVECAST_CN;

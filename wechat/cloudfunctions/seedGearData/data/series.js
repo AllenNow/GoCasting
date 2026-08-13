@@ -16,7 +16,7 @@ const SERIES_DATA = [
     market: 'CN',
     price_min: 5489,
     price_max: 5489,
-    price_tier: 3,
+    price_tier: 4,
     model_count: 2,
     description: '更远更精确，45mm行程，投轮的新世界。\n\nSHIMANO投轮的最高峰KISU SP，变为万众期待的45mm行程规格。机身和主轴采用平衡设计，吸收抛投时的冲击，稳定提升飞行距离和精确程度。加入INFINITYDRIVE和SILENTDRIVE技术，有着优秀的收线强度。飞行距离，刚性，轻量，使用感，基本都达到了SHIMANO投轮的最高峰。',
     technologies: [
@@ -61,7 +61,7 @@ const SERIES_DATA = [
     market: 'CN',
     price_min: 5250,
     price_max: 5250,
-    price_tier: 3,
+    price_tier: 4,
     model_count: 1,
     description: '',
     technologies: [],
@@ -81,7 +81,7 @@ const SERIES_DATA = [
     market: 'CN',
     price_min: 5250,
     price_max: 5250,
-    price_tier: 3,
+    price_tier: 4,
     model_count: 1,
     description: '',
     technologies: [],
@@ -101,7 +101,7 @@ const SERIES_DATA = [
     market: 'CN',
     price_min: 3392,
     price_max: 3497,
-    price_tier: 2,
+    price_tier: 3,
     model_count: 3,
     description: '高刚性规格的远投轮。\n\n提升了远投钓法所追求的抛投距离、抛投精度和收线力量。搭载RIGIDCAST、INFINITYDRIVE、SILENTDRIVE等技术和FLIEGEN高刚性的机身效果相辅相成，减少了抛投和收线时的机身变形。提升了抛投距离和精度，即使是连续抛投连续中鱼也可以顺滑收线。搭载HIGHSPEED DRAG技术的SD规格可以和置竿搭配使用。给热爱远投的钓友强力支持。',
     technologies: [
@@ -380,6 +380,110 @@ const SERIES_DATA = [
     documents: [],
     images: [],
     sort_order: 112
+  },
+
+  // ============================================================
+  // 渔轮 — 中国行货 (CN) — 新增系列（2026年8月梳理补充）
+  // ============================================================
+  {
+    series_id: 'shimano_aerlex_xsc_reel_cn',
+    brand: 'Shimano',
+    series_name: 'AERLEX XSC',
+    category: 'reel', type: 'surfcasting_fixed_spool', type_label: '远投专用轮',
+    year: null, market: 'CN', price_min: 1050, price_max: 1050, price_tier: 1,
+    model_count: 1, description: '', technologies: [], features: [], documents: [], images: [],
+    sort_order: 62
+  },
+  {
+    series_id: 'shimano_aerlex_xtc_reel_cn',
+    brand: 'Shimano',
+    series_name: 'AERLEX XTC',
+    category: 'reel', type: 'surfcasting_fixed_spool', type_label: '远投专用轮',
+    year: null, market: 'CN', price_min: 1050, price_max: 1050, price_tier: 1,
+    model_count: 1, description: '', technologies: [], features: [], documents: [], images: [],
+    sort_order: 63
+  },
+  {
+    series_id: 'shimano_activecast_reel_cn',
+    brand: 'Shimano',
+    series_name: 'ACTIVECAST',
+    category: 'reel', type: 'surfcasting_fixed_spool', type_label: '远投专用轮',
+    year: null, market: 'CN', price_min: 541, price_max: 563, price_tier: 1,
+    model_count: 5,
+    description: '瞄准远处目标钓点的远投轮。\n\n配备SHIMANO上位产品所采用的铝制线杯以及主要转动部位的培林，让您享受远投钓法乐趣的高性价比规格。同时也是非常适合入门初学者的产品。',
+    technologies: [
+      { tech_id: 'silentdrive', name: 'SILENTDRIVE', description: '改善至细节部、安静的一体感。机身全部的基本设计、驱动关联部每一个每一个地方重新制作，排除部品间基至细节部位的细微卡顿、间隙和晃动。改善了部件的排布，实现了新次元的顺滑回转性能和静肃性。', logo_url: '', image_url: '' },
+      { tech_id: 'g_free_body', name: 'G FREE BODY', description: '重心更靠近手部。让线杯前后运动的功能部件在渔轮内靠上部配置、让渔轮整体的重心成功靠近手部。这样可以提高和鱼竿的一体性、减少钓友抛投时产生的疲劳感，并且提高了鱼竿的操作性。', logo_url: '', image_url: '' },
+      { tech_id: 'parallel_body', name: 'PARALLEL BODY', description: '抛投时渔线不容易碰到鱼竿、保持鱼竿和渔轮的位置，让线杯中心线和鱼竿保持平衡，这样就能顺滑出线并提升飞行距离。', logo_url: '', image_url: '' },
+      { tech_id: 'ar_c_spool', name: 'AR-C线杯', description: '特殊线杯环形状的线杯，藉由流线的造型产生「渔线整流效果」达到解决缠线问题和提升抛投距离。※AR-C线杯：细、标准除外。', logo_url: '', image_url: '' },
+    ],
+    features: [],
+    documents: [],
+    images: [],
+    sort_order: 64
+  },
+  {
+    series_id: 'shimano_speedmaster_xsd_reel_cn',
+    brand: 'Shimano',
+    series_name: 'SPEEDMASTER XSD',
+    category: 'reel', type: 'surfcasting_fixed_spool', type_label: '远投专用轮',
+    year: null, market: 'CN', price_min: 1260, price_max: 1260, price_tier: 1,
+    model_count: 1, description: '', technologies: [], features: [], documents: [], images: [],
+    sort_order: 65
+  },
+  {
+    series_id: 'shimano_speedmaster_xtd_reel_cn',
+    brand: 'Shimano',
+    series_name: 'SPEEDMASTER XTD',
+    category: 'reel', type: 'surfcasting_fixed_spool', type_label: '远投专用轮',
+    year: null, market: 'CN', price_min: 1336, price_max: 1336, price_tier: 1,
+    model_count: 1, description: '', technologies: [], features: [], documents: [], images: [],
+    sort_order: 66
+  },
+  {
+    series_id: 'shimano_power_aero_xsc_reel_cn',
+    brand: 'Shimano',
+    series_name: 'POWER AERO XSC',
+    category: 'reel', type: 'surfcasting_fixed_spool', type_label: '远投专用轮',
+    year: null, market: 'CN', price_min: 3880, price_max: 3880, price_tier: 3,
+    model_count: 1, description: '', technologies: [], features: [], documents: [], images: [],
+    sort_order: 41
+  },
+  {
+    series_id: 'shimano_power_aero_xtc_reel_cn',
+    brand: 'Shimano',
+    series_name: 'POWER AERO XTC',
+    category: 'reel', type: 'surfcasting_fixed_spool', type_label: '远投专用轮',
+    year: null, market: 'CN', price_min: 3880, price_max: 3880, price_tier: 3,
+    model_count: 1, description: '', technologies: [], features: [], documents: [], images: [],
+    sort_order: 42
+  },
+  {
+    series_id: 'shimano_bulls_eye_reel_cn',
+    brand: 'Shimano',
+    series_name: "BULL'S EYE",
+    category: 'reel', type: 'surfcasting_fixed_spool', type_label: '远投专用轮',
+    year: null, market: 'CN', price_min: 1722, price_max: 2048, price_tier: 2,
+    model_count: 3, description: '', technologies: [], features: [], documents: [], images: [],
+    sort_order: 67
+  },
+  {
+    series_id: 'shimano_baitrunner_ci4_xtb_reel_cn',
+    brand: 'Shimano',
+    series_name: 'BAITRUNNER CI4+ XTB',
+    category: 'reel', type: 'surfcasting_fixed_spool', type_label: '远投专用轮',
+    year: null, market: 'CN', price_min: 1773, price_max: 1828, price_tier: 2,
+    model_count: 2, description: '', technologies: [], features: [], documents: [], images: [],
+    sort_order: 68
+  },
+  {
+    series_id: 'shimano_surf_leader_reel_cn',
+    brand: 'Shimano',
+    series_name: 'SURF LEADER',
+    category: 'reel', type: 'surfcasting_fixed_spool', type_label: '远投专用轮',
+    year: null, market: 'CN', price_min: 1714, price_max: 1821, price_tier: 2,
+    model_count: 3, description: '', technologies: [], features: [], documents: [], images: [],
+    sort_order: 69
   }
 ];
 
@@ -456,7 +560,7 @@ const SERIES_DATA_RODS = [
     market: 'CN',
     price_min: 1880,
     price_max: 2132,
-    price_tier: 1,
+    price_tier: 2,
     model_count: 8,
     description: '轻量与远投性能兼备的中端振出投竿。\n\nSURF LEADER振出竿搭载SPIRAL X和HI-POWER X双X构造，追求远投性能的同时保持竿身轻量。采用全导环固定系统，减少抛投和搏鱼时导环的偏差，抛投更稳定顺滑。渔轮座精心设计，置竿时稳定性优秀，适合多种滩钓场景。',
     technologies: [
@@ -484,7 +588,7 @@ const SERIES_DATA_RODS = [
     market: 'CN',
     price_min: 1551,
     price_max: 1933,
-    price_tier: 1,
+    price_tier: 2,
     model_count: 5,
     description: '用真实的抛投感享受远投钓法的乐趣！\n\n不考虑作钓场景状况和钓友的作钓水平，很容易掌握抛投的释放时机，采用追求宽快抛投感的调性设计。另一方面，为了克服弯曲幅度大的鱼竿的弱点，搭载了减扭曲且防形变强的SPIRAL X和HI-POWER X构造。从抛投时瞬间爆发性的鱼竿动作到和大物搏斗时的高负荷状态都有足够强力的竿身力量可以应对。另外，握把可以辅助抛投时的方向，有效地反映在动作上。设想了从手持到置竿等各种使用方法，采用合适的长度设计，渔轮座的长度也精心设计。并继竿的不易缠线等优势，实现了在所有钓场能够轻松使用的高实用性能。',
     technologies: [
@@ -512,7 +616,7 @@ const SERIES_DATA_RODS = [
     market: 'CN',
     price_min: 2423,
     price_max: 2588,
-    price_tier: 1,
+    price_tier: 2,
     model_count: 8,
     description: '采用双X构造加上抑制渔轮晃动的螺旋渔轮座。追求高质量置竿钓法所需性能的振出竿。\n\n适用于置竿狙击大物的钓法，打磨实际作钓性能后得到的振出竿。SPIRAL X和HI POWER X的双X构造，使其有着出色的抛投感，明确的水底感度，锋利的刺鱼性能，强韧的提竿强度。采用不易晃动的SCREW JOINT，即使在激流和障碍物丛中也能稳定收线。稍微加大顶环的尺寸，使其不仅可以适用于PE线，现在钓大物用的比较多的尼龙线也能应对。适用于包括鲹鱼、真鲷等各种目标鱼，以及包括置竿钓法，在北海道狙击大物等各种钓法，泛用性高。',
     technologies: [
@@ -541,7 +645,7 @@ const SERIES_DATA_RODS = [
     market: 'CN',
     price_min: 2533,
     price_max: 2918,
-    price_tier: 1,
+    price_tier: 3,
     model_count: 8,
     description: '柔和的调性，易挥竿易抛投。SHIMANO投竿的核心系列。\n\nSURF LANDER具备了各种SHIMANO最新技术，任何人都可以轻松抛投的温和调性的设计。SPIRAL X和HI POWER X使其有着优异的远投性能和控制性。手把节导环采用和KISU SP和SPIN POWER相同的抛投X导环，提升防缠线性能。握把采用一体成型抛投辅助握把，提升抛投稳定性。4.05m的长度为基准，有轻量易回竿的3.85m型号（仅DX，EX），易操作多钓组的4.25m型号（仅BX，CX）等都有所配备。可以基本对应现在大多数的投竿钓法。',
     technologies: [
@@ -569,7 +673,7 @@ const SERIES_DATA_RODS = [
     market: 'CN',
     price_min: 2972,
     price_max: 3234,
-    price_tier: 2,
+    price_tier: 3,
     model_count: 4,
     description: '专业级振出投竿，追求远投距离与操控的平衡。\n\nPROSURF搭载SPIRAL X和HI-POWER X双X构造，在轻量化的基础上大幅提升竿身抗扭性能。适合对抛投距离和鱼竿操控有更高要求的进阶玩家，是从入门升级到专业的理想选择。',
     technologies: [
@@ -595,7 +699,7 @@ const SERIES_DATA_RODS = [
     market: 'CN',
     price_min: 3854,
     price_max: 4311,
-    price_tier: 2,
+    price_tier: 3,
     model_count: 6,
     description: '高性能振出投竿，面向专业远投玩家。\n\nPRO SELECT是禧玛诺中国行货振出竿中的旗舰级产品，搭载SPIRAL X CORE高强度碳纤构造，大幅提升抗扭强度，同时配备高刚性X导环，将鱼竿潜在性能充分发挥。适合追求极致抛投距离和操控精度的资深钓手。',
     technologies: [
@@ -623,7 +727,7 @@ const SERIES_DATA_RODS = [
     market: 'CN',
     price_min: 3997,
     price_max: 4173,
-    price_tier: 2,
+    price_tier: 3,
     model_count: 8,
     description: '惊人调子实现抛投力量和手感的平衡。\n\n采用和SPIN POWER SC一样的不等长3节构造，通过第三节比较长的设定，使之凭借高反弹力产生足够远的抛投距离，Type F是追求抛投手感和源头性能的先调子规格，能一口气利用鱼竿的弯曲性将高反弹力一次性爆发出来，Type R是抛投时握把节弯曲的胴调子，配合控竿节奏操控性较强，减少抛投失误。',
     technologies: [
@@ -648,7 +752,7 @@ const SERIES_DATA_RODS = [
     market: 'CN',
     price_min: 4680,
     price_max: 7146,
-    price_tier: 2,
+    price_tier: 5,
     model_count: 22,
     description: '抛投距离和操控性兼顾，无论是远投还是近投都可自在操控。\n\n钓手追求所追求的、兼顾抛投距离和操控性的就是这款SPIN POWER，响应抛投力量的原调子，适用PE线且减少对身体的负担。在确保抛投距离的同时，我们首次搭载SPIRAL X CORE在投竿上，有效减少了鱼竿的晃动，无论近距离还是远距离抛投都能随心所欲。另外，搭载高刚性X导环，将鱼竿的潜力毫无保留的展示出来。',
     technologies: [
@@ -677,7 +781,7 @@ const SERIES_DATA_RODS = [
     market: 'CN',
     price_min: 10796,
     price_max: 12525,
-    price_tier: 3,
+    price_tier: 6,
     model_count: 8,
     description: '追求抛投距离、控制性能、感度，搭载发挥鱼竿性能的钛合金抛投用X导环。\n\n沙梭钓法追求抛投距离、操控性和感度等三大要素融合进了KISU SP这款鱼竿中，从AX到FX+的规格可以满足大家的需求。DX+和EX+在保持竿梢柔软性的同时，能有效抑制抛投时距离的损失，FX+则是考虑上鱼性能，无论是个人休闲钓还是经济比赛都可准确捕捉咬讯。\nAX~FX+的规格继承了历代KISU SP的感度，将海底状况以及鱼带来的讯息传达给钓手，无论是顶级钓手还是刚入门的爱好者都来享受这个沙梭钓法带来的乐趣吧。',
     technologies: [
@@ -710,7 +814,7 @@ const SERIES_DATA_RODS = [
     market: 'CN',
     price_min: 7515,
     price_max: 9244,
-    price_tier: 3,
+    price_tier: 5,
     model_count: 6,
     description: 'KISU SPECIAL旗舰系列的裸竿规格，不含导环，供钓友自行配置导环方案。\n\n竿身与标准版KISU SPECIAL完全相同，搭载SPIRAL X和HI-POWER X构造，轻量高强度。适合对导环有个人偏好或参加特定比赛规则的专业钓手，自行定制导环方案以发挥竿身的最大潜力。',
     technologies: [

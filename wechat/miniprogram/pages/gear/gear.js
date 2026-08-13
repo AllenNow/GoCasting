@@ -13,18 +13,21 @@ const MARKET_OPTIONS = [
   { label: '中国行货', value: 'CN' },
   { label: 'JDM', value: 'JDM' },
 ];
-// 价位筛选 — 渔竿和渔轮阈值不同
-const ROD_PRICE_OPTIONS = [
-  { label: '全部', value: 0 },
-  { label: '入门', value: 1 },
-  { label: '中端', value: 2 },
-  { label: '高端', value: 3 },
-];
+// 价位筛选 — 渔轮和渔竿分开定义（档位含义不同）
 const REEL_PRICE_OPTIONS = [
-  { label: '全部', value: 0 },
-  { label: '入门', value: 1 },
-  { label: '中端', value: 2 },
-  { label: '高端', value: 3 },
+  { label: '全部',    value: 0 },
+  { label: 'L1 入门', value: 1 },  // ≤¥1500
+  { label: 'L2 进阶', value: 2 },  // ¥1500~¥3000
+  { label: 'L3 专业', value: 3 },  // ¥3000~¥4500
+  { label: 'L4 豪华', value: 4 },  // ¥4500~¥6000
+];
+const ROD_PRICE_OPTIONS = [
+  { label: '全部',    value: 0 },
+  { label: 'L1 入门', value: 1 },  // ≤¥1500
+  { label: 'L2 进阶', value: 2 },  // ¥1500~¥2600
+  { label: 'L3 专业', value: 3 },  // ¥2600~¥4500
+  { label: 'L5 竞技', value: 5 },  // ¥6000~¥10000
+  { label: 'L6 顶级', value: 6 },  // >¥10000
 ];
 
 Page({
@@ -90,7 +93,7 @@ Page({
       marketIdx: 0,
       keyword: '',
       showTypePill: !isReel, // 渔轮隐藏类型筛选
-      prices: isReel ? REEL_PRICE_OPTIONS : ROD_PRICE_OPTIONS,
+    prices: isReel ? REEL_PRICE_OPTIONS : ROD_PRICE_OPTIONS,
     });
     this.loadData();
   },
@@ -158,6 +161,11 @@ Page({
 
   onMarketChange(e) {
     this.setData({ marketIdx: Number(e.currentTarget.dataset.idx) });
+    this.applyFilters();
+  },
+
+  resetFilters() {
+    this.setData({ brandIdx: 0, typeIdx: 0, priceIdx: 0, marketIdx: 0, keyword: '' });
     this.applyFilters();
   },
 
