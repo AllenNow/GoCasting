@@ -75,3 +75,17 @@
 
   <view class="safe-bottom"></view>
 </view>
+
+<!-- ===================================================
+  广告位：Go-Score 页底部横幅
+  开通流量主后取消注释，填入广告单元 ID：
+  mp.weixin.qq.com → 推广 → 流量主 → 创建广告位 → 横幅广告
+  unit-id 格式：wx97aaa3a8f799b48c_XXXXXXXXXXXXXXXX
+===================================================
+<ad
+  unit-id="wx97aaa3a8f799b48c/adunit-XXXXXXXXXXXXXXXX"
+  ad-type="banner"
+  bindload="onAdLoad"
+  binderror="onAdError"
+></ad>
+-->

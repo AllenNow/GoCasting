@@ -26,7 +26,7 @@
       <scroll-view class="tag-scroll" scroll-x enable-flex>
         <view wx:for="{{terrainOptions}}" wx:key="*this"
               class="tag {{form.terrain === item ? 'tag-active' : ''}}"
-              bindtap="selectTerrain" data-val="{{item}}">{{item}}</view>
+              catchtap="selectTerrain" data-val="{{item}}">{{item}}</view>
       </scroll-view>
     </view>
 
@@ -38,7 +38,7 @@
           📍 {{form.lat ? '已定位，点击重选' : '选择位置'}}
         </view>
         <view wx:if="{{form.lat}}" class="coords-display">
-          <text class="coords-text">{{form.lat.toFixed(5)}}, {{form.lon.toFixed(5)}}</text>
+          <text class="coords-text">{{form.coordsStr}}</text>
         </view>
       </view>
       <!-- 微信地图预览已选位置 -->
@@ -67,18 +67,18 @@
         <view class="tag-row">
           <view wx:for="{{methodOptions}}" wx:key="*this"
                 class="tag {{form.methods.indexOf(item) !== -1 ? 'tag-active' : ''}}"
-                bindtap="toggleMethod" data-val="{{item}}">{{item}}</view>
+                catchtap="toggleMethod" data-val="{{item}}">{{item}}</view>
         </view>
       </scroll-view>
     </view>
 
-    <!-- 目标鱼种（多选，换行 wrap 布局，因为名字较长） -->
+    <!-- 目标鱼种（多选，换行 wrap 布局） -->
     <view class="form-group">
       <text class="form-label">主要目标鱼</text>
       <view class="tag-wrap">
         <view wx:for="{{speciesOptions}}" wx:key="*this"
               class="tag tag-sm {{form.species.indexOf(item) !== -1 ? 'tag-active' : ''}}"
-              bindtap="toggleSpecies" data-val="{{item}}">{{item}}</view>
+              catchtap="toggleSpecies" data-val="{{item}}">{{item}}</view>
       </view>
     </view>
 
@@ -108,6 +108,23 @@
       <textarea class="form-textarea" placeholder="危险提示、涨潮风险、禁止事项等…"
                 value="{{form.cautions}}" bindinput="onInput" data-field="cautions"
                 maxlength="300" auto-height />
+    </view>
+
+    <!-- 多图上传 -->
+    <view class="form-group">
+      <text class="form-label">钓点相册（最多9张）</text>
+      <view class="images-grid">
+        <!-- 已有图片 -->
+        <view wx:for="{{imagePreviews}}" wx:key="index" class="image-item">
+          <image src="{{item}}" mode="aspectFill" class="gallery-img" bindtap="previewImage" data-index="{{index}}" />
+          <view class="img-del" bindtap="removeImage" data-index="{{index}}">✕</view>
+        </view>
+        <!-- 添加按钮 -->
+        <view wx:if="{{imagePreviews.length < 9}}" class="image-add" bindtap="addImages">
+          <text class="add-plus">＋</text>
+          <text class="add-hint">添加图片</text>
+        </view>
+      </view>
     </view>
 
     <!-- 提交按钮 -->

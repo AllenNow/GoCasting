@@ -149,3 +149,12 @@
   background: #fdeaea;
   color: var(--color-danger);
 }
+
+/* 待审核小地图预览 */
+.review-mini-map {
+  width: 100%;
+  height: 200rpx;
+  border-radius: 8rpx;
+  margin: 12rpx 0;
+  overflow: hidden;
+}

@@ -130,3 +130,26 @@
   background: #f0f0f0;
   color: var(--color-text-secondary);
 }
+
+/* 搜索框 */
+.search-bar {
+  display: flex;
+  align-items: center;
+  padding: 12rpx 24rpx;
+  background: var(--color-card);
+  border-bottom: 2rpx solid var(--color-border);
+  gap: 12rpx;
+}
+.search-input {
+  flex: 1;
+  background: var(--color-bg);
+  border: 2rpx solid var(--color-border);
+  border-radius: 100rpx;
+  padding: 12rpx 24rpx;
+  font-size: 26rpx;
+}
+.search-clear {
+  font-size: 28rpx;
+  color: var(--color-text-hint);
+  padding: 8rpx;
+}

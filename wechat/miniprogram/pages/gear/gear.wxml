@@ -23,26 +23,26 @@
     <!-- 品牌 -->
     <view wx:for="{{brands}}" wx:key="*this"
           class="filter-pill {{brandIdx === index ? 'pill-active' : ''}}"
-          bindtap="onBrandChange" data-idx="{{index}}">{{item}}</view>
+          catchtap="onBrandChange" data-idx="{{index}}">{{item}}</view>
     <!-- 分隔符 -->
     <view class="pill-divider"></view>
     <!-- 类型（仅渔竿显示） -->
     <block wx:if="{{showTypePill}}">
       <view wx:for="{{types}}" wx:key="value"
             class="filter-pill {{typeIdx === index ? 'pill-active' : ''}}"
-            bindtap="onTypeChange" data-idx="{{index}}">{{item.label}}</view>
+            catchtap="onTypeChange" data-idx="{{index}}">{{item.label}}</view>
       <view class="pill-divider"></view>
     </block>
     <!-- 价位 -->
     <view wx:for="{{prices}}" wx:key="value"
           class="filter-pill {{priceIdx === index ? 'pill-active' : ''}}"
-          bindtap="onPriceChange" data-idx="{{index}}">{{item.label}}</view>
+          catchtap="onPriceChange" data-idx="{{index}}">{{item.label}}</view>
     <!-- 分隔符 -->
     <view class="pill-divider"></view>
     <!-- 市场 -->
     <view wx:for="{{markets}}" wx:key="value"
           class="filter-pill {{marketIdx === index ? 'pill-active' : ''}}"
-          bindtap="onMarketChange" data-idx="{{index}}">{{item.label}}</view>
+          catchtap="onMarketChange" data-idx="{{index}}">{{item.label}}</view>
   </scroll-view>
 
   <!-- 加载中 -->

@@ -213,6 +213,26 @@ Page({
     wx.navigateTo({ url: '/pages/catch-log/catch-log' });
   },
 
+  // 连点头像 5 次进入管理后台（隐藏入口，非管理员也能触发检查）
+  _adminTapCount: 0,
+  _adminTapTimer: null,
+
+  onAvatarTap() {
+    this._adminTapCount = (this._adminTapCount || 0) + 1;
+    clearTimeout(this._adminTapTimer);
+    if (this._adminTapCount >= 5) {
+      this._adminTapCount = 0;
+      if (app.globalData.isAdmin) {
+        wx.navigateTo({ url: '/pages/admin/admin' });
+      } else {
+        wx.showToast({ title: '当前账号无管理权限', icon: 'none' });
+      }
+      return;
+    }
+    // 2秒内未达到5次则重置
+    this._adminTapTimer = setTimeout(() => { this._adminTapCount = 0; }, 2000);
+  },
+
   goAdmin() {
     wx.navigateTo({ url: '/pages/admin/admin' });
   },

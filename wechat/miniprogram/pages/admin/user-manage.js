@@ -1,10 +1,14 @@
-// pages/admin/user-manage.js — 用户管理
+// pages/admin/user-manage.js — 用户管理（通过 adminGetUsers 云函数绕过权限）
 const app = getApp();
 
 Page({
   data: {
     users: [],
     loading: true,
+    total: 0,
+    page: 1,
+    pageSize: 50,
+    hasMore: false,
   },
 
   onLoad() {
@@ -15,24 +19,43 @@ Page({
   onShow() { this.loadUsers(); },
 
   onPullDownRefresh() {
+    this.setData({ page: 1 });
     this.loadUsers().finally(() => wx.stopPullDownRefresh());
   },
 
   async loadUsers() {
     this.setData({ loading: true });
     try {
-      const db = app.globalData.db;
-      // users 集合：仅创建者可读，管理员通过云函数绕过权限读取
-      // 目前先尝试直接读（管理员身份），如无权限需另建云函数
-      const res = await db.collection('users')
-        .orderBy('updated_at', 'desc')
-        .limit(50)
-        .get();
-      this.setData({ users: res.data, loading: false });
+      const res = await wx.cloud.callFunction({
+        name: 'adminGetUsers',
+        data: {
+          action: 'list',
+          page: this.data.page,
+          pageSize: this.data.pageSize,
+        },
+      });
+
+      if (!res.result.success) {
+        throw new Error(res.result.error || '加载失败');
+      }
+
+      const { users, total } = res.result;
+      this.setData({
+        users: users.map(u => ({
+          ...u,
+          // 格式化注册时间
+          createdStr: u.created_at
+            ? new Date(u.created_at).toLocaleDateString('zh-CN')
+            : '未知',
+        })),
+        total,
+        hasMore: users.length === this.data.pageSize,
+        loading: false,
+      });
     } catch (e) {
       console.error('加载用户列表失败', e);
       this.setData({ loading: false });
-      wx.showToast({ title: '加载失败，需要云函数权限', icon: 'none' });
+      wx.showToast({ title: '加载失败：' + String(e), icon: 'none' });
     }
   },
 
@@ -47,9 +70,11 @@ Page({
         if (!res.confirm) return;
         wx.showLoading({ title: '操作中…' });
         try {
-          await app.globalData.db.collection('users').doc(id).update({
-            data: { banned: !banned, banned_at: app.globalData.db.serverDate() },
+          const r = await wx.cloud.callFunction({
+            name: 'adminGetUsers',
+            data: { action: 'ban', userId: id, banned: !banned },
           });
+          if (!r.result.success) throw new Error(r.result.error);
           wx.showToast({ title: `已${action}`, icon: 'success' });
           this.loadUsers();
         } catch (err) {

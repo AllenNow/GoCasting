@@ -10,7 +10,8 @@
     </view>
 
     <view wx:if="{{ userInfo && userInfo.nickName }}" class="user-info">
-      <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+      <!-- 头像：连点5次触发管理员入口 -->
+      <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" bindtap="onAvatarTap">
         <image class="avatar" src="{{ userInfo.avatarUrl }}" mode="aspectFill" />
       </button>
       <view wx:if="{{ editingNickname }}" class="nickname-edit-wrap">
@@ -33,7 +34,8 @@
 
     <!-- 未设置态 -->
     <view wx:else class="user-setup">
-      <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+      <!-- 头像：连点5次触发管理员入口 -->
+      <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" bindtap="onAvatarTap">
         <view wx:if="{{ userInfo && userInfo.avatarUrl }}" class="avatar-wrap">
           <image class="avatar" src="{{ userInfo.avatarUrl }}" mode="aspectFill" />
         </view>

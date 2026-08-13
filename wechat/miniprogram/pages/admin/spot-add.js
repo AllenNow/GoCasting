@@ -35,6 +35,11 @@ Page({
     coverPreview: '',
     coverTempPath: '',   // 待上传本地路径
 
+    // 多图
+    imagePreviews: [],        // 本地或云端预览 URL 数组
+    imageTempPaths: [],       // 待上传的本地路径（与 imagePreviews 一一对应，云端URL对应空字符串）
+    imageCloudUrls: [],       // 已上传云端 URL（与 imagePreviews 对应）
+
     // 地图 marker
     mapMarkers: [],
 
@@ -95,6 +100,7 @@ Page({
         'form.terrain':     spot.terrain     || '',
         'form.lat':         spot.lat,
         'form.lon':         spot.lon,
+        'form.coordsStr':   spot.lat ? `${spot.lat.toFixed(5)}, ${spot.lon.toFixed(5)}` : '',
         'form.description': spot.description || '',
         'form.methods':     spot.methods     || [],
         'form.species':     spot.species     || [],
@@ -103,6 +109,25 @@ Page({
         'form.cautions':    spot.cautions    || '',
         'form.cover_image': spot.cover_image || '',
       });
+
+      // 加载多图预览（images[] 字段）
+      const images = spot.images || [];
+      if (images.length > 0) {
+        const cloudImgs = images.filter(u => u && u.startsWith('cloud://'));
+        let urlMap = {};
+        if (cloudImgs.length > 0) {
+          try {
+            const r = await wx.cloud.getTempFileURL({ fileList: cloudImgs });
+            (r.fileList || []).forEach(i => { if (i.tempFileURL) urlMap[i.fileID] = i.tempFileURL; });
+          } catch (e) { /* ignore */ }
+        }
+        const previews = images.map(u => urlMap[u] || u);
+        this.setData({
+          imagePreviews:  previews,
+          imageTempPaths: images.map(() => ''),   // 已是云端，无需重新上传
+          imageCloudUrls: [...images],
+        });
+      }
       if (spot.lat) this._updateMapMarker(spot.lat, spot.lon);
     } catch (e) {
       wx.showToast({ title: '加载失败', icon: 'error' });
@@ -131,11 +156,64 @@ Page({
     if (!this.data.coverTempPath) return this.data.form.cover_image;
     const ext = this.data.coverTempPath.split('.').pop() || 'jpg';
     const cloudPath = `official_spots/cover_${Date.now()}.${ext}`;
-    const res = await wx.cloud.uploadFile({
-      cloudPath,
-      filePath: this.data.coverTempPath,
-    });
+    const res = await wx.cloud.uploadFile({ cloudPath, filePath: this.data.coverTempPath });
     return res.fileID;
+  },
+
+  // ──────────────────────────────────────────
+  // 多图管理
+  // ──────────────────────────────────────────
+  addImages() {
+    const remain = 9 - this.data.imagePreviews.length;
+    if (remain <= 0) return;
+    wx.chooseMedia({
+      count: remain,
+      mediaType: ['image'],
+      sourceType: ['album', 'camera'],
+      sizeType: ['compressed'],
+      success: (res) => {
+        const newPaths   = res.tempFiles.map(f => f.tempFilePath);
+        const previews   = [...this.data.imagePreviews,  ...newPaths];
+        const tempPaths  = [...this.data.imageTempPaths, ...newPaths];
+        const cloudUrls  = [...this.data.imageCloudUrls, ...newPaths.map(() => '')];
+        this.setData({ imagePreviews: previews, imageTempPaths: tempPaths, imageCloudUrls: cloudUrls });
+      },
+    });
+  },
+
+  removeImage(e) {
+    const idx = e.currentTarget.dataset.index;
+    const previews  = [...this.data.imagePreviews];
+    const tempPaths = [...this.data.imageTempPaths];
+    const cloudUrls = [...this.data.imageCloudUrls];
+    previews.splice(idx, 1);
+    tempPaths.splice(idx, 1);
+    cloudUrls.splice(idx, 1);
+    this.setData({ imagePreviews: previews, imageTempPaths: tempPaths, imageCloudUrls: cloudUrls });
+  },
+
+  previewImage(e) {
+    const idx = e.currentTarget.dataset.index;
+    wx.previewImage({ current: this.data.imagePreviews[idx], urls: this.data.imagePreviews });
+  },
+
+  // 批量上传多图，返回最终 cloud:// URL 数组
+  async _uploadImages() {
+    const { imageTempPaths, imageCloudUrls } = this.data;
+    const result = [...imageCloudUrls];
+    for (let i = 0; i < imageTempPaths.length; i++) {
+      if (imageTempPaths[i]) {  // 有本地路径需要上传
+        const ext = imageTempPaths[i].split('.').pop() || 'jpg';
+        const cloudPath = `official_spots/img_${Date.now()}_${i}.${ext}`;
+        try {
+          const r = await wx.cloud.uploadFile({ cloudPath, filePath: imageTempPaths[i] });
+          result[i] = r.fileID;
+        } catch (e) {
+          console.error(`上传第${i+1}张图片失败`, e);
+        }
+      }
+    }
+    return result.filter(Boolean);
   },
 
   // ──────────────────────────────────────────
@@ -148,6 +226,7 @@ Page({
         this.setData({
           'form.lat': latitude,
           'form.lon': longitude,
+          'form.coordsStr': `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`,
         });
         this._updateMapMarker(latitude, longitude);
       },
@@ -227,13 +306,17 @@ Page({
     wx.showLoading({ title: '保存中…', mask: true });
 
     try {
-      // 上传封面图
-      const coverUrl = await this._uploadCover();
+      // 上传封面图 + 多图
+      const [coverUrl, imageUrls] = await Promise.all([
+        this._uploadCover(),
+        this._uploadImages(),
+      ]);
 
       const data = {
         ...form,
         name: form.name.trim(),
         cover_image: coverUrl,
+        images: imageUrls,
       };
 
       const action = isEdit ? 'update' : 'add';

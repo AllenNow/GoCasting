@@ -64,7 +64,19 @@ Page({
       ]);
 
       this.setData({
-        spots: res.data,
+        spots: res.data.map(s => ({
+          ...s,
+          coordsStr: s.lat ? `${s.lat.toFixed(4)}, ${s.lon.toFixed(4)}` : '',
+          // 待审核地图预览 marker
+          previewMarker: s.lat ? [{
+            id: 0,
+            latitude: s.lat,
+            longitude: s.lon,
+            iconPath: '/images/marker-public.png',
+            width: 36,
+            height: 42,
+          }] : [],
+        })),
         loading: false,
         counts: {
           pending: pendingRes.total,

@@ -32,8 +32,17 @@
       <view class="review-info">
         <text class="review-name">{{item.name}}</text>
         <text class="review-desc">{{item.description || '无描述'}}</text>
+        <!-- 待审核时显示小地图 -->
+        <map wx:if="{{tab === 'pending' && item.lat}}"
+             class="review-mini-map"
+             latitude="{{item.lat}}"
+             longitude="{{item.lon}}"
+             scale="14"
+             markers="{{item.previewMarker}}"
+             show-location="{{false}}">
+        </map>
         <view class="review-meta">
-          <text class="review-coord">📍 {{item.lat.toFixed(4)}}, {{item.lon.toFixed(4)}}</text>
+          <text class="review-coord">📍 {{item.coordsStr}}</text>
           <text class="review-public">{{item.is_public ? '公开' : '私有'}}</text>
         </view>
       </view>

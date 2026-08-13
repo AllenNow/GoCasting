@@ -29,17 +29,21 @@ Page({
     const db = app.globalData.db;
 
     try {
-      // 并行查询各集合数量
+      // 并行查询各集合数量 + 用户总数（通过云函数）
       const [
         catchRes,
         officialRes,
         userSpotRes,
         gearRes,
+        userCountRes,
       ] = await Promise.all([
         db.collection('catch_logs').count(),
         db.collection('official_spots').where({ status: 'active' }).count(),
         db.collection('fishing_spots').count(),
         db.collection('gear_series').count(),
+        wx.cloud.callFunction({ name: 'adminGetUsers', data: { action: 'count' } })
+          .then(r => r.result.success ? r.result.total : '—')
+          .catch(() => '—'),
       ]);
 
       // 热门鱼种（取最近100条渔获统计）
@@ -70,7 +74,7 @@ Page({
           totalOfficialSpots: officialRes.total,
           totalUserSpots: userSpotRes.total,
           gearSeries: gearRes.total,
-          totalUsers: '—', // users 集合权限限制，需云函数
+          totalUsers: userCountRes,
         },
         topSpecies,
         topSpots,

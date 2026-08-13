@@ -12,7 +12,7 @@
   <scroll-view class="category-scroll" scroll-x enable-flex>
     <view wx:for="{{ categories }}" wx:key="key"
           class="cat-tab {{activeCategory === item.key ? 'cat-tab-active' : ''}}"
-          bindtap="onCategoryTap" data-key="{{ item.key }}">
+          catchtap="onCategoryTap" data-key="{{ item.key }}">
       {{ item.label }}
     </view>
   </scroll-view>
