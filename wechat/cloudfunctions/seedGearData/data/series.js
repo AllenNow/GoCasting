@@ -437,8 +437,8 @@ const SERIES_DATA_RODS = [
     price_min: 630,
     price_max: 966,
     price_tier: 1,
-    model_count: 6,
-    description: '面向入门远投爱好者的振出式投竿，轻量便携，性价比之选。适合初次接触远投钓法的钓友。',
+    model_count: 15,
+    description: '入门级投竿，可选规格广泛。\n\n面向远投入门爱好者的振出式投竿，从2.75m到4.5m共15个规格，覆盖防波堤、近岸沙滩等多种场景。轻量便携，性价比之选，适合初次接触远投钓法的钓友。',
     technologies: [],
     features: [],
     documents: [],
@@ -458,9 +458,17 @@ const SERIES_DATA_RODS = [
     price_max: 2132,
     price_tier: 1,
     model_count: 8,
-    description: '',
-    technologies: [],
-    features: [],
+    description: '轻量与远投性能兼备的中端振出投竿。\n\nSURF LEADER振出竿搭载SPIRAL X和HI-POWER X双X构造，追求远投性能的同时保持竿身轻量。采用全导环固定系统，减少抛投和搏鱼时导环的偏差，抛投更稳定顺滑。渔轮座精心设计，置竿时稳定性优秀，适合多种滩钓场景。',
+    technologies: [
+      { tech_id: 'spiral_x', name: 'SPIRAL X', description: '从根本提升鱼竿性能，克服了扭和变形的问题。【SPIRAL X】是鱼竿碳纤维的内层和外层将碳布由逆斜向密编织的三层构造，内外斜向编织能够保持鱼竿轻量并且实现高强度和防歪扭的性能。', logo_url: 'cloud://cloud1-d4gkci99i21e9bfe9.636c-cloud1-d4gkci99i21e9bfe9-1319417052/tech/tech_rod_spiral_x_img.png', image_url: 'cloud://cloud1-d4gkci99i21e9bfe9.636c-cloud1-d4gkci99i21e9bfe9-1319417052/tech/tech_rod_spiral_x_img.png' },
+      { tech_id: 'hi_power_x', name: 'HI-POWER X', description: '有效减少抛投、搏鱼时鱼竿的扭曲和晃动。在SPIRAL X 结构外层或普通纵横交织碳布的最外层之上卷上X形碳布。根据这一特性，尽可能使鱼竿的弯曲方向与钓友的意图一致，充分发挥出鱼竿具备的能力。', logo_url: 'cloud://cloud1-d4gkci99i21e9bfe9.636c-cloud1-d4gkci99i21e9bfe9-1319417052/tech/tech_rod_hi_power_x_img.png', image_url: 'cloud://cloud1-d4gkci99i21e9bfe9.636c-cloud1-d4gkci99i21e9bfe9-1319417052/tech/tech_rod_hi_power_x_img.png' }
+    ],
+    features: [
+      { name: '振出竿用竿梢套', description: '', image_url: '' },
+      { name: '全导环固定系统', description: '固定住导环可以实现轻松作钓，减少高负荷状态下导环偏差导致的抛投距离变低和缠线问题', image_url: '' },
+      { name: '旋紧式渔轮座', description: '', image_url: '' },
+      { name: '辅助抛投握把', description: '', image_url: '' }
+    ],
     documents: [],
     images: [],
     sort_order: 210
@@ -563,9 +571,15 @@ const SERIES_DATA_RODS = [
     price_max: 3234,
     price_tier: 2,
     model_count: 4,
-    description: '',
-    technologies: [],
-    features: [],
+    description: '专业级振出投竿，追求远投距离与操控的平衡。\n\nPROSURF搭载SPIRAL X和HI-POWER X双X构造，在轻量化的基础上大幅提升竿身抗扭性能。适合对抛投距离和鱼竿操控有更高要求的进阶玩家，是从入门升级到专业的理想选择。',
+    technologies: [
+      { tech_id: 'spiral_x', name: 'SPIRAL X', description: '从根本提升鱼竿性能，克服了扭和变形的问题。【SPIRAL X】是鱼竿碳纤维的内层和外层将碳布由逆斜向密编织的三层构造，内外斜向编织能够保持鱼竿轻量并且实现高强度和防歪扭的性能。', logo_url: 'cloud://cloud1-d4gkci99i21e9bfe9.636c-cloud1-d4gkci99i21e9bfe9-1319417052/tech/tech_rod_spiral_x_img.png', image_url: 'cloud://cloud1-d4gkci99i21e9bfe9.636c-cloud1-d4gkci99i21e9bfe9-1319417052/tech/tech_rod_spiral_x_img.png' },
+      { tech_id: 'hi_power_x', name: 'HI-POWER X', description: '有效减少抛投、搏鱼时鱼竿的扭曲和晃动。在SPIRAL X 结构外层或普通纵横交织碳布的最外层之上卷上X形碳布。根据这一特性，尽可能使鱼竿的弯曲方向与钓友的意图一致，充分发挥出鱼竿具备的能力。', logo_url: 'cloud://cloud1-d4gkci99i21e9bfe9.636c-cloud1-d4gkci99i21e9bfe9-1319417052/tech/tech_rod_hi_power_x_img.png', image_url: 'cloud://cloud1-d4gkci99i21e9bfe9.636c-cloud1-d4gkci99i21e9bfe9-1319417052/tech/tech_rod_hi_power_x_img.png' }
+    ],
+    features: [
+      { name: '全导环固定系统', description: '', image_url: '' },
+      { name: '辅助抛投握把', description: '', image_url: '' }
+    ],
     documents: [],
     images: [],
     sort_order: 240
@@ -583,9 +597,17 @@ const SERIES_DATA_RODS = [
     price_max: 4311,
     price_tier: 2,
     model_count: 6,
-    description: '',
-    technologies: [],
-    features: [],
+    description: '高性能振出投竿，面向专业远投玩家。\n\nPRO SELECT是禧玛诺中国行货振出竿中的旗舰级产品，搭载SPIRAL X CORE高强度碳纤构造，大幅提升抗扭强度，同时配备高刚性X导环，将鱼竿潜在性能充分发挥。适合追求极致抛投距离和操控精度的资深钓手。',
+    technologies: [
+      { tech_id: 'spiral_x_core', name: 'SPIRAL X CORE', description: '采用高强度素材后再次进化的鱼竿主要构造。SHIMANO自创设计制造方法，追求鱼竿抗弯扭、抗晃动、抗破坏、以及各方向抵抗强度。抗歪扭强度和抗压强度是普通鱼竿构造的1.4倍和2.5倍。', logo_url: 'cloud://cloud1-d4gkci99i21e9bfe9.636c-cloud1-d4gkci99i21e9bfe9-1319417052/tech/tech_rod_spiral_x_core_img.png', image_url: 'cloud://cloud1-d4gkci99i21e9bfe9.636c-cloud1-d4gkci99i21e9bfe9-1319417052/tech/tech_rod_spiral_x_core_img.png' },
+      { tech_id: 'x_guide', name: 'X导环', description: 'SHIMANO自创导环[X导环]，进一步发挥出鱼竿的性能。根据鱼竿制造商观点所诞生的[X导环]是能够将竿身具备的潜在能力120%发挥而诞生的。融合了抛投性能的高次元SHIMANO高性能导环。', logo_url: 'cloud://cloud1-d4gkci99i21e9bfe9.636c-cloud1-d4gkci99i21e9bfe9-1319417052/tech/tech_rod_x_guide_img.png', image_url: 'cloud://cloud1-d4gkci99i21e9bfe9.636c-cloud1-d4gkci99i21e9bfe9-1319417052/tech/tech_rod_x_guide_img.png' },
+      { tech_id: 'hi_power_x', name: 'HI-POWER X', description: '有效减少抛投、搏鱼时鱼竿的扭曲和晃动。在SPIRAL X 结构外层或普通纵横交织碳布的最外层之上卷上X形碳布。根据这一特性，尽可能使鱼竿的弯曲方向与钓友的意图一致，充分发挥出鱼竿具备的能力。', logo_url: 'cloud://cloud1-d4gkci99i21e9bfe9.636c-cloud1-d4gkci99i21e9bfe9-1319417052/tech/tech_rod_hi_power_x_img.png', image_url: 'cloud://cloud1-d4gkci99i21e9bfe9.636c-cloud1-d4gkci99i21e9bfe9-1319417052/tech/tech_rod_hi_power_x_img.png' }
+    ],
+    features: [
+      { name: '钛材质远投用X导环', description: '', image_url: '' },
+      { name: '全导环固定系统', description: '', image_url: '' },
+      { name: '辅助抛投握把', description: '', image_url: '' }
+    ],
     documents: [],
     images: [],
     sort_order: 250
@@ -690,9 +712,15 @@ const SERIES_DATA_RODS = [
     price_max: 9244,
     price_tier: 3,
     model_count: 6,
-    description: '',
-    technologies: [],
-    features: [],
+    description: 'KISU SPECIAL旗舰系列的裸竿规格，不含导环，供钓友自行配置导环方案。\n\n竿身与标准版KISU SPECIAL完全相同，搭载SPIRAL X和HI-POWER X构造，轻量高强度。适合对导环有个人偏好或参加特定比赛规则的专业钓手，自行定制导环方案以发挥竿身的最大潜力。',
+    technologies: [
+      { tech_id: 'spiral_x', name: 'SPIRAL X', description: '从根本提升鱼竿性能，克服了扭和变形的问题。【SPIRAL X】是鱼竿碳纤维的内层和外层将碳布由逆斜向密编织的三层构造，内外斜向编织能够保持鱼竿轻量并且实现高强度和防歪扭的性能。', logo_url: 'cloud://cloud1-d4gkci99i21e9bfe9.636c-cloud1-d4gkci99i21e9bfe9-1319417052/tech/tech_rod_spiral_x_img.png', image_url: 'cloud://cloud1-d4gkci99i21e9bfe9.636c-cloud1-d4gkci99i21e9bfe9-1319417052/tech/tech_rod_spiral_x_img.png' },
+      { tech_id: 'hi_power_x', name: 'HI-POWER X', description: '有效减少抛投、搏鱼时鱼竿的扭曲和晃动。在SPIRAL X 结构外层或普通纵横交织碳布的最外层之上卷上X形碳布。根据这一特性，尽可能使鱼竿的弯曲方向与钓友的意图一致，充分发挥出鱼竿具备的能力。', logo_url: 'cloud://cloud1-d4gkci99i21e9bfe9.636c-cloud1-d4gkci99i21e9bfe9-1319417052/tech/tech_rod_hi_power_x_img.png', image_url: 'cloud://cloud1-d4gkci99i21e9bfe9.636c-cloud1-d4gkci99i21e9bfe9-1319417052/tech/tech_rod_hi_power_x_img.png' }
+    ],
+    features: [
+      { name: '裸竿规格（不含导环）', description: '供钓友自行配置导环，ST规格', image_url: '' },
+      { name: '抛投握把', description: '', image_url: '' }
+    ],
     documents: [],
     images: [],
     sort_order: 281

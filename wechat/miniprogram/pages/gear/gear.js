@@ -46,13 +46,13 @@ Page({
     // 筛选选项
     brands: BRAND_OPTIONS,
     types: ROD_TYPE_OPTIONS,
-    prices: REEL_PRICE_OPTIONS,
+    prices: ROD_PRICE_OPTIONS,
     markets: MARKET_OPTIONS,
 
     // UI 状态
     loading: true,
-    seeded: true,    // 数据库是否有数据
-    showTypePill: false, // 渔轮时隐藏类型筛选
+    seeded: true,
+    showTypePill: true, // 默认渔竿，显示类型筛选
   },
 
   // 搜索防抖计时器

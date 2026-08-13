@@ -487,3 +487,30 @@ const MODELS_DATA_SURF_CHASER_CN = [
 ];
 
 module.exports.MODELS_DATA_SURF_CHASER_CN = MODELS_DATA_SURF_CHASER_CN;
+
+
+// ============================================================
+// 渔竿型号 — SPINJOY (振出) CN — 15 个型号
+// 数据来源：禧玛诺官网产品规格表
+// 注：butt_diameter_mm 为元径（竿尾直径），SPINJOY 特有字段
+// ============================================================
+
+const MODELS_DATA_SPINJOY_CN = [
+  { series_id: 'shimano_spinjoy_rod_cn', model: '275HX-T', model_image: null, category: 'rod', length_m: 2.75, pieces: 3, closed_length_cm: 101.5, weight_g: 175, tip_diameter_mm: 1.9, butt_diameter_mm: 18.6, sinker_load: '10-20', standard_sinker: null, reel_seat_mm: null, carbon_percent: 67.1, price_cn: 630,  product_code: '' },
+  { series_id: 'shimano_spinjoy_rod_cn', model: '300HX-T', model_image: null, category: 'rod', length_m: 3.00, pieces: 4, closed_length_cm: 86.5,  weight_g: 205, tip_diameter_mm: 1.9, butt_diameter_mm: 20.6, sinker_load: '10-20', standard_sinker: null, reel_seat_mm: null, carbon_percent: 65.0, price_cn: 725,  product_code: '' },
+  { series_id: 'shimano_spinjoy_rod_cn', model: '330HX-T', model_image: null, category: 'rod', length_m: 3.30, pieces: 4, closed_length_cm: 94.0,  weight_g: 230, tip_diameter_mm: 1.9, butt_diameter_mm: 21.0, sinker_load: '10-20', standard_sinker: null, reel_seat_mm: null, carbon_percent: 66.9, price_cn: 756,  product_code: '' },
+  { series_id: 'shimano_spinjoy_rod_cn', model: '360HX-T', model_image: null, category: 'rod', length_m: 3.60, pieces: 4, closed_length_cm: 101.5, weight_g: 260, tip_diameter_mm: 1.9, butt_diameter_mm: 21.2, sinker_load: '10-20', standard_sinker: null, reel_seat_mm: null, carbon_percent: 69.5, price_cn: 788,  product_code: '' },
+  { series_id: 'shimano_spinjoy_rod_cn', model: '390HX-T', model_image: null, category: 'rod', length_m: 3.90, pieces: 4, closed_length_cm: 109.0, weight_g: 295, tip_diameter_mm: 1.9, butt_diameter_mm: 21.4, sinker_load: '10-20', standard_sinker: null, reel_seat_mm: null, carbon_percent: 71.8, price_cn: 798,  product_code: '' },
+  { series_id: 'shimano_spinjoy_rod_cn', model: '360GX-T', model_image: null, category: 'rod', length_m: 3.60, pieces: 4, closed_length_cm: 103.0, weight_g: 270, tip_diameter_mm: 2.1, butt_diameter_mm: 21.4, sinker_load: '15-23', standard_sinker: null, reel_seat_mm: null, carbon_percent: 86.3, price_cn: 809,  product_code: '' },
+  { series_id: 'shimano_spinjoy_rod_cn', model: '360FX-T', model_image: null, category: 'rod', length_m: 3.60, pieces: 4, closed_length_cm: 103.0, weight_g: 285, tip_diameter_mm: 2.2, butt_diameter_mm: 21.6, sinker_load: '18-25', standard_sinker: null, reel_seat_mm: null, carbon_percent: 87.9, price_cn: 830,  product_code: '' },
+  { series_id: 'shimano_spinjoy_rod_cn', model: '405FX-T', model_image: null, category: 'rod', length_m: 4.05, pieces: 4, closed_length_cm: 114.0, weight_g: 355, tip_diameter_mm: 2.2, butt_diameter_mm: 21.8, sinker_load: '18-25', standard_sinker: null, reel_seat_mm: null, carbon_percent: 88.8, price_cn: 840,  product_code: '' },
+  { series_id: 'shimano_spinjoy_rod_cn', model: '405EX-T', model_image: null, category: 'rod', length_m: 4.05, pieces: 4, closed_length_cm: 114.0, weight_g: 375, tip_diameter_mm: 2.3, butt_diameter_mm: 22.8, sinker_load: '20-30', standard_sinker: null, reel_seat_mm: null, carbon_percent: 89.5, price_cn: 840,  product_code: '' },
+  { series_id: 'shimano_spinjoy_rod_cn', model: '425EX-T', model_image: null, category: 'rod', length_m: 4.25, pieces: 4, closed_length_cm: 119.0, weight_g: 405, tip_diameter_mm: 2.3, butt_diameter_mm: 23.0, sinker_load: '20-30', standard_sinker: null, reel_seat_mm: null, carbon_percent: 89.9, price_cn: 861,  product_code: '' },
+  { series_id: 'shimano_spinjoy_rod_cn', model: '405DX-T', model_image: null, category: 'rod', length_m: 4.05, pieces: 4, closed_length_cm: 114.0, weight_g: 400, tip_diameter_mm: 2.4, butt_diameter_mm: 23.0, sinker_load: '23-30', standard_sinker: null, reel_seat_mm: null, carbon_percent: 90.2, price_cn: 861,  product_code: '' },
+  { series_id: 'shimano_spinjoy_rod_cn', model: '425DX-T', model_image: null, category: 'rod', length_m: 4.25, pieces: 4, closed_length_cm: 119.0, weight_g: 430, tip_diameter_mm: 2.4, butt_diameter_mm: 23.2, sinker_load: '23-30', standard_sinker: null, reel_seat_mm: null, carbon_percent: 90.7, price_cn: 903,  product_code: '' },
+  { series_id: 'shimano_spinjoy_rod_cn', model: '450DX-T', model_image: null, category: 'rod', length_m: 4.50, pieces: 5, closed_length_cm: 104.0, weight_g: 455, tip_diameter_mm: 2.2, butt_diameter_mm: 23.4, sinker_load: '23-30', standard_sinker: null, reel_seat_mm: null, carbon_percent: 91.5, price_cn: 966,  product_code: '' },
+  { series_id: 'shimano_spinjoy_rod_cn', model: '405CX-T', model_image: null, category: 'rod', length_m: 4.05, pieces: 4, closed_length_cm: 114.0, weight_g: 425, tip_diameter_mm: 2.6, butt_diameter_mm: 23.2, sinker_load: '25-35', standard_sinker: null, reel_seat_mm: null, carbon_percent: 91.0, price_cn: 903,  product_code: '' },
+  { series_id: 'shimano_spinjoy_rod_cn', model: '425CX-T', model_image: null, category: 'rod', length_m: 4.25, pieces: 4, closed_length_cm: 119.0, weight_g: 460, tip_diameter_mm: 2.6, butt_diameter_mm: 23.2, sinker_load: '25-35', standard_sinker: null, reel_seat_mm: null, carbon_percent: 91.5, price_cn: 935,  product_code: '' },
+];
+
+module.exports.MODELS_DATA_SPINJOY_CN = MODELS_DATA_SPINJOY_CN;

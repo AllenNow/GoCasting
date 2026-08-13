@@ -44,20 +44,26 @@ Page({
     try {
       const db = app.globalData.db;
 
-      // 并行查询三类钓点
-      const [officialRes, publicRes, privateRes] = await Promise.all([
-        // 官方钓点（所有人可读）
-        db.collection('official_spots')
+      // 官方钓点单独查询，集合不存在时不影响用户钓点
+      let officialSpots = [];
+      try {
+        const officialRes = await db.collection('official_spots')
           .where({ status: 'active' })
           .limit(200)
-          .get(),
-        // 用户公开钓点
+          .get();
+        officialSpots = officialRes.data;
+      } catch (e) {
+        // official_spots 集合尚未创建，忽略，只显示用户钓点
+        console.log('[spot-map] official_spots 集合不存在，跳过官方钓点加载');
+      }
+
+      // 用户钓点并行查询
+      const [publicRes, privateRes] = await Promise.all([
         db.collection('fishing_spots')
           .where({ is_public: true })
           .orderBy('created_at', 'desc')
           .limit(200)
           .get(),
-        // 我的私有钓点
         db.collection('fishing_spots')
           .where({ is_public: false })
           .orderBy('created_at', 'desc')
@@ -65,14 +71,9 @@ Page({
           .get(),
       ]);
 
-      // 官方钓点封面图转临时 URL（用于 callout 展示，marker 图标统一用星标）
-      const officialSpots = officialRes.data;
-
-      // 合并用户钓点，去重
       const userSpots = [...publicRes.data, ...privateRes.data]
         .filter((v, i, a) => a.findIndex(t => t._id === v._id) === i);
 
-      // 生成 markers：官方钓点 + 用户钓点
       let markerId = 0;
       const officialMarkers = officialSpots.map(spot => ({
         id: markerId++,
@@ -118,10 +119,8 @@ Page({
         _spotData: spot,
       }));
 
-      const markers = [...officialMarkers, ...userMarkers];
-
       this.setData({
-        markers,
+        markers: [...officialMarkers, ...userMarkers],
         loading: false,
         totalPublic: publicRes.data.length,
         totalOfficial: officialSpots.length,
