@@ -72,4 +72,5 @@ Page({
   goGearManage() { wx.navigateTo({ url: '/pages/admin/gear-manage' }); },
   goUserManage() { wx.navigateTo({ url: '/pages/admin/user-manage' }); },
   goDashboard()  { wx.navigateTo({ url: '/pages/admin/dashboard' }); },
+  goApiStats()   { wx.navigateTo({ url: '/pages/admin/api-stats/api-stats' }); },
 });

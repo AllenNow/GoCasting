@@ -1,0 +1,272 @@
+<!-- pages/admin/api-stats/api-stats.wxml — 第三方 API 用量统计 -->
+<view class="page">
+
+  <!-- ══ Tab Bar ══════════════════════════════════════════════ -->
+  <view class="tab-bar">
+    <view
+      wx:for="{{ ['overview','byApi','byUser','fail'] }}"
+      wx:key="*this"
+      class="tab-item {{ activeTab === item ? 'tab-active' : '' }}"
+      bindtap="switchTab"
+      data-tab="{{ item }}"
+    >
+      <text>{{ item === 'overview' ? '总览' : item === 'byApi' ? '按接口' : item === 'byUser' ? '按用户' : '失败记录' }}</text>
+    </view>
+  </view>
+
+  <!-- ══ 加载中 ══════════════════════════════════════════════ -->
+  <view wx:if="{{ loading }}" class="loading-wrap">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中…</text>
+  </view>
+
+  <!-- ════════════════════════════════════════════════════════
+       Tab1：总览
+  ═══════════════════════════════════════════════════════════ -->
+  <block wx:if="{{ activeTab === 'overview' && !loading }}">
+
+    <view wx:if="{{ overview }}">
+
+      <!-- 四格汇总卡 -->
+      <view class="stats-grid">
+        <view class="stat-card">
+          <text class="stat-num">{{ overview.total }}</text>
+          <text class="stat-label">总调用次数</text>
+        </view>
+        <view class="stat-card stat-card-success">
+          <text class="stat-num">{{ overview.totalSuccess }}</text>
+          <text class="stat-label">成功次数</text>
+        </view>
+        <view class="stat-card stat-card-fail">
+          <text class="stat-num">{{ overview.totalFail }}</text>
+          <text class="stat-label">失败次数</text>
+        </view>
+        <view class="stat-card stat-card-latency">
+          <text class="stat-num">{{ overview.avgLatencyMs }}</text>
+          <text class="stat-label">平均耗时 ms</text>
+        </view>
+      </view>
+
+      <!-- 成功率进度条 -->
+      <view class="section-card">
+        <text class="section-title">整体成功率</text>
+        <view class="rate-bar-wrap">
+          <view
+            class="rate-bar-fill"
+            style="width: {{ overview.overallSuccessRate }}%"
+          ></view>
+        </view>
+        <text class="rate-label">{{ overview.overallSuccessRate }}%</text>
+      </view>
+
+      <!-- 14天趋势柱图 -->
+      <view class="section-card" wx:if="{{ dateSeriesLoaded }}">
+        <text class="section-title">近14天调用趋势</text>
+        <view class="bar-chart">
+          <view
+            wx:for="{{ dateSeries }}"
+            wx:key="dateKey"
+            class="bar-col"
+          >
+            <text class="bar-num {{ item.total === 0 ? 'bar-num-zero' : '' }}">{{ item.total }}</text>
+            <view class="bar-body">
+              <view
+                class="bar-fill"
+                style="height: {{ item.heightPct }}%;"
+              ></view>
+            </view>
+            <text class="bar-label">{{ item.label }}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 各接口调用量 -->
+      <view class="section-card">
+        <text class="section-title">各接口调用量（近500条）</text>
+        <view wx:for="{{ byApiList }}" wx:key="apiName" class="api-row">
+          <view class="api-row-left">
+            <view class="api-group-tag tag-{{ item.apiGroup }}">
+              <text>{{ item.groupLabel }}</text>
+            </view>
+            <text class="api-name">{{ item.nameLabel }}</text>
+          </view>
+          <view class="api-row-right">
+            <text class="api-cnt">{{ item.total }}次</text>
+            <view class="api-mini-bar-bg">
+              <view
+                class="api-mini-bar-fill {{ item.successRate < 80 ? 'fill-warn' : '' }}"
+                style="width: {{ item.successRate }}%"
+              ></view>
+            </view>
+            <text class="api-rate {{ item.successRate < 80 ? 'rate-warn' : 'rate-ok' }}">{{ item.successRate }}%</text>
+            <text class="api-latency">{{ item.avgLatencyMs }}ms</text>
+          </view>
+        </view>
+      </view>
+
+    </view>
+
+    <!-- 无数据提示 -->
+    <view wx:else class="empty-tip">
+      <text>暂无统计数据</text>
+      <text class="empty-sub">部署并使用天气/海洋功能后会自动记录</text>
+    </view>
+  </block>
+
+  <!-- ════════════════════════════════════════════════════════
+       Tab2：按接口详情
+  ═══════════════════════════════════════════════════════════ -->
+  <block wx:if="{{ activeTab === 'byApi' && !loading }}">
+    <view class="section-card" wx:if="{{ byApiList.length > 0 }}">
+      <text class="section-title">接口维度统计</text>
+
+      <!-- 表头 -->
+      <view class="table-head">
+        <text class="th th-name">接口名</text>
+        <text class="th th-total">调用</text>
+        <text class="th th-fail">失败</text>
+        <text class="th th-rate">成功率</text>
+        <text class="th th-ms">耗时</text>
+      </view>
+
+      <view wx:for="{{ byApiList }}" wx:key="apiName" class="table-row">
+        <view class="td td-name">
+          <view class="api-group-tag tag-{{ item.apiGroup }}">
+            <text>{{ item.groupLabel }}</text>
+          </view>
+          <text class="api-name">{{ item.nameLabel }}</text>
+        </view>
+        <text class="td td-total">{{ item.total }}</text>
+        <text class="td td-fail {{ item.fail > 0 ? 'txt-warn' : 'txt-mute' }}">{{ item.fail }}</text>
+        <view class="td td-rate">
+          <view class="inline-bar">
+            <view
+              class="inline-bar-fill {{ item.successRate < 80 ? 'fill-warn' : 'fill-ok' }}"
+              style="width: {{ item.successRate }}%"
+            ></view>
+          </view>
+          <text class="{{ item.successRate < 80 ? 'rate-warn' : 'rate-ok' }}">{{ item.successRate }}%</text>
+        </view>
+        <text class="td td-ms">{{ item.avgLatencyMs }}ms</text>
+      </view>
+    </view>
+
+    <view wx:else class="empty-tip">
+      <text>暂无数据</text>
+    </view>
+  </block>
+
+  <!-- ════════════════════════════════════════════════════════
+       Tab3：按用户
+  ═══════════════════════════════════════════════════════════ -->
+  <block wx:if="{{ activeTab === 'byUser' && !loading }}">
+
+    <view wx:if="{{ byUserList.length > 0 }}">
+
+      <view wx:for="{{ byUserList }}" wx:key="openid" class="user-card">
+
+        <!-- 用户行（点击展开详情） -->
+        <view class="user-row" bindtap="toggleUserDetail" data-openid="{{ item.openid }}">
+          <view class="user-rank {{ item.rank <= 3 ? 'rank-top' : '' }}">
+            <text>{{ item.rank <= 3 ? (item.rank === 1 ? '🥇' : item.rank === 2 ? '🥈' : '🥉') : item.rank }}</text>
+          </view>
+          <view class="user-info">
+            <text class="user-openid">…{{ item.openidShort }}</text>
+            <text class="user-apis-summary">{{ item.apisSummary }}</text>
+          </view>
+          <view class="user-stats">
+            <text class="user-total">{{ item.total }}次</text>
+            <text class="user-last">{{ item.lastCalledStr }}</text>
+          </view>
+          <text class="user-arrow {{ selectedUser === item.openid ? 'arrow-down' : '' }}">›</text>
+        </view>
+
+        <!-- 成功率条 -->
+        <view class="user-rate-bar">
+          <view class="user-rate-fill" style="width: {{ item.successRate }}%"></view>
+          <text class="user-rate-txt">成功率 {{ item.successRate }}%</text>
+        </view>
+
+        <!-- 展开：用户详情 -->
+        <view wx:if="{{ selectedUser === item.openid }}" class="user-detail">
+
+          <view wx:if="{{ userDetailLoading }}" class="detail-loading">
+            <text>加载中…</text>
+          </view>
+
+          <block wx:elif="{{ userDetail }}">
+            <!-- 接口汇总 -->
+            <view class="detail-section">
+              <text class="detail-section-title">接口用量</text>
+              <view wx:for="{{ userDetail.summary.apis }}" wx:key="apiName" class="detail-api-row">
+                <view class="api-group-tag tag-{{ item.apiGroup }}">
+                  <text>{{ item.groupLabel }}</text>
+                </view>
+                <text class="detail-api-name">{{ item.nameLabel }}</text>
+                <text class="detail-api-cnt">{{ item.count }}次</text>
+                <text wx:if="{{ item.fail > 0 }}" class="detail-api-fail">失败{{ item.fail }}</text>
+              </view>
+            </view>
+
+            <!-- 最近记录（最多20条） -->
+            <view class="detail-section">
+              <text class="detail-section-title">最近调用（最多20条）</text>
+              <view wx:for="{{ userDetail.records }}" wx:key="index" wx:if="{{ index < 20 }}" class="record-row">
+                <view class="record-left">
+                  <view class="api-group-tag tag-{{ item.apiGroup }}">
+                    <text>{{ item.groupLabel }}</text>
+                  </view>
+                  <text class="record-name">{{ item.nameLabel }}</text>
+                  <view class="record-status {{ item.success ? 'status-ok' : 'status-fail' }}">
+                    <text>{{ item.success ? '✓' : '✗' }}</text>
+                  </view>
+                </view>
+                <view class="record-right">
+                  <text class="record-time">{{ item.calledAtStr }}</text>
+                  <text class="record-latency">{{ item.latencyLabel }}</text>
+                </view>
+                <text wx:if="{{ !item.success }}" class="record-error">{{ item.error }}</text>
+              </view>
+            </view>
+          </block>
+
+        </view>
+      </view>
+    </view>
+
+    <view wx:elif="{{ !loading }}" class="empty-tip">
+      <text>暂无用户数据</text>
+    </view>
+
+  </block>
+
+  <!-- ════════════════════════════════════════════════════════
+       Tab4：失败记录
+  ═══════════════════════════════════════════════════════════ -->
+  <block wx:if="{{ activeTab === 'fail' && !loading }}">
+
+    <view wx:if="{{ failLogs.length > 0 }}">
+      <view class="section-card">
+        <text class="section-title">最近100条失败记录</text>
+        <view wx:for="{{ failLogs }}" wx:key="index" class="fail-row">
+          <view class="fail-row-header">
+            <view class="api-group-tag tag-{{ item.apiGroup }}">
+              <text>{{ item.groupLabel }}</text>
+            </view>
+            <text class="fail-api-name">{{ item.nameLabel }}</text>
+            <text class="fail-openid">用户 …{{ item.openidShort }}</text>
+            <text class="fail-time">{{ item.calledAtStr }}</text>
+          </view>
+          <text class="fail-error">{{ item.errorShort }}</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:elif="{{ !loading }}" class="empty-tip">
+      <text>🎉 暂无失败记录</text>
+    </view>
+
+  </block>
+
+  <view class="safe-bottom"></view>
+</view>

@@ -1,0 +1,10 @@
+{
+  "name": "getMarineData",
+  "version": "1.0.0",
+  "description": "获取海洋数据：潮汐+浪高+水温（Open-Meteo Marine API，完全免费）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3",
+    "node-fetch": "^2.6.7"
+  }
+}

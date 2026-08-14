@@ -80,11 +80,60 @@
     </view>
   </view>
 
-  <!-- 空状态 -->
-  <view wx:elif="{{ catches.length === 0 }}" class="empty-state">
-    <text class="empty-icon">🐟</text>
-    <text class="empty-text">还没有渔获记录</text>
-    <text class="empty-subtext">点击上方按钮记录你的第一次渔获</text>
+  <!-- 空状态：新用户引导 -->
+  <view wx:elif="{{ catches.length === 0 }}" class="empty-guide">
+    <!-- 主图标动画 -->
+    <view class="empty-fish-wrap">
+      <text class="empty-fish-icon">🎣</text>
+    </view>
+    <text class="empty-guide-title">开始你的钓鱼之旅</text>
+    <text class="empty-guide-sub">记录每一次渔获，追踪你的钓鱼足迹</text>
+
+    <!-- 三步引导卡 -->
+    <view class="guide-steps">
+      <view class="guide-step">
+        <view class="step-badge">1</view>
+        <view class="step-info">
+          <text class="step-title">记录渔获</text>
+          <text class="step-desc">拍照、记录鱼种、重量、钓法</text>
+        </view>
+        <text class="step-icon">📷</text>
+      </view>
+      <view class="guide-step-divider"></view>
+      <view class="guide-step">
+        <view class="step-badge">2</view>
+        <view class="step-info">
+          <text class="step-title">查看潮汐</text>
+          <text class="step-desc">选最佳时段，出钓不踩坑</text>
+        </view>
+        <text class="step-icon">🌊</text>
+      </view>
+      <view class="guide-step-divider"></view>
+      <view class="guide-step">
+        <view class="step-badge">3</view>
+        <view class="step-info">
+          <text class="step-title">发现钓点</text>
+          <text class="step-desc">地图上找到附近优质钓点</text>
+        </view>
+        <text class="step-icon">📍</text>
+      </view>
+    </view>
+
+    <!-- 立即开始按钮 -->
+    <view class="btn-primary guide-start-btn" bindtap="goRecord">
+      <text class="guide-start-icon">🎣</text>
+      <text>记录第一条渔获</text>
+    </view>
+
+    <!-- 次级入口 -->
+    <view class="guide-secondary-row">
+      <view class="guide-secondary-btn" bindtap="goWeather">
+        <text>查看今日潮汐 →</text>
+      </view>
+      <view class="guide-secondary-btn" bindtap="goMap">
+        <text>浏览钓点地图 →</text>
+      </view>
+    </view>
   </view>
 
   <!-- 渔获列表 -->

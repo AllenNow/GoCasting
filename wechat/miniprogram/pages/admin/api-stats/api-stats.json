@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "API 用量统计",
+  "navigationBarBackgroundColor": "#1a1a2e",
+  "navigationBarTextStyle": "white",
+  "enablePullDownRefresh": true
+}

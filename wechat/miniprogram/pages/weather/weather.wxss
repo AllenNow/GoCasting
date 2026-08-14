@@ -1,154 +1,1243 @@
-/* pages/weather/weather.wxss */
+/* pages/weather/weather.wxss — 潮汐+海洋仪表板完整样式 */
 
+/* ── 全局 ─────────────────────────────────────────────────── */
+.page-bg {
+  min-height: 100vh;
+  background: #f0f4f8;
+}
+
+/* ── 加载状态 ────────────────────────────────────────────── */
+.loading-full {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  gap: 24rpx;
+}
+.loading-spinner {
+  width: 64rpx;
+  height: 64rpx;
+  border: 6rpx solid #e0e0e0;
+  border-top-color: #1a7f5a;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 28rpx; color: #888; }
+
+/* ── 错误栏 ─────────────────────────────────────────────── */
 .error-bar {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
   background: #fff8e6;
-  padding: 16rpx 24rpx;
-  font-size: 24rpx;
-  color: #b07800;
+  padding: 18rpx 28rpx;
   border-bottom: 2rpx solid #ffe0a0;
 }
+.error-icon { font-size: 28rpx; }
+.error-text { font-size: 24rpx; color: #b07800; flex: 1; }
 
-/* 天气主卡 */
-.weather-card {
-  background: linear-gradient(135deg, #1a7f5a, #0d5c42);
-  padding: 36rpx 32rpx 40rpx;
-  color: #fff;
-}
-.weather-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 28rpx;
-}
-.weather-location {
+/* ── 缓存提示条 ─────────────────────────────────────────── */
+.cache-hint-bar {
   display: flex;
   align-items: center;
   gap: 8rpx;
+  background: #f5f7fa;
+  padding: 10rpx 28rpx;
+  border-bottom: 1rpx solid #eaeaea;
 }
-.location-icon { font-size: 28rpx; }
-.location-name { font-size: 28rpx; font-weight: 600; }
-.weather-temp-wrap {
-  text-align: right;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-}
-.weather-temp { font-size: 64rpx; font-weight: 700; line-height: 1; }
-.weather-desc { font-size: 24rpx; opacity: 0.8; margin-top: 6rpx; }
-.weather-meta {
-  display: flex;
-  gap: 0;
-  background: rgba(255,255,255,0.12);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-}
-.meta-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 14rpx 8rpx;
-  gap: 4rpx;
-}
-.meta-icon { font-size: 28rpx; }
-.meta-val  { font-size: 20rpx; opacity: 0.9; }
+.cache-hint-icon { font-size: 20rpx; }
+.cache-hint-text { font-size: 20rpx; color: #aaa; }
 
-/* 钓鱼指数卡 */
-.score-card { margin: 16rpx 20rpx 0; }
-.score-row {
+/* ── 通用 section-card ──────────────────────────────────── */
+.section-card {
+  background: #fff;
+  border-radius: 24rpx;
+  margin: 20rpx 20rpx 0;
+  padding: 28rpx 24rpx;
+  box-shadow: 0 2rpx 16rpx rgba(0,0,0,0.06);
+}
+.section-header {
   display: flex;
   align-items: center;
-  gap: 24rpx;
+  justify-content: space-between;
   margin-bottom: 20rpx;
 }
-.score-circle {
-  width: 100rpx;
-  height: 100rpx;
-  border-radius: 50%;
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  flex-shrink: 0;
-  padding-top: 20rpx;
+.section-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #1a2a1a;
 }
-.score-good { background: #e6f4ef; }
-.score-ok   { background: #fff8e6; }
-.score-bad  { background: #fdeaea; }
-.score-num  { font-size: 44rpx; font-weight: 700; color: var(--color-text-primary); }
-.score-max  { font-size: 22rpx; color: var(--color-text-hint); }
-.score-desc { display: flex; flex-direction: column; gap: 6rpx; }
-.score-label{ font-size: 28rpx; font-weight: 600; }
-.score-sub  { font-size: 22rpx; color: var(--color-text-hint); }
-.score-actions { display: flex; gap: 16rpx; }
-.score-btn  { flex: 1; text-align: center; padding: 18rpx; font-size: 26rpx; border-radius: var(--radius-md); }
 
-/* 潮汐卡 */
-.tide-card { margin: 16rpx 20rpx 0; }
-.tide-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16rpx; }
-.tide-state-badge {
-  background: var(--color-primary-light);
-  color: var(--color-primary);
-  font-size: 24rpx;
-  padding: 6rpx 16rpx;
+/* ════════════════════════════════════════════════════════
+   区块1：顶部实况英雄卡
+════════════════════════════════════════════════════════ */
+.hero-card {
+  background: linear-gradient(160deg, #0d5c42 0%, #1a7f5a 50%, #2d9e72 100%);
+  padding: 48rpx 32rpx 36rpx;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+/* 装饰波浪背景 */
+.hero-card::after {
+  content: '';
+  position: absolute;
+  bottom: -30rpx;
+  left: -10%;
+  width: 120%;
+  height: 60rpx;
+  background: #f0f4f8;
+  border-radius: 50% 50% 0 0;
+  pointer-events: none;
+}
+
+.hero-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32rpx;
+}
+.hero-location {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+.hero-location-icon { font-size: 26rpx; }
+.hero-location-name { font-size: 28rpx; font-weight: 600; opacity: 0.95; }
+.hero-weather-mini {
+  display: flex;
+  gap: 12rpx;
+  align-items: center;
+  background: rgba(255,255,255,0.15);
+  padding: 8rpx 18rpx;
   border-radius: 100rpx;
 }
-.tide-height-row {
+.hero-weather-desc { font-size: 24rpx; opacity: 0.9; }
+.hero-weather-temp { font-size: 26rpx; font-weight: 600; }
+
+/* 潮汐主体 */
+.hero-tide-main {
   display: flex;
   align-items: baseline;
-  gap: 8rpx;
-  margin-bottom: 24rpx;
+  gap: 20rpx;
+  margin-bottom: 8rpx;
+  flex-wrap: wrap;
 }
-.tide-height-num { font-size: 56rpx; font-weight: 700; color: var(--color-primary); }
-.tide-height-unit{ font-size: 24rpx; color: var(--color-text-secondary); }
-.tide-hint { font-size: 22rpx; color: var(--color-text-hint); margin-left: 8rpx; }
-
-/* 潮汐条形图 */
-.tide-bars {
+.hero-tide-state {
   display: flex;
-  align-items: flex-end;
-  gap: 6rpx;
-  height: 120rpx;
-  padding-bottom: 32rpx;
-  position: relative;
+  align-items: center;
+  gap: 8rpx;
+  background: rgba(255,255,255,0.18);
+  padding: 10rpx 22rpx;
+  border-radius: 100rpx;
 }
-.tide-bar-col {
-  flex: 1;
+.hero-tide-icon  { font-size: 32rpx; }
+.hero-tide-label { font-size: 28rpx; font-weight: 700; }
+.hero-tide-height { display: flex; align-items: baseline; gap: 4rpx; }
+.hero-height-num  { font-size: 64rpx; font-weight: 800; line-height: 1; }
+.hero-height-unit { font-size: 26rpx; opacity: 0.8; }
+.hero-height-hint { font-size: 22rpx; opacity: 0.65; align-self: flex-end; padding-bottom: 8rpx; }
+
+/* 四格数据 */
+.hero-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  background: rgba(255,255,255,0.12);
+  border-radius: 16rpx;
+  margin: 24rpx 0 20rpx;
+  overflow: hidden;
+}
+.hero-grid-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
-  position: relative;
+  padding: 18rpx 8rpx;
+  gap: 6rpx;
+  border-right: 1rpx solid rgba(255,255,255,0.15);
 }
-.tide-bar {
-  width: 100%;
-  border-radius: 4rpx 4rpx 0 0;
-  min-height: 8rpx;
-  transition: height 0.3s;
-}
-.tide-bar-pos { background: var(--color-primary); opacity: 0.7; }
-.tide-bar-neg { background: #aaa; opacity: 0.5; border-radius: 0 0 4rpx 4rpx; }
-.tide-bar-label {
-  position: absolute;
-  bottom: -28rpx;
-  font-size: 18rpx;
-  color: var(--color-text-hint);
-  white-space: nowrap;
-}
+.hero-grid-item:last-child { border-right: none; }
+.hero-grid-icon { font-size: 32rpx; }
+.hero-grid-val  { font-size: 24rpx; font-weight: 700; }
+.hero-grid-label{ font-size: 20rpx; opacity: 0.75; }
 
-/* 3天预报 */
-.forecast-card { margin: 16rpx 20rpx 0; }
-.forecast-list { display: flex; flex-direction: column; gap: 0; }
-.forecast-item {
+/* 出钓评分徽章 */
+.fish-score-badge {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  padding: 18rpx 0;
-  border-bottom: 2rpx solid var(--color-border);
+  justify-content: center;
+}
+.score-good { background: rgba(46, 213, 115, 0.35); }
+.score-ok   { background: rgba(255, 191, 0, 0.35); }
+.score-bad  { background: rgba(255, 71, 87, 0.35); }
+.fish-score-num { font-size: 28rpx; font-weight: 800; color: #fff; }
+
+/* 底部海况 + 赶海 */
+.hero-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4rpx;
+}
+.hero-wave-desc { display: flex; flex-direction: column; gap: 4rpx; }
+.hero-wave-tag  { font-size: 26rpx; font-weight: 700; }
+.hero-wave-detail{ font-size: 22rpx; opacity: 0.75; }
+.ganhai-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6rpx;
+}
+.ganhai-label { font-size: 20rpx; opacity: 0.75; }
+.ganhai-dots  { display: flex; gap: 6rpx; }
+.ganhai-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+}
+.ganhai-dot-on { background: #7fffb2; }
+
+/* ════════════════════════════════════════════════════════
+   区块2：24h 潮位折线图
+════════════════════════════════════════════════════════ */
+.chart-legend {
+  display: flex;
+  gap: 16rpx;
+}
+.legend-item  { font-size: 22rpx; }
+.legend-max   { color: #e85555; }
+.legend-min   { color: #4a90d9; }
+
+.tide-chart-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;  /* tooltip 用 absolute 定位时的参考容器 */
+}
+.chart-yaxis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 240rpx;
+  padding: 0 8rpx;
+  position: absolute;
+  z-index: 2;
+}
+.yaxis-label { font-size: 20rpx; color: #aaa; }
+
+.tide-chart-body {
+  position: relative;
+  height: 240rpx;
+  margin: 0 0 12rpx;
+  background: linear-gradient(180deg, #f0f7ff 0%, #e8f4fd 100%);
+  border-radius: 12rpx;
+  overflow: hidden;
+}
+.chart-gridline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1rpx;
+  background: rgba(100,150,200,0.15);
+}
+
+/* 折线点 */
+.chart-point {
+  position: absolute;
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+  background: #1a7f5a;
+  margin-left: -4rpx;
+  margin-top: -4rpx;
+  z-index: 3;
+}
+.chart-point-tick {
+  width: 12rpx;
+  height: 12rpx;
+  margin-left: -6rpx;
+  margin-top: -6rpx;
+  background: #0d5c42;
+  border: 2rpx solid #fff;
+}
+
+/* 折线段（用 border-bottom 实现） */
+.chart-line-seg {
+  position: absolute;
+  height: 3rpx;
+  background: linear-gradient(90deg, #1a7f5a, #2d9e72);
+  transform-origin: left center;
+  border-radius: 2rpx;
+  margin-top: -1.5rpx;
+  z-index: 2;
+}
+
+/* 当前时刻游标 */
+.chart-cursor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 5;
+}
+.chart-cursor-line {
+  width: 2rpx;
+  flex: 1;
+  background: rgba(232,85,85,0.6);
+  border-style: dashed;
+}
+.chart-cursor-dot {
+  width: 14rpx;
+  height: 14rpx;
+  border-radius: 50%;
+  background: #e85555;
+  border: 3rpx solid #fff;
+  box-shadow: 0 0 8rpx rgba(232,85,85,0.5);
+  position: absolute;
+  top: 50%;
+  margin-top: -7rpx;
+  margin-left: -6rpx;
+}
+.chart-cursor-label {
+  position: absolute;
+  top: 4rpx;
+  font-size: 18rpx;
+  color: #e85555;
+  font-weight: 600;
+  white-space: nowrap;
+  background: rgba(255,255,255,0.8);
+  padding: 2rpx 6rpx;
+  border-radius: 4rpx;
+}
+
+/* 极值标注 */
+.chart-extreme {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 4;
+  transform: translateX(-50%);
+}
+.chart-extreme-high { margin-top: -72rpx; }
+.chart-extreme-low  { margin-top: 8rpx; }
+.chart-extreme-icon { font-size: 18rpx; }
+.chart-extreme-time { font-size: 18rpx; font-weight: 700; color: #333; white-space: nowrap; }
+.chart-extreme-val  { font-size: 18rpx; color: #666; white-space: nowrap; }
+
+/* X轴 */
+.chart-xaxis {
+  display: flex;
+  justify-content: space-between;
+  padding: 6rpx 0;
+}
+.xaxis-label { font-size: 20rpx; color: #aaa; }
+
+/* ── 可拖动探针游标 ──────────────────────────────────────── */
+
+/* 探针竖线容器（绝对定位，撑满图表高度） */
+.probe-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2rpx;
+  margin-left: -1rpx;
+  z-index: 8;
+  pointer-events: none;
+  overflow: visible;  /* tooltip 超出容器边界时不裁剪 */
+}
+
+/* 蓝色竖线 */
+.probe-line-bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 2rpx;
+  background: #4a90d9;
+  opacity: 0.85;
+}
+
+/* 交点圆点（随 probePointY 定位） */
+.probe-dot {
+  position: absolute;
+  left: -9rpx;
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  background: #fff;
+  border: 4rpx solid #4a90d9;
+  box-shadow: 0 2rpx 8rpx rgba(74,144,217,0.5);
+  margin-top: -10rpx;
+}
+
+/* 顶部拖动把手（大一点便于触摸） */
+.probe-handle {
+  position: absolute;
+  top: -16rpx;
+  left: -16rpx;
+  width: 34rpx;
+  height: 34rpx;
+  border-radius: 50%;
+  background: #4a90d9;
+  border: 4rpx solid #fff;
+  box-shadow: 0 2rpx 10rpx rgba(74,144,217,0.6);
+}
+
+/* Tooltip 浮动数据卡（在 tide-chart-wrap 内绝对定位，覆盖在图表上） */
+.probe-tooltip {
+  position: absolute;
+  top: 8rpx;          /* 图表顶部往下 8rpx */
+  z-index: 20;
+  background: rgba(15, 40, 80, 0.92);
+  border-radius: 14rpx;
+  padding: 14rpx 18rpx;
+  min-width: 170rpx;
+  pointer-events: none;
+  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.3);
+  transform: translateX(-50%);  /* 默认水平居中于游标 */
+}
+/* 游标在右侧（>62%）：tooltip 显示在左边 */
+.probe-tooltip-left {
+  transform: translateX(calc(-100% - 12rpx));
+}
+/* 游标在左侧（<=62%）：tooltip 显示在右边 */
+.probe-tooltip-right {
+  transform: translateX(12rpx);
+}
+.probe-tt-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+  margin-bottom: 8rpx;
+  padding-bottom: 8rpx;
+  border-bottom: 1rpx solid rgba(255,255,255,0.15);
+}
+.probe-tt-time  { font-size: 28rpx; font-weight: 800; color: #fff; }
+.probe-tt-state { font-size: 20rpx; color: #7ec8f5; white-space: nowrap; }
+.probe-tt-body  { display: flex; align-items: baseline; justify-content: space-between; gap: 8rpx; }
+.probe-tt-label { font-size: 20rpx; color: rgba(255,255,255,0.55); }
+.probe-tt-val   { font-size: 30rpx; font-weight: 800; color: #5bcefa; }
+
+/* ════════════════════════════════════════════════════════
+   区块3：高低潮时刻表
+════════════════════════════════════════════════════════ */
+.day-label {
+  display: block;
+  font-size: 24rpx;
+  color: #888;
+  margin-bottom: 10rpx;
+  margin-top: 4rpx;
+}
+
+.extreme-table {}
+.extreme-table-head {
+  display: flex;
+  padding: 0 4rpx 12rpx;
+  border-bottom: 2rpx solid #f0f0f0;
+  margin-bottom: 4rpx;
+}
+.extreme-table-head text { font-size: 22rpx; color: #bbb; }
+
+.extreme-table-row {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 4rpx;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+.extreme-table-row:last-child { border-bottom: none; }
+
+.et-col-time   { flex: 2; }
+.et-col-type   { flex: 2; }
+.et-col-height { flex: 2; }
+.et-col-bar    { flex: 3; }
+
+.et-time { font-size: 30rpx; font-weight: 700; color: #222; }
+.et-time-dim { color: #999; }
+
+.tide-type-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6rpx 14rpx;
+  border-radius: 100rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+}
+.badge-high { background: #fff0f0; color: #e85555; }
+.badge-low  { background: #f0f6ff; color: #4a90d9; }
+.badge-dim  { opacity: 0.55; }
+
+.et-height { font-size: 28rpx; font-weight: 700; }
+.height-high { color: #e85555; }
+.height-low  { color: #4a90d9; }
+.et-height-dim { color: #bbb; font-weight: 400; }
+
+.et-bar-bg {
+  height: 12rpx;
+  background: #f0f0f0;
+  border-radius: 6rpx;
+  overflow: hidden;
+}
+.et-bar-fill {
+  height: 100%;
+  border-radius: 6rpx;
+  transition: width 0.5s ease;
+}
+.bar-high { background: linear-gradient(90deg, #ff8a80, #e85555); }
+.bar-low  { background: linear-gradient(90deg, #82b1ff, #4a90d9); }
+.bar-dim  { opacity: 0.4; }
+
+/* ════════════════════════════════════════════════════════
+   区块4：48h浪况趋势
+════════════════════════════════════════════════════════ */
+.wave-legend {
+  display: flex;
+  gap: 16rpx;
+  align-items: center;
+}
+.wl-item { display: flex; align-items: center; gap: 6rpx; }
+.wl-dot  {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+}
+.wl-dot-wave  { background: #1a7f5a; }
+.wl-dot-swell { background: #4a90d9; }
+.wl-text { font-size: 22rpx; color: #888; }
+
+.wave-scroll { width: 100%; }
+.wave-scroll-inner {
+  display: flex;
+  align-items: flex-end;
+  gap: 0;
+  padding-bottom: 8rpx;
+  min-width: max-content;
+}
+.wave-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 36rpx;
+  gap: 4rpx;
+}
+.wave-col-mark { background: rgba(26,127,90,0.04); border-radius: 6rpx; }
+
+.wave-col-time {
+  font-size: 18rpx;
+  color: #888;
+  white-space: nowrap;
+  transform: rotate(-45deg);
+  margin-bottom: 4rpx;
+  height: 40rpx;
+  line-height: 40rpx;
+}
+.invisible { opacity: 0; }
+
+.wave-bar-group {
+  display: flex;
+  gap: 4rpx;
+  align-items: flex-end;
+  height: 140rpx;
+  justify-content: center;
+}
+.wave-bar {
+  width: 12rpx;
+  border-radius: 3rpx 3rpx 0 0;
+  min-height: 4rpx;
+  transition: height 0.4s ease;
+}
+.wave-bar-wind  { background: #1a7f5a; opacity: 0.85; }
+.wave-bar-swell { background: #4a90d9; opacity: 0.65; }
+
+.wave-col-val {
+  font-size: 18rpx;
+  color: #555;
+  margin-top: 4rpx;
+}
+.wave-col-sst {
+  font-size: 17rpx;
+  color: #e85555;
+  margin-top: 2rpx;
+}
+
+.wave-footer-note { margin-top: 12rpx; }
+.wave-note-text { font-size: 20rpx; color: #ccc; }
+
+/* ════════════════════════════════════════════════════════
+   区块5：7天日历
+════════════════════════════════════════════════════════ */
+.calendar-scroll { width: 100%; }
+.calendar-row {
+  display: flex;
+  gap: 16rpx;
+  padding-bottom: 4rpx;
+  min-width: max-content;
+}
+.calendar-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 130rpx;
+  padding: 20rpx 16rpx;
+  background: #f7fafc;
+  border-radius: 20rpx;
+  gap: 6rpx;
+  border: 2rpx solid transparent;
+  transition: all 0.2s;
+}
+.calendar-day-active {
+  background: #e8f5ef;
+  border-color: #1a7f5a;
+}
+.cal-date       { font-size: 22rpx; color: #888; }
+.cal-wave-icon  { margin: 6rpx 0; }
+.cal-wave-emoji { font-size: 36rpx; }
+.cal-wave-val   { font-size: 30rpx; font-weight: 700; color: #1a2a1a; }
+.cal-wave-desc  { font-size: 20rpx; color: #888; }
+.cal-swell-row  { display: flex; gap: 4rpx; align-items: center; margin-top: 4rpx; }
+.cal-swell-label{ font-size: 18rpx; color: #aaa; background: #eee; padding: 2rpx 6rpx; border-radius: 4rpx; }
+.cal-swell-val  { font-size: 20rpx; color: #4a90d9; font-weight: 600; }
+
+/* ── 选中日期详情网格（旧版，保留兼容）── */
+.cal-detail {
+  margin-top: 20rpx;
+  padding: 20rpx;
+  background: #f7fafc;
+  border-radius: 16rpx;
+}
+.cal-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 0;
 }
-.forecast-item:last-child { border-bottom: none; }
-.forecast-date  { flex: 2; font-size: 26rpx; color: var(--color-text-secondary); }
-.forecast-icon  { flex: 1; font-size: 36rpx; text-align: center; }
-.forecast-temp  { flex: 2; display: flex; gap: 8rpx; align-items: center; }
-.temp-hi { font-size: 28rpx; font-weight: 600; color: var(--color-text-primary); }
-.temp-lo { font-size: 24rpx; color: var(--color-text-hint); }
-.forecast-desc  { flex: 2; font-size: 24rpx; color: var(--color-text-secondary); text-align: right; }
+.cal-detail-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6rpx;
+  padding: 8rpx 0;
+  border-right: 1rpx solid #e8e8e8;
+}
+.cal-detail-item:last-child { border-right: none; }
+.cal-detail-label { font-size: 20rpx; color: #aaa; }
+.cal-detail-val   { font-size: 26rpx; font-weight: 700; color: #1a2a1a; }
+
+/* ════════════════════════════════════════════════════════
+   14天日历新增样式
+════════════════════════════════════════════════════════ */
+
+/* 图例 */
+.cal-legend-row { display: flex; align-items: center; gap: 8rpx; }
+.cal-legend-dot {
+  width: 14rpx; height: 14rpx; border-radius: 50%;
+}
+.cal-legend-past   { background: #ccc; }
+.cal-legend-today  { background: #1a7f5a; }
+.cal-legend-future { background: #4a90d9; }
+.cal-legend-text   { font-size: 20rpx; color: #aaa; margin-right: 8rpx; }
+
+/* 日历卡片新状态 */
+.cal-today {
+  background: #e8f5ef !important;
+  border-color: #1a7f5a !important;
+}
+.cal-past {
+  opacity: 0.7;
+}
+.cal-week {
+  font-size: 20rpx;
+  color: #aaa;
+  margin-bottom: 2rpx;
+}
+.cal-week-today {
+  color: #1a7f5a;
+  font-weight: 700;
+}
+.cal-val-past { color: #bbb !important; }
+
+/* 潮汐高低范围 */
+.cal-tide-range {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  margin-top: 4rpx;
+}
+.cal-tide-hi { font-size: 18rpx; color: #e85555; }
+.cal-tide-lo { font-size: 18rpx; color: #4a90d9; }
+
+/* ── 选中天展开详情区域 ─────────────────────────────── */
+.day-detail-wrap {
+  margin-top: 20rpx;
+  border-top: 2rpx solid #f0f0f0;
+  padding-top: 20rpx;
+}
+.day-detail-header {
+  margin-bottom: 16rpx;
+}
+.day-detail-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #1a2a1a;
+  display: block;
+  margin-bottom: 6rpx;
+}
+.day-detail-meta {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  flex-wrap: wrap;
+}
+.day-meta-wave   { font-size: 22rpx; color: #1a7f5a; font-weight: 600; }
+.day-meta-swell  { font-size: 22rpx; color: #4a90d9; }
+.day-meta-dir    { font-size: 22rpx; color: #888; }
+.day-meta-sep    { font-size: 20rpx; color: #ddd; }
+
+/* 折线图区域标题 */
+.day-chart-section { margin-bottom: 16rpx; }
+.day-chart-legend {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8rpx;
+}
+.day-chart-max { font-size: 20rpx; color: #e85555; }
+.day-chart-min { font-size: 20rpx; color: #4a90d9; }
+
+/* 子区块 label */
+.day-section-label {
+  display: block;
+  font-size: 22rpx;
+  color: #aaa;
+  font-weight: 600;
+  margin: 16rpx 0 8rpx;
+}
+
+/* 高低潮表：历史数据淡化 */
+.et-height-dim { color: #bbb !important; font-weight: 400 !important; }
+
+/* 逐小时浪况区域 */
+.day-wave-wrap { margin-top: 4rpx; }
+
+/* 日统计四格 */
+.day-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: #f7fafc;
+  border-radius: 16rpx;
+  margin-top: 16rpx;
+  overflow: hidden;
+}
+.day-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16rpx 8rpx;
+  gap: 6rpx;
+  border-right: 1rpx solid #eee;
+}
+.day-stat-item:last-child { border-right: none; }
+.day-stat-label { font-size: 20rpx; color: #aaa; }
+.day-stat-val   { font-size: 24rpx; font-weight: 700; color: #1a2a1a; }
+
+/* ════════════════════════════════════════════════════════
+   鱼口预测：评级徽章 + 最佳时段 + 热力图
+════════════════════════════════════════════════════════ */
+
+/* 详情标题行（与评级并排）*/
+.day-detail-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6rpx;
+}
+
+/* 全天评级徽章 */
+.day-grade-badge {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 100rpx;
+  flex-shrink: 0;
+}
+.grade-excellent { background: #e8f5ef; }
+.grade-good      { background: #e8f5ef; }
+.grade-ok        { background: #fff8e6; }
+.grade-poor      { background: #fff3e0; }
+.grade-bad       { background: #fff0f0; }
+.day-grade-emoji { font-size: 24rpx; }
+.day-grade-label { font-size: 22rpx; font-weight: 700; }
+.grade-excellent .day-grade-label { color: #1a7f5a; }
+.grade-good      .day-grade-label { color: #2dce89; }
+.grade-ok        .day-grade-label { color: #e6a817; }
+.grade-poor      .day-grade-label { color: #f5a623; }
+.grade-bad       .day-grade-label { color: #e85555; }
+
+/* 最佳垂钓时段 */
+.best-windows-wrap {
+  margin: 16rpx 0 8rpx;
+  background: #f7fbf9;
+  border-radius: 18rpx;
+  padding: 18rpx 20rpx;
+}
+.best-windows-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14rpx;
+}
+.best-windows-title { font-size: 26rpx; font-weight: 700; color: #1a2a1a; }
+.best-windows-hint  { font-size: 19rpx; color: #aaa; }
+
+.window-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 18rpx;
+  border-radius: 14rpx;
+  margin-bottom: 10rpx;
+}
+.window-card:last-child { margin-bottom: 0; }
+.grade-bg-excellent { background: rgba(26,127,90,0.1); }
+.grade-bg-good      { background: rgba(45,206,137,0.1); }
+.grade-bg-ok        { background: rgba(230,168,23,0.08); }
+.grade-bg-poor      { background: rgba(245,166,35,0.08); }
+.grade-bg-bad       { background: rgba(232,85,85,0.08); }
+
+.window-card-left {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  flex: 1;
+  min-width: 0;
+}
+.window-emoji { font-size: 32rpx; flex-shrink: 0; }
+.window-info  { display: flex; flex-direction: column; gap: 4rpx; }
+.window-time  { font-size: 28rpx; font-weight: 700; color: #1a2a1a; }
+.window-duration { font-size: 20rpx; color: #888; }
+
+.window-score {
+  display: flex;
+  align-items: baseline;
+  gap: 2rpx;
+  flex-shrink: 0;
+}
+.window-score-num  { font-size: 36rpx; font-weight: 800; }
+.window-score-max  { font-size: 18rpx; color: #aaa; }
+.grade-excellent .window-score-num { color: #1a7f5a; }
+.grade-good      .window-score-num { color: #2dce89; }
+.grade-ok        .window-score-num { color: #e6a817; }
+.grade-poor      .window-score-num { color: #f5a623; }
+.grade-bad       .window-score-num { color: #e85555; }
+
+/* 无最佳时段提示 */
+.no-window-tip {
+  background: #fff8e6;
+  border-radius: 14rpx;
+  padding: 16rpx 20rpx;
+  margin: 12rpx 0;
+  font-size: 24rpx;
+  color: #b07800;
+}
+
+/* 热力图 */
+.fish-heatmap-wrap { margin-top: 4rpx; }
+.heatmap-scroll { width: 100%; }
+.heatmap-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0;
+  padding-bottom: 4rpx;
+  min-width: max-content;
+}
+.heatmap-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 28rpx;
+  gap: 4rpx;
+}
+.heatmap-bar-wrap {
+  width: 100%;
+  height: 80rpx;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.heatmap-bar {
+  width: 20rpx;
+  min-height: 4rpx;
+  border-radius: 3rpx 3rpx 0 0;
+  transition: height 0.3s;
+}
+.heatmap-score {
+  font-size: 16rpx;
+  font-weight: 600;
+  line-height: 1;
+}
+.heatmap-time {
+  font-size: 15rpx;
+  color: #aaa;
+  white-space: nowrap;
+  transform: rotate(-45deg);
+  height: 32rpx;
+  line-height: 32rpx;
+}
+
+/* 图例 */
+.heatmap-legend {
+  display: flex;
+  gap: 16rpx;
+  flex-wrap: wrap;
+  margin-top: 12rpx;
+  padding: 0 4rpx;
+}
+.heatmap-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+}
+.heatmap-legend-dot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 4rpx;
+}
+.heatmap-legend-item text { font-size: 19rpx; color: #888; }
+
+/* ════════════════════════════════════════════════════════
+   区块6：海洋环境详情
+════════════════════════════════════════════════════════ */
+.ocean-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16rpx;
+}
+.ocean-detail-col {
+  background: #f7fafc;
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+.ocean-col-header {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 14rpx 16rpx;
+}
+.ocean-col-wind    { background: #e8f3ff; }
+.ocean-col-swell   { background: #e8f5ef; }
+.ocean-col-current { background: #fff3e8; }
+.ocean-col-icon  { font-size: 24rpx; }
+.ocean-col-title { font-size: 22rpx; font-weight: 700; color: #333; }
+
+.ocean-detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10rpx 16rpx;
+  border-bottom: 1rpx solid rgba(0,0,0,0.04);
+}
+.ocean-detail-row:last-child { border-bottom: none; }
+.od-label { font-size: 20rpx; color: #aaa; flex-shrink: 0; }
+.od-val   { font-size: 22rpx; font-weight: 600; color: #333; text-align: right; }
+.od-val-desc { color: #1a7f5a; }
+
+/* 赶海点 */
+.od-ganhai-dots { display: flex; gap: 4rpx; }
+.od-ganhai-dot  {
+  width: 10rpx;
+  height: 10rpx;
+  border-radius: 50%;
+  background: #e0e0e0;
+}
+.od-ganhai-on { background: #1a7f5a; }
+
+/* 评分文字颜色 */
+.od-score      { font-size: 20rpx !important; }
+.od-score-good { color: #1a7f5a !important; }
+.od-score-ok   { color: #e6a817 !important; }
+.od-score-bad  { color: #e85555 !important; }
+
+/* ════════════════════════════════════════════════════════
+   底部操作按钮
+════════════════════════════════════════════════════════ */
+.bottom-actions {
+  display: flex;
+  gap: 20rpx;
+  padding: 28rpx 20rpx 12rpx;
+}
+.btn-action {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10rpx;
+  padding: 24rpx 16rpx;
+  border-radius: 20rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+.btn-map    { background: #e8f5ef; color: #1a7f5a; }
+.btn-record { background: #1a7f5a; color: #fff; }
+.btn-action-icon { font-size: 32rpx; }
+.btn-action-text { font-size: 28rpx; }
+
+.safe-bottom { height: 40rpx; }
+
+/* ════════════════════════════════════════════════════════
+   顶部地点切换按钮
+════════════════════════════════════════════════════════ */
+.hero-location {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  background: rgba(255,255,255,0.18);
+  padding: 8rpx 18rpx 8rpx 14rpx;
+  border-radius: 100rpx;
+  max-width: 420rpx;
+}
+.hero-location-icon { font-size: 26rpx; flex-shrink: 0; }
+.hero-location-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  opacity: 0.95;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 300rpx;
+}
+.hero-location-arrow { font-size: 20rpx; opacity: 0.75; flex-shrink: 0; }
+
+/* 定位转圈 */
+.locating-spin {
+  width: 24rpx;
+  height: 24rpx;
+  border: 3rpx solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+  flex-shrink: 0;
+}
+
+/* ════════════════════════════════════════════════════════
+   地点选择面板
+════════════════════════════════════════════════════════ */
+
+/* 遮罩 */
+.place-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 100;
+}
+
+/* 面板本体：默认藏在屏幕下方，open 时滑入 */
+.place-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-radius: 32rpx 32rpx 0 0;
+  z-index: 101;
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.32,0.72,0,1);
+}
+.place-panel-open {
+  transform: translateY(0);
+}
+
+/* 面板头部 */
+.panel-header {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 28rpx 16rpx;
+  position: relative;
+  flex-shrink: 0;
+}
+.panel-handle {
+  position: absolute;
+  top: 12rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 72rpx;
+  height: 8rpx;
+  background: #e0e0e0;
+  border-radius: 4rpx;
+}
+.panel-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #1a2a1a;
+  flex: 1;
+  text-align: center;
+}
+.panel-close {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  background: #f0f4f8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  color: #888;
+}
+
+/* 搜索框 */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin: 4rpx 24rpx 16rpx;
+  background: #f5f7fa;
+  border-radius: 100rpx;
+  padding: 16rpx 24rpx;
+  flex-shrink: 0;
+}
+.search-icon { font-size: 28rpx; }
+.search-input {
+  flex: 1;
+  font-size: 28rpx;
+  color: #333;
+  background: transparent;
+}
+.search-spin {
+  width: 32rpx;
+  height: 32rpx;
+  border: 4rpx solid #e0e0e0;
+  border-top-color: #1a7f5a;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+  flex-shrink: 0;
+}
+
+/* 使用当前定位按钮 */
+.locate-btn {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin: 0 24rpx 8rpx;
+  padding: 20rpx 24rpx;
+  background: #e8f5ef;
+  border-radius: 20rpx;
+  flex-shrink: 0;
+}
+.locate-btn-icon { font-size: 36rpx; }
+.locate-btn-info { flex: 1; display: flex; flex-direction: column; gap: 4rpx; }
+.locate-btn-title { font-size: 28rpx; font-weight: 600; color: #1a7f5a; }
+.locate-btn-sub   { font-size: 20rpx; color: #888; }
+.locate-active-badge {
+  background: #1a7f5a;
+  border-radius: 100rpx;
+  padding: 4rpx 14rpx;
+}
+.locate-active-badge text { font-size: 20rpx; color: #fff; }
+
+/* section label */
+.panel-section-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8rpx 28rpx 4rpx;
+  flex-shrink: 0;
+}
+.panel-section-label {
+  display: block;
+  font-size: 22rpx;
+  color: #aaa;
+  font-weight: 600;
+  padding: 8rpx 28rpx 4rpx;
+  flex-shrink: 0;
+}
+.panel-section-hint { font-size: 20rpx; color: #ccc; }
+
+/* 地点列表 */
+.place-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 16rpx;
+}
+
+.place-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 12rpx;
+  border-bottom: 1rpx solid #f5f5f5;
+  gap: 16rpx;
+  border-radius: 16rpx;
+}
+.place-item:last-child { border-bottom: none; }
+.place-item-active { background: #e8f5ef; }
+
+.place-item-left {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  min-width: 0;
+}
+.place-item-icon { font-size: 36rpx; flex-shrink: 0; }
+.place-item-info { display: flex; flex-direction: column; gap: 4rpx; min-width: 0; }
+.place-item-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1a2a1a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.place-item-addr {
+  font-size: 20rpx;
+  color: #aaa;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.place-item-right { flex-shrink: 0; }
+
+/* 收藏按钮 */
+.save-btn {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  background: #f0f4f8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  color: #ccc;
+}
+.save-btn-saved { background: #fff8e6; color: #f5a623; }
+
+/* 搜索无结果 */
+.search-empty {
+  text-align: center;
+  padding: 48rpx 40rpx;
+  font-size: 26rpx;
+  color: #ccc;
+}
+
+/* 收藏为空 */
+.saved-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40rpx 40rpx;
+  gap: 12rpx;
+}
+.saved-empty-icon { font-size: 48rpx; color: #e0e0e0; }
+.saved-empty-text { font-size: 24rpx; color: #ccc; text-align: center; }
+
+.panel-safe-bottom { height: 60rpx; flex-shrink: 0; }

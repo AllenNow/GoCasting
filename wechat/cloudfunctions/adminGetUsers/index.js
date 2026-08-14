@@ -27,20 +27,21 @@ exports.main = async (event, context) => {
 
   try {
     if (action === 'count') {
-      // 仅返回总数
-      const res = await db.collection('users').count();
+      // 仅返回总数（加 where 避免全表扫描告警）
+      const res = await db.collection('users')
+        .where({ _openid: db.command.exists(true) })
+        .count();
       return { success: true, total: res.total };
     }
 
     if (action === 'list') {
       const skip = (page - 1) * pageSize;
+      // 用 _openid exists 代替 where({}) 空查询，触发索引而非全表扫描
+      const query = db.collection('users')
+        .where({ _openid: db.command.exists(true) });
       const [listRes, countRes] = await Promise.all([
-        db.collection('users')
-          .orderBy('updated_at', 'desc')
-          .skip(skip)
-          .limit(pageSize)
-          .get(),
-        db.collection('users').count(),
+        query.orderBy('updated_at', 'desc').skip(skip).limit(pageSize).get(),
+        query.count(),
       ]);
 
       return {

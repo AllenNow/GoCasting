@@ -13,6 +13,7 @@ Page({
     record: null,
     loading: true,
     recordId: '',
+    showShareCard: false,  // 分享卡片弹窗
   },
 
   onLoad(options) {
@@ -64,11 +65,53 @@ Page({
     });
   },
 
-  // 分享卡片（复用 catch-log 的逻辑，简化为跳转编辑页触发）
+  // 分享卡片：展示分享预览 modal
   onShare() {
-    wx.navigateTo({
-      url: `/pages/catch-log/catch-log?id=${this.data.recordId}&action=share`,
+    this.setData({ showShareCard: true });
+  },
+
+  // 关闭分享卡片
+  closeShareCard() {
+    this.setData({ showShareCard: false });
+  },
+
+  // 保存分享图到相册
+  onSaveShareCard() {
+    wx.showLoading({ title: '生成中…' });
+    // 使用 canvas 截图保存分享卡（小程序 canvas 方案）
+    const query = wx.createSelectorQuery().in(this);
+    query.select('#shareCanvas').fields({ node: true, size: true }).exec((res) => {
+      if (!res[0]) {
+        wx.hideLoading();
+        wx.showToast({ title: '生成失败', icon: 'none' });
+        return;
+      }
+      // 截取分享卡片 DOM 为图片（使用 wx.canvasToTempFilePath）
+      wx.canvasToTempFilePath({
+        canvas: res[0].node,
+        success: (r) => {
+          wx.hideLoading();
+          wx.saveImageToPhotosAlbum({
+            filePath: r.tempFilePath,
+            success: () => wx.showToast({ title: '已保存到相册', icon: 'success' }),
+            fail: () => wx.showToast({ title: '需要相册权限', icon: 'none' }),
+          });
+        },
+        fail: () => { wx.hideLoading(); wx.showToast({ title: '生成失败', icon: 'none' }); },
+      });
     });
+  },
+
+  // 微信分享（onShareAppMessage 触发）
+  onShareAppMessage() {
+    const r = this.data.record;
+    if (!r) return {};
+    const weight = r.weightDisplay ? ` · ${r.weightDisplay}` : '';
+    const loc    = r.location     ? ` · ${r.location}` : '';
+    return {
+      title: `我钓到了 ${r.species || '鱼'}${weight}${loc}！`,
+      path:  `/pages/catch-detail/catch-detail?id=${this.data.recordId}`,
+    };
   },
 
   // 删除

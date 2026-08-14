@@ -1,0 +1,9 @@
+{
+  "name": "getApiStats",
+  "version": "1.0.0",
+  "description": "管理员专用：第三方 API 用量统计云函数",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

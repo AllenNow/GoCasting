@@ -136,6 +136,15 @@ Page({
       weather = cached.data;
     } else {
       try {
+        // 检查并申请定位权限
+        const setting = await new Promise(resolve =>
+          wx.getSetting({ success: resolve, fail: () => resolve({ authSetting: {} }) })
+        );
+        if (!setting.authSetting['scope.userLocation']) {
+          await new Promise((resolve, reject) =>
+            wx.authorize({ scope: 'scope.userLocation', success: resolve, fail: reject })
+          ).catch(() => null);
+        }
         const pos = await new Promise((res, rej) =>
           wx.getLocation({ type: 'gcj02', success: res, fail: rej })
         );

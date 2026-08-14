@@ -1,0 +1,10 @@
+{
+  "name": "getWeatherForecast",
+  "version": "1.0.0",
+  "description": "Open-Meteo 大气预报：气压+风速+降水+天气代码（鱼口预测用）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3",
+    "node-fetch": "^2.6.7"
+  }
+}

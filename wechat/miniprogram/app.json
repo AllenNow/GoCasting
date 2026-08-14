@@ -1,5 +1,6 @@
 {
   "pages": [
+    "pages/weather/weather",
     "pages/index/index",
     "pages/catch-log/catch-log",
     "pages/catch-detail/catch-detail",
@@ -7,7 +8,6 @@
     "pages/profile/profile",
     "pages/gear/gear",
     "pages/gear/gear-detail",
-    "pages/weather/weather",
     "pages/go-score/go-score",
     "pages/species/species",
     "pages/admin/admin",
@@ -17,7 +17,8 @@
     "pages/admin/gear-manage",
     "pages/admin/gear-edit",
     "pages/admin/user-manage",
-    "pages/admin/dashboard"
+    "pages/admin/dashboard",
+    "pages/admin/api-stats/api-stats"
   ],
   "tabBar": {
     "custom": true,
@@ -27,16 +28,16 @@
     "borderStyle": "black",
     "list": [
       {
-        "pagePath": "pages/index/index",
-        "text": "渔获"
-      },
-      {
-        "pagePath": "pages/gear/gear",
-        "text": "装备"
+        "pagePath": "pages/weather/weather",
+        "text": "潮汐"
       },
       {
         "pagePath": "pages/spot-map/spot-map",
         "text": "钓点"
+      },
+      {
+        "pagePath": "pages/gear/gear",
+        "text": "装备"
       },
       {
         "pagePath": "pages/profile/profile",

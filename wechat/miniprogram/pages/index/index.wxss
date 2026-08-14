@@ -278,3 +278,113 @@
 }
 .qt-icon  { font-size: 40rpx; }
 .qt-label { font-size: 20rpx; color: var(--color-text-secondary); text-align: center; }
+
+/* ════════════════════════════════════════════
+   空状态：新用户引导
+════════════════════════════════════════════ */
+.empty-guide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48rpx 40rpx 60rpx;
+}
+
+/* 主图标：浮动动画 */
+.empty-fish-wrap {
+  margin-bottom: 24rpx;
+  animation: float 2.5s ease-in-out infinite;
+}
+.empty-fish-icon { font-size: 96rpx; }
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-16rpx); }
+}
+
+.empty-guide-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #1a2a1a;
+  margin-bottom: 10rpx;
+}
+.empty-guide-sub {
+  font-size: 26rpx;
+  color: #888;
+  margin-bottom: 40rpx;
+  text-align: center;
+}
+
+/* 三步引导卡 */
+.guide-steps {
+  width: 100%;
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 8rpx 0;
+  margin-bottom: 36rpx;
+  box-shadow: 0 4rpx 24rpx rgba(0,0,0,0.07);
+}
+.guide-step {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 28rpx;
+  gap: 20rpx;
+}
+.guide-step-divider {
+  height: 1rpx;
+  background: #f0f0f0;
+  margin: 0 28rpx;
+}
+.step-badge {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  background: #1a7f5a;
+  color: #fff;
+  font-size: 24rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.step-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+.step-title { font-size: 28rpx; font-weight: 600; color: #1a2a1a; }
+.step-desc  { font-size: 22rpx; color: #aaa; }
+.step-icon  { font-size: 40rpx; flex-shrink: 0; }
+
+/* 开始按钮 */
+.guide-start-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  padding: 28rpx;
+  font-size: 30rpx;
+  font-weight: 700;
+  border-radius: 20rpx;
+  box-shadow: 0 6rpx 24rpx rgba(26,127,90,0.3);
+  margin-bottom: 24rpx;
+}
+.guide-start-icon { font-size: 36rpx; }
+
+/* 次级入口 */
+.guide-secondary-row {
+  display: flex;
+  gap: 24rpx;
+  width: 100%;
+}
+.guide-secondary-btn {
+  flex: 1;
+  text-align: center;
+  padding: 18rpx;
+  background: #f5f7fa;
+  border-radius: 14rpx;
+  font-size: 24rpx;
+  color: #1a7f5a;
+  font-weight: 600;
+}

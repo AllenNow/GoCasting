@@ -247,7 +247,7 @@ Page({
 
   // 跳转到首页渔获列表
   goAllCatches() {
-    wx.switchTab({ url: '/pages/index/index' });
+    wx.navigateTo({ url: '/pages/index/index' });
   },
 
   // ========== 图表数据计算 ==========

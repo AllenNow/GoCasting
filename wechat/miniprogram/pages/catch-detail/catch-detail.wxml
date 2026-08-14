@@ -85,3 +85,82 @@
 <view wx:if="{{loading}}" class="loading-wrap">
   <text>加载中…</text>
 </view>
+
+<!-- ══ 分享卡片弹窗 ══════════════════════════════════ -->
+<view wx:if="{{ showShareCard }}" class="share-mask" bindtap="closeShareCard"></view>
+<view wx:if="{{ showShareCard }}" class="share-panel">
+  <!-- 分享卡片主体（视觉样式，可截图分享）-->
+  <view class="share-card" id="shareCard">
+    <!-- 顶部品牌 -->
+    <view class="sc-header">
+      <text class="sc-brand">GoCasting</text>
+      <text class="sc-tagline">海钓记录</text>
+    </view>
+
+    <!-- 鱼的照片 -->
+    <view class="sc-photo-wrap">
+      <image
+        wx:if="{{ record.photo_url }}"
+        class="sc-photo"
+        src="{{ record.photo_url }}"
+        mode="aspectFill"
+      />
+      <view wx:else class="sc-photo-placeholder">
+        <text>🐟</text>
+      </view>
+    </view>
+
+    <!-- 核心信息 -->
+    <view class="sc-main">
+      <text class="sc-species">{{ record.species || '未知鱼种' }}</text>
+      <view class="sc-stats-row">
+        <view wx:if="{{ record.weightDisplay }}" class="sc-stat">
+          <text class="sc-stat-icon">⚖️</text>
+          <text class="sc-stat-val">{{ record.weightDisplay }}</text>
+        </view>
+        <view wx:if="{{ record.length_cm }}" class="sc-stat">
+          <text class="sc-stat-icon">📏</text>
+          <text class="sc-stat-val">{{ record.length_cm }}cm</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 地点 + 时间 -->
+    <view class="sc-meta">
+      <view wx:if="{{ record.location }}" class="sc-meta-item">
+        <text class="sc-meta-icon">📍</text>
+        <text class="sc-meta-text">{{ record.location }}</text>
+      </view>
+      <view class="sc-meta-item">
+        <text class="sc-meta-icon">📅</text>
+        <text class="sc-meta-text">{{ record.dateDisplay }}</text>
+      </view>
+      <view wx:if="{{ record.tideDisplay }}" class="sc-meta-item">
+        <text class="sc-meta-icon">{{ record.tideDisplay.icon }}</text>
+        <text class="sc-meta-text">{{ record.tideDisplay.label }}</text>
+      </view>
+    </view>
+
+    <!-- 钓法/饵料 -->
+    <view wx:if="{{ record.method || record.bait }}" class="sc-tackle">
+      <text wx:if="{{ record.method }}" class="sc-tackle-item">🎣 {{ record.method }}</text>
+      <text wx:if="{{ record.bait }}"   class="sc-tackle-item">🪱 {{ record.bait }}</text>
+    </view>
+
+    <!-- 底部装饰 -->
+    <view class="sc-footer">
+      <text class="sc-footer-text">用 GoCasting 记录每一次出钓</text>
+    </view>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="share-actions">
+    <button class="share-action-btn share-save-btn" bindtap="onSaveShareCard">
+      <text>📥 保存到相册</text>
+    </button>
+    <button class="share-action-btn share-wx-btn" open-type="share">
+      <text>💬 分享给朋友</text>
+    </button>
+  </view>
+  <view class="share-cancel" bindtap="closeShareCard">取消</view>
+</view>

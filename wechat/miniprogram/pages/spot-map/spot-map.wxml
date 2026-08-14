@@ -22,6 +22,12 @@
     <text>长按地图标记钓点  |  点击标记查看详情</text>
   </view>
 
+  <!-- 海况适合度状态条 -->
+  <view wx:if="{{ fitnessLabel }}" class="fitness-bar fitness-bar-{{ fitnessLevel }}">
+    <text class="fitness-dot">{{ fitnessLevel === 'good' ? '🟢' : fitnessLevel === 'ok' ? '🟡' : '🔴' }}</text>
+    <text class="fitness-text">{{ fitnessLabel }}</text>
+  </view>
+
   <!-- 右侧工具栏 -->
   <view class="map-toolbar">
     <view class="tool-btn" bindtap="goToMyLocation">

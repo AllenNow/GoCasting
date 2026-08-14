@@ -27,6 +27,26 @@
   pointer-events: none;
 }
 
+/* 海况适合度状态条 */
+.fitness-bar {
+  position: absolute;
+  top: 80rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 10rpx 24rpx;
+  border-radius: 100rpx;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.fitness-bar-good { background: rgba(26,127,90,0.88); }
+.fitness-bar-ok   { background: rgba(230,168,23,0.88); }
+.fitness-bar-poor { background: rgba(232,85,85,0.88); }
+.fitness-dot { font-size: 20rpx; }
+.fitness-text { font-size: 22rpx; color: #fff; font-weight: 600; }
+
 /* 右侧工具栏 */
 .map-toolbar {
   position: absolute;

@@ -1,35 +1,132 @@
 // pages/spot-map/spot-map.js — 钓点地图
 const app = getApp();
+const apiCache = require('../../utils/apiCache');
+
+// ── 根据当前海况计算 marker 适合度 ──────────────────────────
+// 返回 { level: 'good'|'ok'|'poor', label, color, bgColor }
+function calcSpotFitness(marineData) {
+  if (!marineData) return { level: 'unknown', label: '—', color: '#888', bgColor: '#f5f5f5' };
+  const { tideState, waveHeight, sst } = marineData.currentData || {};
+
+  let score = 0;
+  // 潮汐
+  if (tideState?.value === 'rising')  score += 3;
+  if (tideState?.value === 'falling') score += 2;
+  if (tideState?.value === 'high' || tideState?.value === 'low') score += 0;
+  // 浪高
+  if (waveHeight != null) {
+    if (waveHeight < 0.5)      score += 2;
+    else if (waveHeight < 1.2) score += 1;
+    else if (waveHeight > 2.0) score -= 2;
+  }
+  // 水温
+  if (sst != null && sst >= 18 && sst <= 28) score += 1;
+
+  if (score >= 5) return { level: 'good', label: '适合出钓', color: '#fff', bgColor: '#1a7f5a' };
+  if (score >= 3) return { level: 'ok',   label: '条件一般', color: '#fff', bgColor: '#e6a817' };
+  return               { level: 'poor',  label: '不宜出钓', color: '#fff', bgColor: '#e85555' };
+}
+
+// ── 构建 marker callout 内容（带适合度标注）─────────────────
+function buildCallout(name, isOfficial, fitness) {
+  const prefix = isOfficial ? '⭐ ' : '';
+  const suffix = fitness.level !== 'unknown' ? ` · ${fitness.label}` : '';
+  return {
+    content: prefix + name + suffix,
+    color: '#1a1a2e',
+    fontSize: 12,
+    borderRadius: 8,
+    bgColor: '#ffffff',
+    padding: 7,
+    display: 'BYCLICK',
+    borderWidth: 1,
+    borderColor: fitness.bgColor,
+  };
+}
+
+// ── marker 图标颜色（用自定义 iconPath 或 label 着色）────────
+// 由于微信地图不支持动态改 iconPath 颜色，用 label 覆盖来着色
+function buildMarkerLabel(fitness) {
+  if (fitness.level === 'unknown') return null;
+  const dotMap = { good: '●', ok: '●', poor: '●' };
+  return {
+    content:   dotMap[fitness.level],
+    color:     fitness.bgColor,
+    fontSize:  14,
+    anchorX:   0,
+    anchorY:   -30,
+  };
+}
 
 Page({
   data: {
-    latitude: 24.45,          // 默认中心：厦门
+    latitude: 24.45,
     longitude: 118.07,
     scale: 13,
-    markers: [],              // 地图标记点
-    myLocation: null,         // 我的当前位置
-    selectedSpot: null,       // 当前选中的钓点
-    showAddPanel: false,      // 添加钓点面板
-    showDetailPanel: false,   // 详情面板
+    markers: [],
+    myLocation: null,
+    selectedSpot: null,
+    showAddPanel: false,
+    showDetailPanel: false,
     loading: false,
+    // 当前海况适合度（用于 marker 着色）
+    marineData: null,
+    fitnessLabel: '',   // 顶部提示文字
+    fitnessLevel: '',   // good/ok/poor
 
-    // 新钓点表单
-    newSpot: {
-      name: '',
-      description: '',
-      isPublic: false,
-      lat: null,
-      lon: null,
-    },
-
-    // 长按选取的临时坐标
-    tapLat: null,
-    tapLon: null,
+    newSpot: { name: '', description: '', isPublic: false, lat: null, lon: null },
+    tapLat: null, tapLon: null,
   },
 
   onLoad() {
     this.loadSpots();
     this.getMyLocation();
+    this._loadMarineForFitness();
+  },
+
+  // 加载海况用于 marker 着色（从本地缓存优先，无缓存则调云函数）
+  async _loadMarineForFitness(lat, lon) {
+    try {
+      // 无参数时用当前 data 坐标
+      const useLat = lat ?? this.data.latitude;
+      const useLon = lon ?? this.data.longitude;
+      const cacheKey = apiCache.geoKey('marine', useLat, useLon);
+      let marine = apiCache.get(cacheKey);
+
+      if (!marine) {
+        const res = await wx.cloud.callFunction({ name: 'getMarineData', data: { lat: useLat, lon: useLon } });
+        if (res.result?.success) {
+          marine = res.result.data;
+          apiCache.set(cacheKey, marine, apiCache.TTL.marine);
+        }
+      }
+
+      if (marine) {
+        const fitness = calcSpotFitness(marine);
+        const tide = marine.currentData?.tideState?.label || '';
+        const wave = marine.currentData?.waveHeight != null ? `浪高 ${marine.currentData.waveHeight}m` : '';
+        this.setData({
+          marineData: marine,
+          fitnessLabel: `${fitness.label} · ${tide} · ${wave}`,
+          fitnessLevel: fitness.level,
+        });
+        // 重绘 markers 着色
+        this._recolorMarkers(marine);
+      }
+    } catch (e) {
+      console.warn('[spot-map] 海况加载失败，marker不着色');
+    }
+  },
+
+  // 给已有 markers 注入适合度着色
+  _recolorMarkers(marine) {
+    const fitness = calcSpotFitness(marine);
+    const markers = this.data.markers.map(m => ({
+      ...m,
+      callout: buildCallout(m.title, m.isOfficial, fitness),
+      label:   buildMarkerLabel(fitness),
+    }));
+    this.setData({ markers });
   },
 
   onShow() {
@@ -125,6 +222,10 @@ Page({
         totalPublic: publicRes.data.length,
         totalOfficial: officialSpots.length,
       });
+      // 如果已有海况数据，立即着色
+      if (this.data.marineData) {
+        this._recolorMarkers(this.data.marineData);
+      }
     } catch (err) {
       console.error('加载钓点失败', err);
       this.setData({ loading: false });
@@ -138,17 +239,11 @@ Page({
       type: 'gcj02',
       success: (pos) => {
         const { latitude, longitude } = pos;
-        this.setData({
-          latitude,
-          longitude,
-          scale: 14,
-          myLocation: { latitude, longitude },
-        });
+        this.setData({ latitude, longitude, scale: 14, myLocation: { latitude, longitude } });
+        // 用真实定位更新海况
+        this._loadMarineForFitness(latitude, longitude);
       },
-      fail: () => {
-        // 用户未授权，保持默认位置
-        console.log('位置获取失败，使用默认位置');
-      },
+      fail: () => { console.log('位置获取失败，使用默认位置'); },
     });
   },
 

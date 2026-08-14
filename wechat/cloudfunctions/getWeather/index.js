@@ -1,150 +1,219 @@
 // cloudfunctions/getWeather/index.js
-// 云函数：调用腾讯地图位置服务 + 天气信息
-// 在云端运行，不受小程序端域名白名单限制
+// 调用高德天气 API：逆地理编码 + 实况天气 + 3天预报
+// 缓存策略：云端共享缓存（api_cache 集合）+ 埋点（api_usage_logs）
+// 缓存命中时直接返回，不请求高德 API，减少配额消耗
 
 const cloud = require('wx-server-sdk');
-const fetch = require('node-fetch');
+const fetch  = require('node-fetch');
+const { logApiUsage } = require('./logApiUsage');
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
-// 腾讯位置服务 Web Key（替换为你的真实 Key）
-// 申请地址：https://lbs.qq.com/dev/console/application/mine
-// 创建应用 → 添加 Key → 产品选「WebServiceAPI」
-const QQ_MAP_KEY = 'YOUR_QQ_MAP_KEY_HERE';
+const AMAP_KEY = 'b5fddea474402d2c2e263595eee40006';
 
-// 天气描述 → emoji
-const WEATHER_ICONS = {
-  '晴':   '☀️', '多云': '⛅', '阴': '☁️',
-  '小雨': '🌦️', '中雨': '🌧️', '大雨': '🌧️',
-  '暴雨': '⛈️', '雷阵雨': '⛈️', '雪': '❄️',
-  '大雪': '🌨️', '雾': '🌫️', '霾': '😷',
-  '阵雨': '🌦️',
+// ── 缓存 TTL（毫秒）─────────────────────────────────────────
+const CACHE_TTL = {
+  regeo:    30 * 24 * 60 * 60 * 1000,   // 30天：城市名不变
+  weather:  20 * 60 * 1000,             // 20分钟：实况+预报共用
 };
 
-function weatherIcon(desc) {
-  for (const [k, v] of Object.entries(WEATHER_ICONS)) {
-    if (desc && desc.includes(k)) return v;
+// ── 云端缓存读写 ────────────────────────────────────────────
+async function cacheGet(db, key) {
+  try {
+    const res = await db.collection('api_cache')
+      .where({ _id: key })
+      .limit(1)
+      .get();
+    if (!res.data.length) return null;
+    const entry = res.data[0];
+    // 检查过期
+    if (entry.expireAt && new Date(entry.expireAt) < new Date()) {
+      // 异步删除（不阻塞）
+      db.collection('api_cache').doc(entry._id).remove().catch(() => {});
+      return null;
+    }
+    return entry.data;
+  } catch (e) {
+    return null;  // 查询失败时降级为调 API
   }
-  return '🌤️';
 }
 
-exports.main = async (event, context) => {
-  const { lat, lon } = event;
-
+async function cacheSet(db, key, data, ttlMs) {
   try {
-    // Step 1：腾讯地图逆地理编码获取城市
-    const geoUrl = `https://apis.map.qq.com/ws/geocoder/v1/?location=${lat},${lon}&key=${QQ_MAP_KEY}&get_poi=0`;
-    const geoRes  = await fetch(geoUrl).then(r => r.json());
-    const adInfo  = geoRes?.result?.ad_info;
-    const city    = adInfo?.city || adInfo?.district || adInfo?.province || '未知城市';
-    const cityId  = adInfo?.adcode || '';
-
-    // Step 2：腾讯天气 API — 实况
-    const liveUrl = `https://apis.map.qq.com/ws/weather/v1/?province=${encodeURIComponent(adInfo?.province || '')}&city=${encodeURIComponent(city)}&key=${QQ_MAP_KEY}`;
-    const liveRes = await fetch(liveUrl).then(r => r.json());
-    const observe = liveRes?.result?.observe;
-
-    const current = observe ? {
-      temp:       observe.degree,
-      desc:       observe.weather,
-      humidity:   observe.humidity,
-      wind_speed: observe.wind_speed,
-      visibility: observe.visibility || '—',
-    } : null;
-
-    // Step 3：腾讯天气 API — 预报
-    const castUrl = `https://apis.map.qq.com/ws/weather/v1/?province=${encodeURIComponent(adInfo?.province || '')}&city=${encodeURIComponent(city)}&key=${QQ_MAP_KEY}&forecast_days=3`;
-    const castRes = await fetch(castUrl).then(r => r.json());
-    const forecasts = castRes?.result?.forecast || [];
-
-    const weekDays = ['周日','周一','周二','周三','周四','周五','周六'];
-    const today = new Date().getDay();
-
-    const forecast = forecasts.slice(0, 3).map((c, i) => ({
-      date:     i === 0 ? '今天' : weekDays[(today + i) % 7],
-      desc:     c.day_weather,
-      icon:     weatherIcon(c.day_weather),
-      tempHigh: c.max_degree,
-      tempLow:  c.min_degree,
-    }));
-
-    return {
-      success: true,
-      data: { city, current, forecast },
-    };
-
-  } catch (err) {
-    console.error('getWeather error:', err);
-    return { success: false, error: err.message };
+    const expireAt = new Date(Date.now() + ttlMs).toISOString();
+    // upsert：存在则更新，不存在则创建
+    await db.collection('api_cache').doc(key).set({
+      data: {
+        _id:      key,
+        data,
+        expireAt,
+        cachedAt: db.serverDate(),
+      },
+    });
+  } catch (e) {
+    console.warn('[cache] 写入失败:', key, e.message);
   }
-};
+}
 
-// 天气描述 → emoji
+// ── 天气描述 → emoji ────────────────────────────────────────
 const WEATHER_ICONS = {
-  '晴':     '☀️', '多云': '⛅', '阴': '☁️',
-  '小雨':   '🌦️', '中雨': '🌧️', '大雨': '🌧️',
-  '暴雨':   '⛈️', '雷阵雨': '⛈️', '雪': '❄️',
-  '大雪':   '🌨️', '雾': '🌫️', '霾': '😷',
-  '阵雨':   '🌦️',
+  '晴': '☀️', '多云': '⛅', '阴': '☁️',
+  '小雨': '🌦️', '中雨': '🌧️', '大雨': '🌧️',
+  '暴雨': '⛈️', '雷阵雨': '⛈️', '雪': '❄️',
+  '大雪': '🌨️', '雾': '🌫️', '霾': '😷', '阵雨': '🌦️',
 };
-
 function weatherIcon(desc) {
+  if (!desc) return '🌤️';
   for (const [k, v] of Object.entries(WEATHER_ICONS)) {
     if (desc.includes(k)) return v;
   }
   return '🌤️';
 }
 
+async function timedFetch(url) {
+  const t0 = Date.now();
+  const json = await fetch(url).then(r => r.json());
+  return { json, latencyMs: Date.now() - t0 };
+}
+
 exports.main = async (event, context) => {
   const { lat, lon } = event;
+  const { OPENID } = cloud.getWXContext();
+  const db = cloud.database();
 
   try {
-    // Step 1：逆地理编码获取城市
-    const geoUrl = `https://restapi.amap.com/v3/geocode/regeo?location=${lon},${lat}&key=${AMAP_KEY}&extensions=base&output=json`;
-    const geoRes  = await fetch(geoUrl).then(r => r.json());
-    const city    = geoRes?.regeocode?.addressComponent?.city ||
-                    geoRes?.regeocode?.addressComponent?.province || '未知城市';
-    const adcode  = geoRes?.regeocode?.addressComponent?.adcode || '';
+    // ══════════════════════════════════════════════
+    // Step 1：逆地理编码（缓存 30 天）
+    // 缓存 key：坐标精度 0.1°（≈11km），同城市完全复用
+    // ══════════════════════════════════════════════
+    const sLat = (Math.round(lat / 0.1) * 0.1).toFixed(1);
+    const sLon = (Math.round(lon / 0.1) * 0.1).toFixed(1);
+    const regeoKey = `regeo_${sLat}_${sLon}`;
 
-    // Step 2：实况天气
-    const liveUrl = `https://restapi.amap.com/v3/weather/weatherInfo?city=${adcode}&key=${AMAP_KEY}&extensions=base&output=json`;
-    const liveRes = await fetch(liveUrl).then(r => r.json());
-    const live    = liveRes?.lives?.[0];
+    let geoData = await cacheGet(db, regeoKey);
+    let geoFromCache = !!geoData;
+    let geoLatency = 0, geoSuccess = true, geoError = null;
+    let city = '未知城市', adcode = '';
 
-    // Step 3：预报天气（3天）
-    const castUrl = `https://restapi.amap.com/v3/weather/weatherInfo?city=${adcode}&key=${AMAP_KEY}&extensions=all&output=json`;
-    const castRes = await fetch(castUrl).then(r => r.json());
-    const casts   = castRes?.forecasts?.[0]?.casts || [];
+    if (!geoData) {
+      // 未命中，请求高德
+      const geoUrl = `https://restapi.amap.com/v3/geocode/regeo?location=${lon},${lat}&key=${AMAP_KEY}&extensions=base&output=json`;
+      try {
+        const { json: geoRes, latencyMs } = await timedFetch(geoUrl);
+        geoLatency = latencyMs;
+        const adComp = geoRes?.regeocode?.addressComponent;
+        city    = adComp?.city || adComp?.district || adComp?.province || '未知城市';
+        adcode  = adComp?.adcode || '';
+        if (adComp) {
+          geoData = { city, adcode };
+          // 异步写缓存（不 await）
+          cacheSet(db, regeoKey, geoData, CACHE_TTL.regeo);
+        } else {
+          geoSuccess = false; geoError = 'addressComponent 为空';
+        }
+      } catch (e) {
+        geoSuccess = false; geoError = String(e);
+      }
+      // 埋点
+      logApiUsage(db, {
+        openid: OPENID, apiGroup: 'amap', apiName: 'regeo',
+        endpoint: 'https://restapi.amap.com/v3/geocode/regeo',
+        success: geoSuccess, latencyMs: geoLatency, error: geoError,
+      });
+    } else {
+      city   = geoData.city;
+      adcode = geoData.adcode;
+    }
 
-    // 格式化当前天气
-    const current = live ? {
-      temp:       live.temperature,
-      desc:       live.weather,
-      humidity:   live.humidity,
-      wind_speed: live.windpower,
-      visibility: live.visibility || '—',
-    } : null;
+    if (!adcode) {
+      return { success: true, data: { city, current: null, forecast: [], fromCache: false } };
+    }
 
-    // 格式化 3 天预报
-    const forecast = casts.slice(0, 3).map(c => {
-      const dateObj = new Date(c.date);
-      const weekDays = ['周日','周一','周二','周三','周四','周五','周六'];
-      const dayLabel = dateObj.getDay() === new Date().getDay() ? '今天' : weekDays[dateObj.getDay()];
-      return {
-        date:     dayLabel,
-        desc:     c.dayweather,
-        icon:     weatherIcon(c.dayweather),
-        tempHigh: c.daytemp,
-        tempLow:  c.nighttemp,
-      };
-    });
+    // ══════════════════════════════════════════════
+    // Step 2+3：天气实况 + 3天预报（共享缓存 20 分钟）
+    // 缓存 key：adcode 级别，同城市所有用户共享
+    // ══════════════════════════════════════════════
+    const weatherKey = `weather_${adcode}`;
+    let weatherData  = await cacheGet(db, weatherKey);
+    let weatherFromCache = !!weatherData;
+    let current = null, forecast = [];
+
+    if (!weatherData) {
+      // 未命中，调高德天气
+      let liveSuccess = true, liveLatency = 0, liveError = null;
+      let castSuccess = true, castLatency = 0, castError = null;
+
+      // 并行请求实况 + 预报
+      const [liveResult, castResult] = await Promise.allSettled([
+        timedFetch(`https://restapi.amap.com/v3/weather/weatherInfo?city=${adcode}&key=${AMAP_KEY}&extensions=base&output=json`),
+        timedFetch(`https://restapi.amap.com/v3/weather/weatherInfo?city=${adcode}&key=${AMAP_KEY}&extensions=all&output=json`),
+      ]);
+
+      // 处理实况
+      if (liveResult.status === 'fulfilled') {
+        const { json: liveRes, latencyMs } = liveResult.value;
+        liveLatency = latencyMs;
+        const live = liveRes?.lives?.[0];
+        current = live ? {
+          temp: live.temperature, desc: live.weather,
+          humidity: live.humidity, wind_speed: live.windpower,
+          visibility: live.visibility || '—',
+        } : null;
+        if (!live) { liveSuccess = false; liveError = 'lives 数组为空'; }
+      } else {
+        liveSuccess = false; liveError = String(liveResult.reason);
+      }
+
+      // 处理预报
+      if (castResult.status === 'fulfilled') {
+        const { json: castRes, latencyMs } = castResult.value;
+        castLatency = latencyMs;
+        const casts = castRes?.forecasts?.[0]?.casts || [];
+        const weekDays = ['周日','周一','周二','周三','周四','周五','周六'];
+        forecast = casts.slice(0, 3).map((c, i) => ({
+          date:     i === 0 ? '今天' : weekDays[new Date(c.date).getDay()],
+          desc:     c.dayweather,
+          icon:     weatherIcon(c.dayweather),
+          tempHigh: c.daytemp,
+          tempLow:  c.nighttemp,
+        }));
+        if (!casts.length) { castSuccess = false; castError = '预报数组为空'; }
+      } else {
+        castSuccess = false; castError = String(castResult.reason);
+      }
+
+      // 写云端缓存（两个接口的数据打包存一条记录）
+      if (current || forecast.length) {
+        weatherData = { city, current, forecast };
+        cacheSet(db, weatherKey, weatherData, CACHE_TTL.weather);
+      }
+
+      // 埋点（两个接口分别记录）
+      logApiUsage(db, {
+        openid: OPENID, apiGroup: 'amap', apiName: 'weather_live',
+        endpoint: 'https://restapi.amap.com/v3/weather/weatherInfo?extensions=base',
+        success: liveSuccess, latencyMs: liveLatency, error: liveError,
+      });
+      logApiUsage(db, {
+        openid: OPENID, apiGroup: 'amap', apiName: 'weather_forecast',
+        endpoint: 'https://restapi.amap.com/v3/weather/weatherInfo?extensions=all',
+        success: castSuccess, latencyMs: castLatency, error: castError,
+      });
+    } else {
+      // 缓存命中，直接解包
+      current  = weatherData.current;
+      forecast = weatherData.forecast;
+      city     = weatherData.city || city;
+    }
 
     return {
       success: true,
       data: { city, current, forecast },
+      // 透传缓存命中情况（供调试）
+      _cache: { regeo: geoFromCache, weather: weatherFromCache },
     };
 
   } catch (err) {
     console.error('getWeather error:', err);
-    return { success: false, error: err.message };
+    return { success: false, error: String(err) };
   }
 };
