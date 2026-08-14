@@ -344,10 +344,7 @@
             wx:for="{{ allDays }}"
             wx:key="date"
             id="cal-day-{{ index }}"
-            class="calendar-day
-              {{ item.isToday ? 'cal-today' : '' }}
-              {{ item.isPast  ? 'cal-past'  : '' }}
-              {{ selectedDayIdx === index ? 'calendar-day-active' : '' }}"
+            class="calendar-day {{ item.isToday ? 'cal-today' : '' }} {{ item.isPast ? 'cal-past' : '' }} {{ selectedDayIdx === index ? 'calendar-day-active' : '' }}"
             bindtap="selectDay"
             data-idx="{{ index }}"
           >
