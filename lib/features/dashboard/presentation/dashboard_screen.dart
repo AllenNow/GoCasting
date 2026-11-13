@@ -246,6 +246,14 @@ class _QuickActions extends StatelessWidget {
           const SizedBox(width: 8),
           _ActionButton(emoji: '📖', label: '鱼种图鉴', onTap: () => Get.toNamed(AppRoutes.gearSpeciesGuide)),
         ]),
+        const SizedBox(height: 8),
+        Row(children: [
+          _ActionButton(emoji: '🏆', label: '钓鱼比赛', onTap: () => Get.toNamed(AppRoutes.competition)),
+          const SizedBox(width: 8),
+          _ActionButton(emoji: '📊', label: '比赛统计', onTap: () => Get.toNamed(AppRoutes.competitionStats)),
+          const SizedBox(width: 8),
+          _ActionButton(emoji: '📝', label: '提交参赛', onTap: () => Get.toNamed(AppRoutes.competitionSubmit)),
+        ]),
       ],
     );
   }

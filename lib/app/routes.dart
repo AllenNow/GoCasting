@@ -19,6 +19,9 @@ import '../core/settings/settings_screen.dart';
 import '../core/settings/privacy_policy_screen.dart';
 import 'home_page.dart';
 
+// 比赛功能路由
+import '../features/competition/presentation/routes/competition_routes.dart';
+
 /// 路由名称常量
 abstract class AppRoutes {
   static const gear = '/';
@@ -41,6 +44,12 @@ abstract class AppRoutes {
   static const maintenanceAdd = '/maintenance/add';
   static const maintenanceDetail = '/maintenance/detail';
   static const privacyPolicy = '/privacy-policy';
+  
+  // 比赛功能路由
+  static const competition = CompetitionRoutes.competitionList;
+  static const competitionLeaderboard = CompetitionRoutes.leaderboard;
+  static const competitionSubmit = CompetitionRoutes.entrySubmission;
+  static const competitionStats = CompetitionRoutes.competitionStats;
 }
 
 /// 路由页面配置
@@ -69,5 +78,7 @@ class AppPages {
       ),
     ),
     GetPage(name: AppRoutes.privacyPolicy, page: () => const PrivacyPolicyScreen()),
+    // 添加比赛功能路由
+    ...CompetitionRoutes.routes,
   ];
 }
