@@ -176,14 +176,67 @@ Page({
       count: 1,
       mediaType: ['image'],
       sourceType: ['album', 'camera'],
-      sizeType: ['compressed'],
-      success: (res) => {
-        const tempPath = res.tempFiles[0].tempFilePath;
+      sizeType: ['compressed'], // 微信自动压缩
+      success: async (res) => {
+        const file = res.tempFiles[0];
+        let tempPath = file.tempFilePath;
+        const fileSize = file.size; // 字节
+
+        // 如果超过 1MB，进一步压缩
+        if (fileSize > 1024 * 1024) {
+          wx.showLoading({ title: '压缩图片中…' });
+          try {
+            tempPath = await this.compressImage(tempPath, fileSize);
+          } catch (err) {
+            console.error('压缩失败:', err);
+            wx.showToast({ title: '图片过大，压缩失败', icon: 'none' });
+            wx.hideLoading();
+            return;
+          }
+          wx.hideLoading();
+        }
+
         this.setData({
           photoTempPath: tempPath,
           'entryForm.photo_url': tempPath,
         });
       },
+    });
+  },
+
+  // 压缩图片到 1MB 以下
+  compressImage(filePath, originalSize) {
+    return new Promise((resolve, reject) => {
+      // 计算压缩质量（目标 900KB，留点余量）
+      const targetSize = 900 * 1024;
+      let quality = Math.floor((targetSize / originalSize) * 100);
+      quality = Math.max(20, Math.min(80, quality)); // 限制在 20-80 之间
+
+      wx.compressImage({
+        src: filePath,
+        quality: quality,
+        success: (res) => {
+          // 检查压缩后大小
+          wx.getFileInfo({
+            filePath: res.tempFilePath,
+            success: (info) => {
+              if (info.size > 1024 * 1024) {
+                // 还是太大，再压一次
+                wx.compressImage({
+                  src: res.tempFilePath,
+                  quality: 20,
+                  success: (res2) => resolve(res2.tempFilePath),
+                  fail: reject,
+                });
+              } else {
+                resolve(res.tempFilePath);
+              }
+            },
+            fail: () => resolve(res.tempFilePath), // 获取大小失败就直接用
+          });
+        },
+        fail: reject,
+      });
     });
   },
 
