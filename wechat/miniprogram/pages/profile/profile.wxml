@@ -1,41 +1,19 @@
-<!-- pages/profile/profile.wxml — 个人中心 -->
+<!-- pages/profile/profile.wxml — 个人中心（精简版）-->
 <view class="page-container">
 
   <!-- 用户信息头部 -->
   <view class="profile-header">
-
-    <!-- 管理员入口：右上角图标（仅管理员可见）-->
-    <view wx:if="{{ isAdmin }}" class="admin-corner-btn" bindtap="goAdmin">
-      <text class="admin-corner-icon">⚙️</text>
-    </view>
-
     <view wx:if="{{ userInfo && userInfo.nickName }}" class="user-info">
-      <!-- 头像：连点5次触发管理员入口 -->
-      <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" bindtap="onAvatarTap">
+      <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
         <image class="avatar" src="{{ userInfo.avatarUrl }}" mode="aspectFill" />
       </button>
-      <view wx:if="{{ editingNickname }}" class="nickname-edit-wrap">
-        <input
-          class="nickname-input"
-          type="nickname"
-          value="{{ userInfo.nickName }}"
-          bindinput="onNicknameInput"
-          bindblur="onNicknameBlur"
-          placeholder="输入昵称"
-          focus="{{true}}"
-        />
-      </view>
-      <view wx:else class="nickname-display" bindtap="startEditNickname">
-        <text class="username">{{ userInfo.nickName }}</text>
-        <text class="edit-hint">✎</text>
-      </view>
+      <text class="username">{{ userInfo.nickName }}</text>
       <text class="user-sub">钓鱼爱好者</text>
     </view>
 
     <!-- 未设置态 -->
     <view wx:else class="user-setup">
-      <!-- 头像：连点5次触发管理员入口 -->
-      <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" bindtap="onAvatarTap">
+      <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
         <view wx:if="{{ userInfo && userInfo.avatarUrl }}" class="avatar-wrap">
           <image class="avatar" src="{{ userInfo.avatarUrl }}" mode="aspectFill" />
         </view>
@@ -50,138 +28,29 @@
         placeholder="输入昵称完成设置"
       />
     </view>
-  </view>
 
-  <!-- 数据统计网格 -->
-  <view class="stats-card card">
-    <text class="card-title">我的钓鱼数据</text>
-    <view class="stats-grid">
-      <view class="stat-cell">
-        <text class="stat-num-lg">{{ stats.totalCatches }}</text>
-        <text class="stat-label-sm">总渔获次数</text>
-      </view>
-      <view class="stat-cell">
-        <text class="stat-num-lg">{{ stats.thisYear }}</text>
-        <text class="stat-label-sm">今年渔获</text>
-      </view>
-      <view class="stat-cell">
-        <text class="stat-num-lg">{{ stats.totalSpecies }}</text>
-        <text class="stat-label-sm">已钓鱼种</text>
-      </view>
-      <view class="stat-cell">
-        <text class="stat-num-lg">{{ stats.releasedCount }}</text>
-        <text class="stat-label-sm">已放流</text>
-      </view>
-    </view>
-    <view class="divider"></view>
-    <view class="highlight-row">
-      <view class="highlight-item">
-        <text class="highlight-label">最爱鱼种</text>
-        <text class="highlight-value">{{ stats.topSpecies }}</text>
-      </view>
-      <view class="highlight-item">
-        <text class="highlight-label">累计钓获</text>
-        <text class="highlight-value green">
-          {{ stats.totalWeight_g >= 1000 ? stats.totalWeightKg + ' kg' : stats.totalWeight_g + ' g' }}
-        </text>
-      </view>
-    </view>
-  </view>
-
-  <!-- 最近渔获快览 -->
-  <view class="section-header">
-    <text class="section-title">最近记录</text>
-    <text class="section-more" bindtap="goAllCatches">全部 ›</text>
-  </view>
-
-  <view wx:if="{{ loading }}" class="loading-wrap"><text>加载中…</text></view>
-
-  <view wx:elif="{{ recentCatches.length === 0 }}" class="empty-state">
-    <text class="empty-icon">🐟</text>
-    <text class="empty-text">暂无渔获记录</text>
-    <text class="empty-subtext">去记录你的第一次渔获吧！</text>
-    <view class="btn-primary record-btn-sm" style="margin-top:24rpx" bindtap="goRecord">
-      立即记录
-    </view>
-  </view>
-
-  <view wx:else class="recent-list">
-    <view
-      wx:for="{{ recentCatches }}"
-      wx:key="_id"
-      class="recent-item card"
-    >
-      <view class="recent-top">
-        <text class="recent-species">{{ item.species }}</text>
-        <text wx:if="{{ item.weight_g }}" class="recent-weight">
-          {{ item.weight_g >= 1000 ? item.weightKg + 'kg' : item.weight_g + 'g' }}
-        </text>
-      </view>
-      <view class="recent-meta">
-        <text class="recent-date">{{ item.date }}</text>
-        <text wx:if="{{ item.location }}" class="recent-location">📍 {{ item.location }}</text>
-      </view>
-    </view>
-  </view>
-
-  <!-- 渔获统计图表（月度趋势 + 鱼种分布）-->
-  <view wx:if="{{ monthlyData.length > 0 }}" class="chart-card card">
-    <view class="chart-header">
-      <text class="card-title">月度渔获趋势</text>
-      <text class="chart-period">近6个月</text>
-    </view>
-    <view class="bar-chart">
-      <view wx:for="{{ monthlyData }}" wx:key="month" class="bar-group">
-        <view class="bar-wrap">
-          <text wx:if="{{ item.count > 0 }}" class="bar-count">{{ item.count }}</text>
-          <view class="bar-fill"
-            style="height:{{ item.count > 0 ? 20 + (item.count / maxMonthCount) * 100 : 4 }}rpx;">
-          </view>
-        </view>
-        <text class="bar-label">{{ item.label }}</text>
-      </view>
-    </view>
-  </view>
-
-  <view wx:if="{{ speciesData.length > 0 }}" class="species-chart-card card">
-    <text class="card-title">鱼种分布 Top 5</text>
-    <view class="species-bars">
-      <view wx:for="{{ speciesData }}" wx:key="name" class="species-row">
-        <text class="species-name">{{ item.name }}</text>
-        <view class="species-bar-wrap">
-          <view class="species-bar" style="width:{{ item.pct }}%;background:{{ item.color }}"></view>
-        </view>
-        <text class="species-count">{{ item.count }}</text>
-      </view>
+    <!-- 管理员标识 -->
+    <view wx:if="{{ isAdmin }}" class="admin-badge">
+      <text>🔑 管理员</text>
     </view>
   </view>
 
   <!-- 功能入口 -->
-  <view class="section-header"><text class="section-title">功能</text></view>
-  <view class="card" style="margin:0 24rpx 16rpx;padding:0;overflow:hidden;">
-    <view class="menu-item" bindtap="goRecord">
-      <text class="menu-icon">🎣</text>
-      <text class="menu-label">新建渔获记录</text>
-      <text class="menu-arrow">›</text>
+  <view class="menu-section">
+    <view class="card">
+      <button class="menu-item share-btn" open-type="share">
+        <text class="menu-icon">📤</text>
+        <text class="menu-label">分享给钓友</text>
+        <text class="menu-arrow">›</text>
+      </button>
     </view>
-    <view class="divider" style="margin:0 0 0 72rpx"></view>
-    <view class="menu-item" bindtap="goGoScore">
-      <text class="menu-icon">🎯</text>
-      <text class="menu-label">今日 Go-Score 评分</text>
-      <text class="menu-arrow">›</text>
-    </view>
-    <view class="divider" style="margin:0 0 0 72rpx"></view>
-    <view class="menu-item" bindtap="goSpecies">
-      <text class="menu-icon">🐟</text>
-      <text class="menu-label">鱼种图鉴</text>
-      <text class="menu-arrow">›</text>
-    </view>
-    <view class="divider" style="margin:0 0 0 72rpx"></view>
-    <button class="menu-item share-btn" open-type="share">
-      <text class="menu-icon">📤</text>
-      <text class="menu-label">分享给钓友</text>
-      <text class="menu-arrow">›</text>
-    </button>
+  </view>
+
+  <!-- 关于 -->
+  <view class="about-section">
+    <text class="about-title">钓鱼赛事助手</text>
+    <text class="about-desc">记录钓鱼荣誉，分享垂钓快乐</text>
+    <text class="about-version">版本 1.0.0</text>
   </view>
 
   <view class="safe-bottom"></view>

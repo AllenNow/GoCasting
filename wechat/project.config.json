@@ -45,7 +45,7 @@
     "disableSWC": true
   },
   "appid": "wx97aaa3a8f799b48c",
-  "projectname": "quickstart-wx-cloud",
+  "projectname": "fishing-competition-helper",
   "libVersion": "3.17.1",
   "cloudfunctionTemplateRoot": "cloudfunctionTemplate/",
   "condition": {
