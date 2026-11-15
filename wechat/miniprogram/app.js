@@ -20,6 +20,8 @@ App({
     // openid 不再出现在前端源码中，由服务端返回
     wx.cloud.callFunction({ name: 'checkAdmin' })
       .then(res => {
+        console.log('===== 当前用户 openid:', res.result.openid, '=====');
+        console.log('===== 是否管理员:', res.result.isAdmin, '=====');
         this.globalData.openid  = res.result.openid;
         this.globalData.isAdmin = res.result.isAdmin === true;
 

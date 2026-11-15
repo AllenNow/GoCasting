@@ -247,3 +247,14 @@ _bmad-output
 .kiro
 apple-project-ai-log
 wcs-lite-web-master
+
+### 微信小程序 ###
+# 云函数 node_modules
+wechat/cloudfunctions/**/node_modules/
+wechat/cloudfunctions/**/package-lock.json
+
+# 小程序本地配置（包含个人 appid 等）
+wechat/project.private.config.json
+
+# miniprogram npm 构建产物
+wechat/miniprogram/miniprogram_npm/

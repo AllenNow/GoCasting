@@ -1,0 +1,255 @@
+<!-- pages/competition/competition-detail.wxml — 比赛详情 & 榜单 -->
+<view class="page-container">
+
+  <!-- 加载中 -->
+  <view wx:if="{{ loading }}" class="loading-wrap">
+    <text>加载中…</text>
+  </view>
+
+  <block wx:elif="{{ competition }}">
+
+    <!-- 顶部信息区 -->
+    <view class="comp-header">
+      <view class="comp-title-row">
+        <text class="comp-title">{{ competition.name }}</text>
+        <view class="status-badge" style="background:{{ competition.statusColor }}">
+          {{ competition.statusLabel }}
+        </view>
+      </view>
+      <view class="comp-meta">
+        <text class="meta-item">📅 {{ competition.date }}</text>
+        <text wx:if="{{ competition.location }}" class="meta-item">📍 {{ competition.location }}</text>
+      </view>
+      <text wx:if="{{ competition.description }}" class="comp-desc">{{ competition.description }}</text>
+
+      <!-- 管理员操作 -->
+      <view wx:if="{{ isAdmin }}" class="admin-actions">
+        <view class="btn-outline admin-btn" bindtap="editCompetition">✏️ 编辑榜单</view>
+        <view class="btn-danger-outline admin-btn" bindtap="deleteCompetition">🗑️ 删除</view>
+      </view>
+    </view>
+
+    <!-- 无上榜记录空状态 -->
+    <view wx:if="{{ competition.entries.length === 0 }}" class="empty-entries">
+      <text class="empty-icon">🎣</text>
+      <text class="empty-text">暂无上榜记录</text>
+      <view wx:if="{{ isAdmin }}" class="btn-primary add-entry-btn-center" bindtap="openAddEntry">
+        添加第一条记录
+      </view>
+    </view>
+
+    <block wx:else>
+      <!-- ===== 颁奖台（前3名）===== -->
+      <view wx:if="{{ top3.length > 0 }}" class="podium-section">
+        <text class="section-title">🏅 颁奖台</text>
+        <view class="podium-row">
+          <!-- 第2名（左侧，次高台）-->
+          <view wx:if="{{ top3.length >= 2 }}" class="podium-item podium-silver">
+            <text class="podium-medal">🥈</text>
+            <text class="podium-name">{{ top3[1].player_name }}</text>
+            <text class="podium-stat">{{ top3[1].lengthDisplay }}</text>
+            <view class="podium-block podium-block-silver">
+              <text class="podium-rank-num">2</text>
+            </view>
+          </view>
+          <!-- 第1名（中间，最高台）-->
+          <view class="podium-item podium-gold">
+            <text class="podium-medal">🥇</text>
+            <text class="podium-name">{{ top3[0].player_name }}</text>
+            <text class="podium-stat podium-stat-gold">{{ top3[0].lengthDisplay }}</text>
+            <view class="podium-block podium-block-gold">
+              <text class="podium-rank-num">1</text>
+            </view>
+          </view>
+          <!-- 第3名（右侧，最低台）-->
+          <view wx:if="{{ top3.length >= 3 }}" class="podium-item podium-bronze">
+            <text class="podium-medal">🥉</text>
+            <text class="podium-name">{{ top3[2].player_name }}</text>
+            <text class="podium-stat">{{ top3[2].lengthDisplay }}</text>
+            <view class="podium-block podium-block-bronze">
+              <text class="podium-rank-num">3</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- ===== 完整榜单 ===== -->
+      <view class="leaderboard-section">
+        <view class="section-header-row">
+          <text class="section-title">📋 完整榜单</text>
+          <view class="header-btns">
+            <view class="btn-sm-outline" bindtap="exportImage">📤 导出图片</view>
+            <view wx:if="{{ isAdmin }}" class="btn-sm-green" bindtap="openAddEntry">＋ 添加记录</view>
+          </view>
+        </view>
+
+        <!-- 完整列表 -->
+        <view class="leaderboard-list">
+          <view
+            wx:for="{{ competition.entries }}"
+            wx:key="id"
+            class="entry-row {{ item.isTop3 ? 'entry-row-top3' : '' }}"
+            bindtap="{{ isAdmin ? 'openEditEntry' : '' }}"
+            data-id="{{ item.id }}"
+          >
+            <text class="entry-medal">{{ item.medal }}</text>
+            <view class="entry-info">
+              <text class="entry-name">{{ item.player_name }}</text>
+              <view class="entry-meta">
+                <text wx:if="{{ item.best_species }}" class="entry-species">🐟 {{ item.best_species }}</text>
+                <text wx:if="{{ item.spot }}" class="entry-spot">📍 {{ item.spot }}</text>
+              </view>
+            </view>
+            <view class="entry-right">
+              <!-- 主指标：长度 -->
+              <text class="entry-main-stat">{{ item.lengthDisplay }}</text>
+              <!-- 副指标：重量 -->
+              <text wx:if="{{ item.total_weight_g }}" class="entry-sub-stat">{{ item.weightDisplay }}</text>
+              <text wx:else class="entry-sub-stat entry-sub-pending">重量待定</text>
+              <!-- 管理员删除按钮 -->
+              <view wx:if="{{ isAdmin }}" class="entry-admin-btns" catchtap="stopPropagation">
+                <view class="entry-btn-del" catchtap="deleteEntry" data-id="{{ item.id }}">🗑️</view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </block>
+
+  </block>
+
+  <view class="safe-bottom"></view>
+
+  <!-- 撤销删除提示栏 -->
+  <view wx:if="{{ showUndoBar }}" class="undo-bar">
+    <text class="undo-text">已删除 {{ lastDeleted.player_name }} 的记录</text>
+    <view class="undo-actions">
+      <view class="undo-btn" bindtap="undoDelete">撤销</view>
+      <view class="undo-dismiss" bindtap="dismissUndoBar">✕</view>
+    </view>
+  </view>
+
+  <!-- 隐藏 Canvas（用于导出榜单图片）-->
+  <canvas
+    type="2d"
+    id="exportCanvas"
+    class="share-canvas-hidden"
+    canvas-id="exportCanvas"
+  />
+
+  <!-- ===== 选手编辑面板（管理员）===== -->
+  <view wx:if="{{ showEntryPanel }}" class="panel-overlay" bindtap="closeEntryPanel"></view>
+  <view class="entry-panel {{ showEntryPanel ? 'entry-panel--visible' : '' }}">
+    <view class="panel-handle"></view>
+    <text class="panel-title">{{ editingEntryId ? '编辑记录' : '添加记录' }}</text>
+
+    <view class="panel-form">
+      <!-- 图片上传 -->
+      <view class="form-group">
+        <text class="form-label">渔获照片</text>
+        <view class="photo-upload-area">
+          <view wx:if="{{ entryForm.photo_url }}" class="photo-preview-wrap" bindtap="choosePhoto">
+            <image class="photo-preview" src="{{ entryForm.photo_url }}" mode="aspectFill" />
+            <view class="photo-remove-btn" catchtap="removePhoto">✕</view>
+          </view>
+          <view wx:else class="photo-add-btn" bindtap="choosePhoto">
+            <text class="photo-add-icon">📷</text>
+            <text class="photo-add-text">添加照片</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 钓友昵称 -->
+      <view class="form-group">
+        <text class="form-label required">钓友昵称 *</text>
+        <input
+          class="form-input"
+          placeholder="输入钓友昵称"
+          value="{{ entryForm.player_name }}"
+          bindinput="onEntryInput"
+          data-field="player_name"
+          maxlength="20"
+        />
+      </view>
+
+      <!-- 鱼种 -->
+      <view class="form-group">
+        <text class="form-label">鱼种</text>
+        <input
+          class="form-input"
+          placeholder="例：黄鳍鲷"
+          value="{{ entryForm.best_species }}"
+          bindinput="onEntryInput"
+          data-field="best_species"
+          maxlength="20"
+        />
+      </view>
+
+      <!-- 长度 -->
+      <view class="form-group">
+        <text class="form-label">长度（厘米）</text>
+        <input
+          class="form-input"
+          type="digit"
+          placeholder="例：38.5"
+          value="{{ entryForm.length_cm }}"
+          bindinput="onEntryInput"
+          data-field="length_cm"
+          maxlength="6"
+        />
+      </view>
+
+      <!-- 总重量 -->
+      <view class="form-group">
+        <text class="form-label">重量（克）</text>
+        <input
+          class="form-input"
+          type="digit"
+          placeholder="例：1500"
+          value="{{ entryForm.total_weight_g }}"
+          bindinput="onEntryInput"
+          data-field="total_weight_g"
+          maxlength="8"
+        />
+      </view>
+
+      <!-- 钓点 -->
+      <view class="form-group">
+        <text class="form-label">钓点</text>
+        <input
+          class="form-input"
+          placeholder="例：五缘湾"
+          value="{{ entryForm.spot }}"
+          bindinput="onEntryInput"
+          data-field="spot"
+          maxlength="20"
+        />
+      </view>
+
+      <!-- 备注 -->
+      <view class="form-group">
+        <text class="form-label">备注</text>
+        <input
+          class="form-input"
+          placeholder="可选备注"
+          value="{{ entryForm.note }}"
+          bindinput="onEntryInput"
+          data-field="note"
+          maxlength="50"
+        />
+      </view>
+    </view>
+
+    <view class="panel-actions">
+      <view class="btn-outline panel-cancel-btn" bindtap="closeEntryPanel">取消</view>
+      <view
+        class="btn-primary panel-save-btn {{ saving ? 'btn-disabled' : '' }}"
+        bindtap="saveEntry"
+      >
+        <text wx:if="{{ saving }}">保存中…</text>
+        <text wx:else>确认保存</text>
+      </view>
+    </view>
+  </view>
+
+</view>

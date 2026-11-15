@@ -22,6 +22,12 @@ Component({
         iconActive: '🎯',
       },
       {
+        pagePath: 'pages/competition/competition',
+        text: '比赛',
+        icon:       '🏆',
+        iconActive: '🏆',
+      },
+      {
         pagePath: 'pages/profile/profile',
         text: '我的',
         icon:       '👤',

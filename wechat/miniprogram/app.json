@@ -10,6 +10,8 @@
     "pages/gear/gear-detail",
     "pages/go-score/go-score",
     "pages/species/species",
+    "pages/competition/competition",
+    "pages/competition/competition-detail",
     "pages/admin/admin",
     "pages/admin/spot-list",
     "pages/admin/spot-add",
@@ -18,7 +20,8 @@
     "pages/admin/gear-edit",
     "pages/admin/user-manage",
     "pages/admin/dashboard",
-    "pages/admin/api-stats/api-stats"
+    "pages/admin/api-stats/api-stats",
+    "pages/admin/competition-edit"
   ],
   "tabBar": {
     "custom": true,
@@ -38,6 +41,10 @@
       {
         "pagePath": "pages/gear/gear",
         "text": "装备"
+      },
+      {
+        "pagePath": "pages/competition/competition",
+        "text": "比赛"
       },
       {
         "pagePath": "pages/profile/profile",
