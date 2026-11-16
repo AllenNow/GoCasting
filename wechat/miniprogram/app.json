@@ -3,7 +3,9 @@
     "pages/competition/competition",
     "pages/competition/competition-detail",
     "pages/profile/profile",
-    "pages/admin/competition-edit"
+    "pages/admin/competition-edit",
+    "pages/permission/apply",
+    "pages/permission/manage"
   ],
   "tabBar": {
     "custom": true,

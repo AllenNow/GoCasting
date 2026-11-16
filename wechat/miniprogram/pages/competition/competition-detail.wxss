@@ -66,11 +66,35 @@
   overflow: hidden;
 }
 
+/* ===== 操作按钮行 ===== */
+.action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12rpx;
+  gap: 12rpx;
+}
+
+.btn-share {
+  background: rgba(255,255,255,0.2) !important;
+  border: none !important;
+  border-radius: 24rpx !important;
+  padding: 8rpx 20rpx !important;
+  font-size: 22rpx !important;
+  color: #fff !important;
+  line-height: 1.5 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.btn-share::after {
+  display: none;
+}
+
 /* ===== 管理员按钮 ===== */
 .admin-actions {
   display: flex;
   gap: 12rpx;
-  margin-top: 12rpx;
 }
 
 .admin-btn {

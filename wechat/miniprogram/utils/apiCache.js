@@ -1,11 +1,11 @@
-// utils/apiCache.js — 客户端本地缓存工具
+// utils/apiCache.js — 客户端本地缓存工具 (ES5 兼容版)
 // 基于 wx.Storage，支持 TTL 过期、坐标归一化、命中率统计
 // 所有操作同步执行，不阻塞主流程
 
-const CACHE_PREFIX = 'apicache_';
+var CACHE_PREFIX = 'apicache_';
 
 // ── TTL 配置（毫秒）─────────────────────────────────────────
-const TTL = {
+var TTL = {
   regeo:            30 * 24 * 60 * 60 * 1000,  // 30天（城市名几乎不变）
   weather_live:     20 * 60 * 1000,             // 20分钟
   weather_forecast:  3 * 60 * 60 * 1000,        // 3小时
@@ -15,7 +15,7 @@ const TTL = {
 // ── 坐标归一化：减少缓存 key 碎片 ────────────────────────────
 // regeo:   精度 0.1°（≈11km），同城市完全复用
 // marine:  精度 0.5°（≈55km），海洋数据大范围均匀
-const GEO_PRECISION = {
+var GEO_PRECISION = {
   regeo:   0.1,
   marine:  0.5,
   weather: 0.1,  // weather 用 adcode，但坐标 key 同 regeo
@@ -39,10 +39,10 @@ function snapCoord(val, precision) {
  * @returns {string} 缓存 key
  */
 function geoKey(apiName, lat, lon) {
-  const prec = GEO_PRECISION[apiName] || 0.1;
-  const sLat = snapCoord(lat, prec).toFixed(1);
-  const sLon = snapCoord(lon, prec).toFixed(1);
-  return `${CACHE_PREFIX}${apiName}_${sLat}_${sLon}`;
+  var prec = GEO_PRECISION[apiName] || 0.1;
+  var sLat = snapCoord(lat, prec).toFixed(1);
+  var sLon = snapCoord(lon, prec).toFixed(1);
+  return CACHE_PREFIX + apiName + '_' + sLat + '_' + sLon;
 }
 
 /**
@@ -51,7 +51,7 @@ function geoKey(apiName, lat, lon) {
  * @param {string} adcode
  */
 function adcodeKey(apiName, adcode) {
-  return `${CACHE_PREFIX}${apiName}_${adcode}`;
+  return CACHE_PREFIX + apiName + '_' + adcode;
 }
 
 // ── 读缓存 ──────────────────────────────────────────────────
@@ -62,13 +62,13 @@ function adcodeKey(apiName, adcode) {
  */
 function get(key) {
   try {
-    const raw = wx.getStorageSync(key);
+    var raw = wx.getStorageSync(key);
     if (!raw) return null;
-    const entry = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    var entry = typeof raw === 'string' ? JSON.parse(raw) : raw;
     if (!entry || !entry.expireAt) return null;
     if (Date.now() > entry.expireAt) {
       // 过期，异步删除（不阻塞）
-      wx.removeStorage({ key });
+      wx.removeStorage({ key: key });
       return null;
     }
     return entry.data;
@@ -87,7 +87,7 @@ function get(key) {
 function set(key, data, ttlMs) {
   try {
     wx.setStorageSync(key, {
-      data,
+      data: data,
       expireAt:  Date.now() + ttlMs,
       cachedAt:  Date.now(),
     });
@@ -103,10 +103,18 @@ function set(key, data, ttlMs) {
  */
 function invalidateAll() {
   try {
-    const info = wx.getStorageInfoSync();
-    const keys  = (info.keys || []).filter(k => k.startsWith(CACHE_PREFIX));
-    keys.forEach(k => wx.removeStorageSync(k));
-    console.log(`[apiCache] 已清除 ${keys.length} 条缓存`);
+    var info = wx.getStorageInfoSync();
+    var allKeys = info.keys || [];
+    var keys = [];
+    for (var i = 0; i < allKeys.length; i++) {
+      if (allKeys[i].indexOf(CACHE_PREFIX) === 0) {
+        keys.push(allKeys[i]);
+      }
+    }
+    for (var j = 0; j < keys.length; j++) {
+      wx.removeStorageSync(keys[j]);
+    }
+    console.log('[apiCache] 已清除 ' + keys.length + ' 条缓存');
   } catch (e) {
     console.warn('[apiCache] 清除失败:', e.message);
   }
@@ -118,10 +126,14 @@ function invalidateAll() {
  */
 function invalidateByName(apiName) {
   try {
-    const info = wx.getStorageInfoSync();
-    const prefix = `${CACHE_PREFIX}${apiName}_`;
-    const keys  = (info.keys || []).filter(k => k.startsWith(prefix));
-    keys.forEach(k => wx.removeStorageSync(k));
+    var info = wx.getStorageInfoSync();
+    var prefix = CACHE_PREFIX + apiName + '_';
+    var allKeys = info.keys || [];
+    for (var i = 0; i < allKeys.length; i++) {
+      if (allKeys[i].indexOf(prefix) === 0) {
+        wx.removeStorageSync(allKeys[i]);
+      }
+    }
   } catch (e) {}
 }
 
@@ -132,36 +144,49 @@ function invalidateByName(apiName) {
  */
 function getStats() {
   try {
-    const info = wx.getStorageInfoSync();
-    const keys  = (info.keys || []).filter(k => k.startsWith(CACHE_PREFIX));
-    const now   = Date.now();
-    return keys.map(k => {
-      try {
-        const entry = wx.getStorageSync(k);
-        const e = typeof entry === 'string' ? JSON.parse(entry) : entry;
-        return {
-          key:       k.replace(CACHE_PREFIX, ''),
-          cachedAt:  e?.cachedAt  ? new Date(e.cachedAt).toLocaleTimeString()  : '—',
-          expireAt:  e?.expireAt  ? new Date(e.expireAt).toLocaleTimeString()  : '—',
-          remainMs:  e?.expireAt  ? Math.max(0, e.expireAt - now) : 0,
-          expired:   e?.expireAt  ? now > e.expireAt : true,
-        };
-      } catch (_) {
-        return { key: k, expired: true };
+    var info = wx.getStorageInfoSync();
+    var allKeys = info.keys || [];
+    var keys = [];
+    for (var i = 0; i < allKeys.length; i++) {
+      if (allKeys[i].indexOf(CACHE_PREFIX) === 0) {
+        keys.push(allKeys[i]);
       }
-    });
+    }
+    var now = Date.now();
+    var results = [];
+    for (var j = 0; j < keys.length; j++) {
+      var k = keys[j];
+      try {
+        var entry = wx.getStorageSync(k);
+        var e = typeof entry === 'string' ? JSON.parse(entry) : entry;
+        var cachedAt = (e && e.cachedAt) ? new Date(e.cachedAt).toLocaleTimeString() : '—';
+        var expireAt = (e && e.expireAt) ? new Date(e.expireAt).toLocaleTimeString() : '—';
+        var remainMs = (e && e.expireAt) ? Math.max(0, e.expireAt - now) : 0;
+        var expired = (e && e.expireAt) ? now > e.expireAt : true;
+        results.push({
+          key:       k.replace(CACHE_PREFIX, ''),
+          cachedAt:  cachedAt,
+          expireAt:  expireAt,
+          remainMs:  remainMs,
+          expired:   expired,
+        });
+      } catch (_) {
+        results.push({ key: k, expired: true });
+      }
+    }
+    return results;
   } catch (e) {
     return [];
   }
 }
 
 module.exports = {
-  TTL,
-  get,
-  set,
-  geoKey,
-  adcodeKey,
-  invalidateAll,
-  invalidateByName,
-  getStats,
+  TTL: TTL,
+  get: get,
+  set: set,
+  geoKey: geoKey,
+  adcodeKey: adcodeKey,
+  invalidateAll: invalidateAll,
+  invalidateByName: invalidateByName,
+  getStats: getStats,
 };

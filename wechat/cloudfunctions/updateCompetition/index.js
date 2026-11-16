@@ -1,27 +1,112 @@
-// 云函数：updateCompetition — 管理员更新榜单数据
+// 云函数：updateCompetition — 赛事和榜单管理（带权限控制）
 const cloud = require('wx-server-sdk');
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
+const _ = db.command;
+
+// 获取用户对指定赛事的权限
+async function getPermission(OPENID, compId) {
+  // 检查是否超级管理员
+  const configRes = await db.collection('admin_config').limit(1).get();
+  const config = configRes.data[0] || {};
+  const superAdmins = config.super_admins || config.admins || [];
+  const competitionAdmins = config.competition_admins || [];
+  const isSuperAdmin = superAdmins.includes(OPENID);
+  const isCompetitionAdmin = competitionAdmins.includes(OPENID);
+
+  if (!compId) {
+    return { 
+      isSuperAdmin, 
+      isCompetitionAdmin,
+      canCreate: isSuperAdmin || isCompetitionAdmin,
+      canEdit: false, 
+      canDelete: false, 
+      canAssign: false 
+    };
+  }
+
+  // 获取比赛信息
+  const compRes = await db.collection('competitions').doc(compId).get();
+  const comp = compRes.data;
+  
+  const isCreator = comp.created_by === OPENID;
+  const isAssignedAdmin = (comp.admins || []).includes(OPENID);
+
+  return {
+    isSuperAdmin,
+    isCompetitionAdmin,
+    isCreator,
+    isAssignedAdmin,
+    canEdit: isSuperAdmin || isCreator || isAssignedAdmin,
+    canDelete: isSuperAdmin || isCreator,
+    canAssign: isSuperAdmin || isCreator,
+    competition: comp
+  };
+}
 
 exports.main = async (event) => {
   const { OPENID } = cloud.getWXContext();
+  const { action, competitionId, entry, entryId, competition, targetOpenid } = event;
 
-  // 检查是否管理员
   try {
-    const adminRes = await db.collection('admin_config').limit(1).get();
-    const admins = adminRes.data[0]?.admins || [];
-    if (!admins.includes(OPENID)) {
-      return { success: false, error: '无管理员权限' };
+    // ===== 创建比赛 =====
+    if (action === 'create') {
+      const perm = await getPermission(OPENID, null);
+      if (!perm.canCreate) {
+        return { success: false, error: '无权限创建赛事' };
+      }
+
+      const result = await db.collection('competitions').add({
+        data: {
+          ...competition,
+          created_by: OPENID,
+          admins: [],
+          entries: [],
+          created_at: db.serverDate(),
+          updated_at: db.serverDate(),
+        }
+      });
+      return { success: true, id: result._id };
     }
-  } catch (e) {
-    return { success: false, error: '权限检查失败' };
-  }
 
-  const { action, competitionId, entry, entryId } = event;
+    // ===== 更新比赛信息 =====
+    if (action === 'update') {
+      const perm = await getPermission(OPENID, competitionId);
+      if (!perm.canEdit) {
+        return { success: false, error: '无权限编辑此赛事' };
+      }
 
-  try {
+      await db.collection('competitions').doc(competitionId).update({
+        data: {
+          name: competition.name,
+          date: competition.date,
+          location: competition.location,
+          description: competition.description,
+          status: competition.status,
+          updated_at: db.serverDate(),
+        }
+      });
+      return { success: true };
+    }
+
+    // ===== 删除比赛 =====
+    if (action === 'delete') {
+      const perm = await getPermission(OPENID, competitionId);
+      if (!perm.canDelete) {
+        return { success: false, error: '无权限删除此赛事，只有创建者或超级管理员可以删除' };
+      }
+
+      await db.collection('competitions').doc(competitionId).remove();
+      return { success: true };
+    }
+
+    // ===== 添加榜单记录 =====
     if (action === 'addEntry') {
-      // 添加记录
+      const perm = await getPermission(OPENID, competitionId);
+      if (!perm.canEdit) {
+        return { success: false, error: '无权限管理此赛事榜单' };
+      }
+
       const res = await db.collection('competitions').doc(competitionId).get();
       const entries = res.data.entries || [];
       
@@ -35,6 +120,8 @@ exports.main = async (event) => {
         fish_count: 1,
         note: entry.note || '',
         photo_url: entry.photo_url || null,
+        created_by: OPENID,
+        created_at: new Date(),
       });
 
       // 排序：长度优先，长度相同按重量
@@ -50,9 +137,15 @@ exports.main = async (event) => {
       });
 
       return { success: true, message: '添加成功' };
+    }
 
-    } else if (action === 'updateEntry') {
-      // 编辑记录
+    // ===== 更新榜单记录 =====
+    if (action === 'updateEntry') {
+      const perm = await getPermission(OPENID, competitionId);
+      if (!perm.canEdit) {
+        return { success: false, error: '无权限管理此赛事榜单' };
+      }
+
       const res = await db.collection('competitions').doc(competitionId).get();
       const entries = res.data.entries || [];
       
@@ -70,6 +163,8 @@ exports.main = async (event) => {
         spot: entry.spot || '',
         note: entry.note || '',
         photo_url: entry.photo_url || null,
+        updated_by: OPENID,
+        updated_at: new Date(),
       };
 
       // 重新排序
@@ -85,9 +180,15 @@ exports.main = async (event) => {
       });
 
       return { success: true, message: '更新成功' };
+    }
 
-    } else if (action === 'deleteEntry') {
-      // 删除记录
+    // ===== 删除榜单记录 =====
+    if (action === 'deleteEntry') {
+      const perm = await getPermission(OPENID, competitionId);
+      if (!perm.canEdit) {
+        return { success: false, error: '无权限管理此赛事榜单' };
+      }
+
       const res = await db.collection('competitions').doc(competitionId).get();
       let entries = res.data.entries || [];
       
@@ -98,10 +199,96 @@ exports.main = async (event) => {
       });
 
       return { success: true, message: '删除成功' };
-
-    } else {
-      return { success: false, error: '未知操作' };
     }
+
+    // ===== 分配赛事管理权限 =====
+    if (action === 'assignAdmin') {
+      const perm = await getPermission(OPENID, competitionId);
+      if (!perm.canAssign) {
+        return { success: false, error: '无权限分配此赛事的管理权限' };
+      }
+
+      if (!targetOpenid) {
+        return { success: false, error: '请指定要授权的用户' };
+      }
+
+      const comp = perm.competition;
+      const admins = comp.admins || [];
+      
+      if (admins.includes(targetOpenid)) {
+        return { success: false, error: '该用户已有此赛事的管理权限' };
+      }
+
+      admins.push(targetOpenid);
+
+      await db.collection('competitions').doc(competitionId).update({
+        data: { admins, updated_at: db.serverDate() }
+      });
+      return { success: true, message: '已授权' };
+    }
+
+    // ===== 移除赛事管理权限 =====
+    if (action === 'removeAdmin') {
+      const perm = await getPermission(OPENID, competitionId);
+      if (!perm.canAssign) {
+        return { success: false, error: '无权限管理此赛事的权限分配' };
+      }
+
+      if (!targetOpenid) {
+        return { success: false, error: '请指定要移除的用户' };
+      }
+
+      const comp = perm.competition;
+      const admins = (comp.admins || []).filter(id => id !== targetOpenid);
+
+      await db.collection('competitions').doc(competitionId).update({
+        data: { admins, updated_at: db.serverDate() }
+      });
+      return { success: true, message: '已移除权限' };
+    }
+
+    // ===== 获取赛事管理员列表 =====
+    if (action === 'getAdmins') {
+      const perm = await getPermission(OPENID, competitionId);
+      if (!perm.canAssign && !perm.canEdit) {
+        return { success: false, error: '无权限查看' };
+      }
+
+      const comp = perm.competition;
+      
+      // 获取用户备注
+      const configRes = await db.collection('admin_config').limit(1).get();
+      const userNotes = configRes.data[0]?.user_notes || {};
+
+      const adminList = (comp.admins || []).map(openid => ({
+        openid,
+        note: userNotes[openid] || '未知用户'
+      }));
+
+      return { 
+        success: true, 
+        createdBy: comp.created_by,
+        creatorNote: userNotes[comp.created_by] || '创建者',
+        admins: adminList,
+        canAssign: perm.canAssign
+      };
+    }
+
+    // ===== 检查当前用户对赛事的权限 =====
+    if (action === 'checkPermission') {
+      const perm = await getPermission(OPENID, competitionId);
+      return {
+        success: true,
+        canEdit: perm.canEdit,
+        canDelete: perm.canDelete,
+        canAssign: perm.canAssign,
+        isCreator: perm.isCreator,
+        isAssignedAdmin: perm.isAssignedAdmin,
+        isSuperAdmin: perm.isSuperAdmin
+      };
+    }
+
+    return { success: false, error: '未知操作' };
   } catch (err) {
     console.error('updateCompetition error:', err);
     return { success: false, error: err.message || String(err) };

@@ -1,6 +1,8 @@
-// app.js — GoCasting 小程序入口
+// app.js — GoCasting 小程序入口 (ES5 兼容版)
 App({
-  onLaunch() {
+  onLaunch: function() {
+    var that = this;
+    
     if (!wx.cloud) {
       console.error('请使用 2.2.3 或以上的基础库以使用云能力');
       return;
@@ -13,22 +15,27 @@ App({
     this.globalData.db = wx.cloud.database();
 
     // 从本地缓存恢复用户信息（免去每次重新授权）
-    const cached = wx.getStorageSync('userInfo');
+    var cached = wx.getStorageSync('userInfo');
     if (cached) this.globalData.userInfo = cached;
 
-    // 通过 checkAdmin 云函数获取 openid + 管理员身份
-    // openid 不再出现在前端源码中，由服务端返回
-    wx.cloud.callFunction({ name: 'checkAdmin' })
-      .then(res => {
+    // 通过 checkPermission 云函数获取 openid + 权限信息
+    wx.cloud.callFunction({ name: 'checkPermission' })
+      .then(function(res) {
         console.log('===== 当前用户 openid:', res.result.openid, '=====');
-        console.log('===== 是否管理员:', res.result.isAdmin, '=====');
-        this.globalData.openid  = res.result.openid;
-        this.globalData.isAdmin = res.result.isAdmin === true;
+        console.log('===== 用户角色:', res.result.role, '=====');
+        console.log('===== 权限:', res.result.permissions, '=====');
+        that.globalData.openid = res.result.openid;
+        that.globalData.role = res.result.role;
+        that.globalData.permissions = res.result.permissions;
+        that.globalData.isAdmin = res.result.isAdmin === true;
 
-        // 检查用户是否被封禁
+        // 检查用户是否被封禁（使用 openid 精确查询）
         if (res.result.openid) {
-          this.globalData.db.collection('users').limit(1).get()
-            .then(r => {
+          that.globalData.db.collection('users')
+            .where({ _openid: res.result.openid })
+            .limit(1)
+            .get()
+            .then(function(r) {
               if (r.data.length > 0 && r.data[0].banned) {
                 wx.showModal({
                   title: '账号已被封禁',
@@ -38,16 +45,18 @@ App({
                 });
               }
             })
-            .catch(() => {});
+            .catch(function() {});
         }
       })
-      .catch(err => { console.warn('checkAdmin 失败', err); });
+      .catch(function(err) { console.warn('checkPermission 失败', err); });
   },
 
   globalData: {
     db: null,
     userInfo: null,
     openid: null,
+    role: 'viewer',
+    permissions: {},
     isAdmin: false,
     weatherCache: null,
     catchesNeedRefresh: false,

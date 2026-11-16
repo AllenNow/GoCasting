@@ -1,0 +1,94 @@
+<!-- pages/permission/apply.wxml — 申请管理员权限 -->
+<view class="page-container">
+
+  <!-- 已有申请记录 -->
+  <view wx:if="{{ latestRequest }}" class="status-card {{ latestRequest.status }}">
+    <view class="status-header">
+      <text class="status-icon">
+        {{ latestRequest.status === 'pending' ? '⏳' : latestRequest.status === 'approved' ? '✅' : '❌' }}
+      </text>
+      <text class="status-title">
+        {{ latestRequest.status === 'pending' ? '申请审核中' : latestRequest.status === 'approved' ? '申请已通过' : '申请被拒绝' }}
+      </text>
+    </view>
+    
+    <view class="status-detail">
+      <view class="detail-row">
+        <text class="detail-label">申请时间</text>
+        <text class="detail-value">{{ latestRequest.createdAtText }}</text>
+      </view>
+      <view wx:if="{{ latestRequest.status !== 'pending' }}" class="detail-row">
+        <text class="detail-label">审核时间</text>
+        <text class="detail-value">{{ latestRequest.reviewedAtText }}</text>
+      </view>
+      <view wx:if="{{ latestRequest.status === 'rejected' && latestRequest.reject_reason }}" class="detail-row">
+        <text class="detail-label">拒绝原因</text>
+        <text class="detail-value reject-reason">{{ latestRequest.reject_reason }}</text>
+      </view>
+      <view class="detail-row">
+        <text class="detail-label">申请理由</text>
+        <text class="detail-value">{{ latestRequest.reason || '未填写' }}</text>
+      </view>
+    </view>
+
+    <!-- 被拒绝后可以重新申请 -->
+    <view wx:if="{{ latestRequest.status === 'rejected' }}" class="reapply-hint">
+      <text>您可以重新提交申请</text>
+    </view>
+  </view>
+
+  <!-- 申请表单 -->
+  <view wx:if="{{ !latestRequest || latestRequest.status === 'rejected' }}" class="apply-form">
+    <view class="form-header">
+      <text class="form-title">申请成为赛事管理员</text>
+      <text class="form-desc">成为管理员后，您可以创建赛事、编辑榜单记录</text>
+    </view>
+
+    <view class="form-section">
+      <view class="form-item">
+        <text class="form-label">您的昵称</text>
+        <input 
+          class="form-input" 
+          value="{{ nickname }}" 
+          bindinput="onNicknameInput"
+          placeholder="请输入昵称（方便管理员识别）"
+          maxlength="20"
+        />
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">申请理由</text>
+        <textarea 
+          class="form-textarea" 
+          value="{{ reason }}" 
+          bindinput="onReasonInput"
+          placeholder="请简要说明申请理由，如：我是XX钓鱼俱乐部的组织者..."
+          maxlength="200"
+        />
+        <text class="char-count">{{ reason.length }}/200</text>
+      </view>
+    </view>
+
+    <button 
+      class="submit-btn {{ canSubmit ? '' : 'disabled' }}" 
+      bindtap="submitApply"
+      disabled="{{ !canSubmit || submitting }}"
+    >
+      {{ submitting ? '提交中...' : '提交申请' }}
+    </button>
+
+    <view class="tips">
+      <text class="tips-title">📌 提示</text>
+      <text class="tips-item">• 申请提交后，请耐心等待管理员审核</text>
+      <text class="tips-item">• 审核结果会在此页面显示</text>
+      <text class="tips-item">• 如有问题可联系管理员</text>
+    </view>
+  </view>
+
+  <!-- 已通过状态 -->
+  <view wx:if="{{ latestRequest && latestRequest.status === 'approved' }}" class="success-actions">
+    <text class="success-text">🎉 恭喜您已成为赛事管理员</text>
+    <button class="action-btn" bindtap="goBack">返回</button>
+  </view>
+
+</view>

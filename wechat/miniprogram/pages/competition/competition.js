@@ -1,7 +1,7 @@
 // pages/competition/competition.js — 比赛列表
-const app = getApp();
+var app = getApp();
 
-const STATUS_MAP = {
+var STATUS_MAP = {
   upcoming: { label: '即将开始', color: '#4a90d9' },
   ongoing:  { label: '进行中',   color: '#1a7f5a' },
   finished: { label: '已结束',   color: '#999999' },
@@ -9,8 +9,8 @@ const STATUS_MAP = {
 
 Page({
   data: {
-    competitions: [],   // 原始数据
-    filtered: [],       // 筛选后展示
+    competitions: [],
+    filtered: [],
     loading: true,
     isAdmin: false,
     filterStatus: 'all',
@@ -22,82 +22,125 @@ Page({
     ],
   },
 
-  onLoad() {
-    this.setData({ isAdmin: app.globalData.isAdmin || false });
+  onLoad: function() {
     this.loadCompetitions();
+    this.checkPermission();
   },
 
-  onShow() {
+  onShow: function() {
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
       this.getTabBar().init();
     }
-    // isAdmin 依赖异步 openid，轮询等待
-    const checkAdmin = () => {
-      if (app.globalData.openid) {
-        this.setData({ isAdmin: app.globalData.isAdmin || false });
-      } else {
-        setTimeout(checkAdmin, 500);
-      }
-    };
-    checkAdmin();
+    this.checkPermission();
     this.loadCompetitions();
   },
 
-  async loadCompetitions() {
-    this.setData({ loading: true });
-    try {
-      const db = app.globalData.db;
-      const res = await db.collection('competitions')
-        .orderBy('date', 'desc')
-        .limit(50)
-        .get();
-
-      const competitions = res.data.map(c => ({
-        ...c,
-        statusLabel: STATUS_MAP[c.status]?.label || c.status,
-        statusColor: STATUS_MAP[c.status]?.color || '#999',
-        entryCount: (c.entries || []).length,
-      }));
-
-      this.setData({ competitions });
-      this._applyFilter();
-    } catch (err) {
-      // 集合尚未创建时静默处理，只展示空状态
-      if (err.errCode === -502005 || (err.message || '').includes('not exist')) {
-        console.warn('competitions 集合尚未创建，请在云开发控制台新建');
-      } else {
-        console.error('加载比赛列表失败', err);
-        wx.showToast({ title: '加载失败', icon: 'error' });
+  checkPermission: function() {
+    var that = this;
+    wx.cloud.callFunction({ name: 'checkPermission' }).then(function(res) {
+      if (res.result) {
+        var permissions = res.result.permissions || {};
+        var isAdmin = res.result.isAdmin;
+        that.setData({ 
+          isAdmin: isAdmin || permissions.canCreateCompetition || false
+        });
+        app.globalData.isAdmin = isAdmin;
+        app.globalData.permissions = res.result.permissions;
       }
-    } finally {
-      this.setData({ loading: false });
+    }).catch(function(err) {
+      console.error('checkPermission error:', err);
+    });
+  },
+
+  loadCompetitions: function() {
+    var that = this;
+    this.setData({ loading: true });
+    
+    var db = app.globalData.db;
+    db.collection('competitions')
+      .orderBy('date', 'desc')
+      .limit(50)
+      .get()
+      .then(function(res) {
+        var competitions = res.data.map(function(c) {
+          var statusInfo = STATUS_MAP[c.status] || {};
+          return {
+            _id: c._id,
+            name: c.name,
+            date: c.date,
+            location: c.location,
+            description: c.description,
+            status: c.status,
+            entries: c.entries,
+            statusLabel: statusInfo.label || c.status,
+            statusColor: statusInfo.color || '#999',
+            entryCount: (c.entries || []).length,
+          };
+        });
+
+        that.setData({ competitions: competitions });
+        that._applyFilter();
+        that.setData({ loading: false });
+      })
+      .catch(function(err) {
+        if (err.errCode === -502005 || (err.message || '').indexOf('not exist') >= 0) {
+          console.warn('competitions 集合尚未创建，请在云开发控制台新建');
+        } else {
+          console.error('加载比赛列表失败', err);
+          wx.showToast({ title: '加载失败', icon: 'error' });
+        }
+        that.setData({ loading: false });
+      });
+  },
+
+  _applyFilter: function() {
+    var competitions = this.data.competitions;
+    var filterStatus = this.data.filterStatus;
+    var filtered;
+    
+    if (filterStatus === 'all') {
+      filtered = competitions;
+    } else {
+      filtered = competitions.filter(function(c) {
+        return c.status === filterStatus;
+      });
     }
+    this.setData({ filtered: filtered });
   },
 
-  _applyFilter() {
-    const { competitions, filterStatus } = this.data;
-    const filtered = filterStatus === 'all'
-      ? competitions
-      : competitions.filter(c => c.status === filterStatus);
-    this.setData({ filtered });
-  },
-
-  onFilterTap(e) {
-    const status = e.currentTarget.dataset.status;
+  onFilterTap: function(e) {
+    var status = e.currentTarget.dataset.status;
     this.setData({ filterStatus: status });
     this._applyFilter();
   },
 
-  onCompetitionTap(e) {
-    const id = e.currentTarget.dataset.id;
-    wx.navigateTo({ url: `/pages/competition/competition-detail?id=${id}` });
+  onCompetitionTap: function(e) {
+    var id = e.currentTarget.dataset.id;
+    wx.navigateTo({ url: '/pages/competition/competition-detail?id=' + id });
   },
 
-  addCompetition() {
+  addCompetition: function() {
     wx.navigateTo({ url: '/pages/admin/competition-edit' });
   },
 
-  onPullDownRefresh() {
-    this.loadCompetitions().then(() => wx.stopPullDownRefresh());
+  onPullDownRefresh: function() {
+    var that = this;
+    this.loadCompetitions();
+    setTimeout(function() {
+      wx.stopPullDownRefresh();
+    }, 1000);
+  },
+
+  onShareAppMessage: function() {
+    return {
+      title: '钓鱼赛事榜单 - 快来看看谁是钓鱼王',
+      path: '/pages/competition/competition',
+    };
+  },
+
+  onShareTimeline: function() {
+    return {
+      title: '钓鱼赛事榜单 - 快来看看谁是钓鱼王',
+    };
   },
 });

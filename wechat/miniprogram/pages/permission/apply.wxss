@@ -1,0 +1,238 @@
+/* pages/permission/apply.wxss — 申请管理员权限 */
+
+.page-container {
+  min-height: 100vh;
+  background: #f4f6f4;
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+/* ===== 申请状态卡片 ===== */
+.status-card {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.05);
+}
+
+.status-card.pending {
+  border-left: 8rpx solid #ff9800;
+}
+
+.status-card.approved {
+  border-left: 8rpx solid #4caf50;
+}
+
+.status-card.rejected {
+  border-left: 8rpx solid #f44336;
+}
+
+.status-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.status-icon {
+  font-size: 48rpx;
+  margin-right: 16rpx;
+}
+
+.status-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.status-detail {
+  background: #f8f9fa;
+  border-radius: 12rpx;
+  padding: 20rpx;
+}
+
+.detail-row {
+  display: flex;
+  padding: 12rpx 0;
+  border-bottom: 1rpx solid #eee;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  width: 140rpx;
+  font-size: 26rpx;
+  color: #999;
+  flex-shrink: 0;
+}
+
+.detail-value {
+  flex: 1;
+  font-size: 26rpx;
+  color: #333;
+}
+
+.detail-value.reject-reason {
+  color: #f44336;
+}
+
+.reapply-hint {
+  margin-top: 20rpx;
+  text-align: center;
+}
+
+.reapply-hint text {
+  font-size: 26rpx;
+  color: #666;
+}
+
+/* ===== 申请表单 ===== */
+.apply-form {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 32rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.05);
+}
+
+.form-header {
+  margin-bottom: 32rpx;
+  text-align: center;
+}
+
+.form-title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12rpx;
+}
+
+.form-desc {
+  display: block;
+  font-size: 26rpx;
+  color: #999;
+}
+
+.form-section {
+  margin-bottom: 32rpx;
+}
+
+.form-item {
+  margin-bottom: 24rpx;
+  position: relative;
+}
+
+.form-label {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 12rpx;
+}
+
+.form-input {
+  width: 100%;
+  height: 88rpx;
+  padding: 0 24rpx;
+  background: #f8f9fa;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  color: #333;
+  box-sizing: border-box;
+}
+
+.form-textarea {
+  width: 100%;
+  height: 200rpx;
+  padding: 20rpx 24rpx;
+  background: #f8f9fa;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  color: #333;
+  box-sizing: border-box;
+}
+
+.char-count {
+  position: absolute;
+  right: 16rpx;
+  bottom: 16rpx;
+  font-size: 22rpx;
+  color: #ccc;
+}
+
+.submit-btn {
+  width: 100%;
+  height: 88rpx;
+  background: linear-gradient(135deg, #1a7f5a 0%, #0d5c42 100%);
+  border-radius: 44rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+}
+
+.submit-btn::after {
+  display: none;
+}
+
+.submit-btn.disabled {
+  background: #ccc;
+}
+
+/* ===== 提示 ===== */
+.tips {
+  margin-top: 32rpx;
+  padding: 24rpx;
+  background: #f0f7f4;
+  border-radius: 12rpx;
+}
+
+.tips-title {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 500;
+  color: #1a7f5a;
+  margin-bottom: 12rpx;
+}
+
+.tips-item {
+  display: block;
+  font-size: 24rpx;
+  color: #666;
+  line-height: 1.8;
+}
+
+/* ===== 成功状态 ===== */
+.success-actions {
+  text-align: center;
+  padding: 40rpx 0;
+}
+
+.success-text {
+  display: block;
+  font-size: 32rpx;
+  color: #4caf50;
+  margin-bottom: 32rpx;
+}
+
+.action-btn {
+  width: 300rpx;
+  height: 80rpx;
+  background: #1a7f5a;
+  border-radius: 40rpx;
+  font-size: 30rpx;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+}
+
+.action-btn::after {
+  display: none;
+}

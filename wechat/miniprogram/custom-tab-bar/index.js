@@ -1,4 +1,4 @@
-// custom-tab-bar/index.js
+// custom-tab-bar/index.js (ES5 兼容版)
 Component({
   data: {
     selected: 0,
@@ -19,19 +19,27 @@ Component({
   },
 
   methods: {
-    onTap(e) {
-      const { index, path } = e.currentTarget.dataset;
+    onTap: function(e) {
+      var index = e.currentTarget.dataset.index;
+      var path = e.currentTarget.dataset.path;
       if (index === this.data.selected) return;
       this.setData({ selected: index });
       wx.switchTab({ url: '/' + path });
     },
 
     // 供各 tabBar 页面调用，同步高亮状态
-    init() {
-      const pages = getCurrentPages();
-      const currentPage = pages[pages.length - 1];
-      const route = currentPage ? currentPage.route : '';
-      const index = this.data.list.findIndex(item => item.pagePath === route);
+    init: function() {
+      var pages = getCurrentPages();
+      var currentPage = pages[pages.length - 1];
+      var route = currentPage ? currentPage.route : '';
+      var list = this.data.list;
+      var index = -1;
+      for (var i = 0; i < list.length; i++) {
+        if (list[i].pagePath === route) {
+          index = i;
+          break;
+        }
+      }
       if (index !== -1) {
         this.setData({ selected: index });
       }

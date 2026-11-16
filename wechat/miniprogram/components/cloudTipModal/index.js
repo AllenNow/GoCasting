@@ -8,8 +8,8 @@ Component({
   },
   properties: {
     showTipProps: Boolean,
-    title:String,
-    content:String
+    title: String,
+    content: String
   },
   observers: {
     showTipProps: function(showTipProps) {
@@ -19,7 +19,7 @@ Component({
     }
   },
   methods: {
-    onClose(){
+    onClose: function() {
       this.setData({
         showTip: !this.data.showTip
       });

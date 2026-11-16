@@ -22,10 +22,18 @@
       </view>
       <text wx:if="{{ competition.description }}" class="comp-desc">{{ competition.description }}</text>
 
-      <!-- 管理员操作 -->
-      <view wx:if="{{ isAdmin }}" class="admin-actions">
-        <view class="btn-outline admin-btn" bindtap="editCompetition">✏️ 编辑榜单</view>
-        <view class="btn-danger-outline admin-btn" bindtap="deleteCompetition">🗑️ 删除</view>
+      <!-- 操作按钮 -->
+      <view class="action-row">
+        <!-- 分享按钮（所有用户可见）-->
+        <button class="btn-share" open-type="share">
+          <text>📤 分享榜单</text>
+        </button>
+        <!-- 管理员操作 -->
+        <view wx:if="{{ canEdit }}" class="admin-actions">
+          <view class="btn-outline admin-btn" bindtap="editCompetition">✏️ 编辑</view>
+          <view wx:if="{{ canAssign }}" class="btn-outline admin-btn" bindtap="manageAdmins">👥 权限</view>
+          <view wx:if="{{ canDelete }}" class="btn-danger-outline admin-btn" bindtap="deleteCompetition">🗑️ 删除</view>
+        </view>
       </view>
     </view>
 
@@ -33,7 +41,7 @@
     <view wx:if="{{ competition.entries.length === 0 }}" class="empty-entries">
       <text class="empty-icon">🎣</text>
       <text class="empty-text">暂无上榜记录</text>
-      <view wx:if="{{ isAdmin }}" class="btn-primary add-entry-btn-center" bindtap="openAddEntry">
+      <view wx:if="{{ canEdit }}" class="btn-primary add-entry-btn-center" bindtap="openAddEntry">
         添加第一条记录
       </view>
     </view>
@@ -79,7 +87,7 @@
           <text class="section-title">📋 完整榜单</text>
           <view class="header-btns">
             <view class="btn-sm-outline" bindtap="exportImage">📤 导出图片</view>
-            <view wx:if="{{ isAdmin }}" class="btn-sm-green" bindtap="openAddEntry">＋ 添加记录</view>
+            <view wx:if="{{ canEdit }}" class="btn-sm-green" bindtap="openAddEntry">＋ 添加记录</view>
           </view>
         </view>
 
@@ -89,7 +97,7 @@
             wx:for="{{ competition.entries }}"
             wx:key="id"
             class="entry-row {{ item.isTop3 ? 'entry-row-top3' : '' }}"
-            bindtap="{{ isAdmin ? 'openEditEntry' : '' }}"
+            bindtap="{{ canEdit ? 'openEditEntry' : '' }}"
             data-id="{{ item.id }}"
           >
             <text class="entry-medal">{{ item.medal }}</text>
@@ -107,7 +115,7 @@
               <text wx:if="{{ item.total_weight_g }}" class="entry-sub-stat">{{ item.weightDisplay }}</text>
               <text wx:else class="entry-sub-stat entry-sub-pending">重量待定</text>
               <!-- 管理员删除按钮 -->
-              <view wx:if="{{ isAdmin }}" class="entry-admin-btns" catchtap="stopPropagation">
+              <view wx:if="{{ canEdit }}" class="entry-admin-btns" catchtap="stopPropagation">
                 <view class="entry-btn-del" catchtap="deleteEntry" data-id="{{ item.id }}">🗑️</view>
               </view>
             </view>

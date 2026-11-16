@@ -1,0 +1,126 @@
+<!-- pages/permission/manage.wxml — 权限管理（超管专用）-->
+<view class="page-container">
+  <!-- Tab 切换 -->
+  <view class="tab-bar">
+    <view 
+      class="tab-item {{ activeTab === 'pending' ? 'active' : '' }}"
+      bindtap="switchTab"
+      data-tab="pending"
+    >
+      <text>待审核</text>
+      <view wx:if="{{ pendingRequests.length > 0 }}" class="tab-badge">{{ pendingRequests.length }}</view>
+    </view>
+    <view 
+      class="tab-item {{ activeTab === 'admins' ? 'active' : '' }}"
+      bindtap="switchTab"
+      data-tab="admins"
+    >
+      <text>管理员列表</text>
+    </view>
+  </view>
+
+  <!-- 待审核列表 -->
+  <view wx:if="{{ activeTab === 'pending' }}" class="content">
+    <view wx:if="{{ pendingRequests.length === 0 }}" class="empty">
+      <text class="empty-icon">📭</text>
+      <text class="empty-text">暂无待审核申请</text>
+    </view>
+
+    <view wx:for="{{ pendingRequests }}" wx:key="_id" class="request-card">
+      <view class="request-header">
+        <image wx:if="{{ item.avatar }}" class="request-avatar" src="{{ item.avatar }}" mode="aspectFill" />
+        <view wx:else class="request-avatar-placeholder">👤</view>
+        <view class="request-info">
+          <text class="request-name">{{ item.nickname }}</text>
+          <text class="request-time">{{ item.createdAtText }}</text>
+        </view>
+      </view>
+      
+      <view wx:if="{{ item.reason }}" class="request-reason">
+        <text class="reason-label">申请理由：</text>
+        <text class="reason-text">{{ item.reason }}</text>
+      </view>
+
+      <view class="request-actions">
+        <button class="action-btn reject" data-id="{{ item._id }}" bindtap="showRejectDialog">
+          拒绝
+        </button>
+        <button class="action-btn approve" data-id="{{ item._id }}" bindtap="approveRequest">
+          通过
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 管理员列表 -->
+  <view wx:if="{{ activeTab === 'admins' }}" class="content">
+    <!-- 超级管理员 -->
+    <view class="section">
+      <view class="section-header">
+        <text class="section-title">👑 超级管理员</text>
+      </view>
+      <view wx:for="{{ superAdmins }}" wx:key="openid" class="admin-card">
+        <view class="admin-info">
+          <text class="admin-name">{{ item.note }}</text>
+          <text class="admin-role">不可移除</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 赛事管理员 -->
+    <view class="section">
+      <view class="section-header">
+        <text class="section-title">🔑 赛事管理员</text>
+        <text class="section-count">{{ competitionAdmins.length }}人</text>
+      </view>
+      
+      <view wx:if="{{ competitionAdmins.length === 0 }}" class="empty-inline">
+        <text>暂无赛事管理员</text>
+      </view>
+
+      <view 
+        wx:for="{{ competitionAdmins }}" 
+        wx:key="openid" 
+        class="admin-card"
+        bindtap="editNote"
+        data-openid="{{ item.openid }}"
+        data-note="{{ item.note }}"
+      >
+        <view class="admin-info">
+          <text class="admin-name">{{ item.note }}</text>
+          <text class="admin-hint">点击修改备注</text>
+        </view>
+        <view 
+          class="admin-remove" 
+          catchtap="removeAdmin"
+          data-openid="{{ item.openid }}"
+          data-note="{{ item.note }}"
+        >
+          移除
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 拒绝弹窗 -->
+  <view wx:if="{{ showRejectModal }}" class="modal-mask" bindtap="closeRejectModal">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-header">
+        <text class="modal-title">拒绝申请</text>
+      </view>
+      <view class="modal-body">
+        <textarea 
+          class="reject-input"
+          value="{{ rejectReason }}"
+          bindinput="onRejectReasonInput"
+          placeholder="请输入拒绝原因（可选）"
+          maxlength="100"
+        />
+      </view>
+      <view class="modal-footer">
+        <button class="modal-btn cancel" bindtap="closeRejectModal">取消</button>
+        <button class="modal-btn confirm" bindtap="confirmReject">确认拒绝</button>
+      </view>
+    </view>
+  </view>
+</view>

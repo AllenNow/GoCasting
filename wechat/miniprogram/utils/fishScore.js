@@ -1,16 +1,16 @@
-// utils/fishScore.js — 逐小时鱼口评分算法
+// utils/fishScore.js — 逐小时鱼口评分算法 (ES5 兼容版)
 // 综合：潮汐节律 + 气压 + 水温 + 浪高 + 天气
 // 返回每小时 0-10 分，并提取最佳垂钓时间窗口
 
 // ── 评分权重常数 ─────────────────────────────────────────────
-const W = {
+var W = {
   TIDE:     4,   // 潮汐节律（最重要）
   PRESSURE: 2,   // 气压
   SST:      2,   // 水温
   WAVE:     2,   // 浪高
   WEATHER:  1,   // 天气代码（次要，天气已被气压反映）
 };
-const MAX_RAW = W.TIDE + W.PRESSURE + W.SST + W.WAVE + W.WEATHER; // = 11
+var MAX_RAW = W.TIDE + W.PRESSURE + W.SST + W.WAVE + W.WEATHER; // = 11
 
 // ── 单小时评分 ───────────────────────────────────────────────
 /**
@@ -26,73 +26,65 @@ const MAX_RAW = W.TIDE + W.PRESSURE + W.SST + W.WAVE + W.WEATHER; // = 11
  * @returns {number} 0-10 的评分
  */
 function scoreHour(h) {
-  let raw = 0;
+  var raw = 0;
 
   // ── 1. 潮汐得分（0~4）──────────────────────────────────────
-  // 涨潮期前后：鱼随水流进食，活性最高
-  // 退潮中段：水流带饵料，次优
-  // 高低平潮：水体静止，鱼口停滞
-  const tideScore = (() => {
-    const state = h.tideState || 'unknown';
+  var tideScore = (function() {
+    var state = h.tideState || 'unknown';
     // 涨退速率（m/h），用于判断是否处于高速涨退期
-    const rate = h.nextTideLevel != null && h.tideLevel != null
+    var rate = (h.nextTideLevel != null && h.tideLevel != null)
       ? h.nextTideLevel - h.tideLevel : 0;
-    const absRate = Math.abs(rate);
+    var absRate = Math.abs(rate);
 
     if (state === 'rising') {
-      // 涨潮：速率越快鱼口越活跃
       if (absRate > 0.3) return 4.0;
       if (absRate > 0.15) return 3.5;
       return 3.0;
     }
     if (state === 'falling') {
-      // 退潮：活跃度略低于涨潮
       if (absRate > 0.3) return 3.5;
       if (absRate > 0.15) return 3.0;
       return 2.5;
     }
-    if (state === 'high') return 0.5;  // 高平潮
-    if (state === 'low')  return 0.5;  // 低平潮
-    return 1.0;  // 未知
+    if (state === 'high') return 0.5;
+    if (state === 'low')  return 0.5;
+    return 1.0;
   })();
   raw += Math.min(tideScore, W.TIDE);
 
   // ── 2. 气压得分（0~2）──────────────────────────────────────
-  // 高气压：气体溶解度高，水中含氧量高，鱼活跃
-  // 气压下降（暴风前）：鱼躲底，口差
-  // 气压上升（雨后晴）：极佳时机
-  const pressureScore = (() => {
-    const p = h.pressure;
+  var pressureScore = (function() {
+    var p = h.pressure;
     if (p == null) return 1;
-    if (p >= 1020)      return 2.0;   // 高压，极佳
-    if (p >= 1013)      return 1.5;   // 标准偏高
-    if (p >= 1005)      return 1.0;   // 正常
-    if (p >= 998)       return 0.3;   // 偏低，较差
-    return -0.5;                       // <998，台风/暴雨前，大扣分
+    if (p >= 1020)      return 2.0;
+    if (p >= 1013)      return 1.5;
+    if (p >= 1005)      return 1.0;
+    if (p >= 998)       return 0.3;
+    return -0.5;
   })();
   raw += Math.max(-W.PRESSURE, Math.min(pressureScore, W.PRESSURE));
 
   // ── 3. 水温得分（0~2）──────────────────────────────────────
-  const sstScore = (() => {
-    const t = h.sst;
+  var sstScore = (function() {
+    var t = h.sst;
     if (t == null) return 1;
-    if (t >= 20 && t <= 26) return 2.0;   // 黄金区间
-    if (t >= 18 && t <= 28) return 1.5;   // 次优
-    if (t >= 15 && t <= 30) return 1.0;   // 可接受
-    if (t >= 10 && t <= 32) return 0.5;   // 边缘
-    return 0;                              // 极端温度
+    if (t >= 20 && t <= 26) return 2.0;
+    if (t >= 18 && t <= 28) return 1.5;
+    if (t >= 15 && t <= 30) return 1.0;
+    if (t >= 10 && t <= 32) return 0.5;
+    return 0;
   })();
   raw += sstScore;
 
   // ── 4. 浪高得分（0~2）──────────────────────────────────────
-  const waveScore = (() => {
-    const w = h.waveHeight;
+  var waveScore = (function() {
+    var w = h.waveHeight;
     if (w == null) return 1;
-    if (w >= 0.3 && w <= 0.8)  return 2.0;   // 最佳：轻浪
-    if (w < 0.3)               return 1.5;   // 无浪，略差（缺少水流）
-    if (w <= 1.2)              return 1.0;   // 中等
-    if (w <= 1.8)              return 0.3;   // 偏大
-    return 0;                                // 危险
+    if (w >= 0.3 && w <= 0.8)  return 2.0;
+    if (w < 0.3)               return 1.5;
+    if (w <= 1.2)              return 1.0;
+    if (w <= 1.8)              return 0.3;
+    return 0;
   })();
   raw += waveScore;
 
@@ -100,8 +92,7 @@ function scoreHour(h) {
   raw += Math.max(-W.WEATHER * 3, Math.min(h.wmoScore || 0, W.WEATHER));
 
   // ── 归一化到 0-10 ───────────────────────────────────────────
-  // raw 理论范围约 -2 ~ 11，映射到 0-10
-  const normalized = ((raw + 2) / (MAX_RAW + 2)) * 10;
+  var normalized = ((raw + 2) / (MAX_RAW + 2)) * 10;
   return Math.max(0, Math.min(10, parseFloat(normalized.toFixed(1))));
 }
 
@@ -126,79 +117,95 @@ function calcDayScores(marineHourly, atmosHourly) {
     return { scores: [], heatmap: [], bestWindows: [], dayGrade: null };
   }
 
-  const scores = [];
+  var scores = [];
 
-  marineHourly.forEach((mh, i) => {
-    const ah = atmosHourly?.[i] || {};
-
-    // 从相邻小时推算涨退速率
-    const nextMh = marineHourly[i + 1];
+  for (var i = 0; i < marineHourly.length; i++) {
+    var mh = marineHourly[i];
+    var ah = (atmosHourly && atmosHourly[i]) ? atmosHourly[i] : {};
+    var nextMh = marineHourly[i + 1];
 
     // 简单推算 tideState（用水位差判断）
-    let tideState = 'unknown';
-    if (mh.tideLevel != null && nextMh?.tideLevel != null) {
-      const diff = nextMh.tideLevel - mh.tideLevel;
+    var tideState = 'unknown';
+    if (mh.tideLevel != null && nextMh && nextMh.tideLevel != null) {
+      var diff = nextMh.tideLevel - mh.tideLevel;
       if (diff > 0.08)       tideState = 'rising';
       else if (diff < -0.08) tideState = 'falling';
       else                   tideState = mh.tideLevel > 0 ? 'high' : 'low';
     }
 
-    const score = scoreHour({
-      tideState,
+    var score = scoreHour({
+      tideState: tideState,
       tideLevel:     mh.tideLevel,
-      nextTideLevel: nextMh?.tideLevel ?? null,
-      pressure:      ah.pressure     ?? null,
-      sst:           mh.sst          ?? null,
-      waveHeight:    mh.waveHeight   ?? null,
-      wmoScore:      ah.wmoScore     ?? 0,
+      nextTideLevel: nextMh ? nextMh.tideLevel : null,
+      pressure:      ah.pressure != null ? ah.pressure : null,
+      sst:           mh.sst != null ? mh.sst : null,
+      waveHeight:    mh.waveHeight != null ? mh.waveHeight : null,
+      wmoScore:      ah.wmoScore != null ? ah.wmoScore : 0,
     });
 
-    const grade = scoreToGrade(score);
+    var grade = scoreToGrade(score);
     scores.push({
       hour:      i,
-      timeStr:   mh.timeStr || `${String(i).padStart(2,'0')}:00`,
-      score,
+      timeStr:   mh.timeStr || (String(i).padStart(2,'0') + ':00'),
+      score:     score,
       grade:     grade.grade,
       label:     grade.label,
       color:     grade.color,
       emoji:     grade.emoji,
-      pressure:  ah.pressure ?? null,
-      wmoLabel:  ah.wmoLabel ?? '',
-      tideState,
+      pressure:  ah.pressure != null ? ah.pressure : null,
+      wmoLabel:  ah.wmoLabel || '',
+      tideState: tideState,
     });
-  });
+  }
 
   // ── 热力图（每小时宽度条，用于 WXML 渲染）─────────────────
-  const heatmap = scores.map(s => ({
-    ...s,
-    // 高度百分比（5~100%）
-    heightPct: Math.max(5, Math.round(s.score * 10)),
-  }));
+  var heatmap = [];
+  for (var j = 0; j < scores.length; j++) {
+    var s = scores[j];
+    heatmap.push({
+      hour: s.hour,
+      timeStr: s.timeStr,
+      score: s.score,
+      grade: s.grade,
+      label: s.label,
+      color: s.color,
+      emoji: s.emoji,
+      pressure: s.pressure,
+      wmoLabel: s.wmoLabel,
+      tideState: s.tideState,
+      heightPct: Math.max(5, Math.round(s.score * 10)),
+    });
+  }
 
   // ── 提取最佳垂钓窗口（连续 score ≥ 6.5 的时段）────────────
-  const bestWindows = [];
-  let windowStart = null;
-  scores.forEach((s, i) => {
-    if (s.score >= 6.5) {
-      if (windowStart === null) windowStart = i;
-      if (i === scores.length - 1 || scores[i + 1].score < 6.5) {
+  var bestWindows = [];
+  var windowStart = null;
+  
+  for (var k = 0; k < scores.length; k++) {
+    var sc = scores[k];
+    if (sc.score >= 6.5) {
+      if (windowStart === null) windowStart = k;
+      if (k === scores.length - 1 || scores[k + 1].score < 6.5) {
         // 时段结束
-        const duration = i - windowStart + 1;
-        if (duration >= 1) {  // 至少1小时
-          const avgScore = scores.slice(windowStart, i + 1)
-            .reduce((sum, x) => sum + x.score, 0) / duration;
+        var duration = k - windowStart + 1;
+        if (duration >= 1) {
+          var sum = 0;
+          for (var m = windowStart; m <= k; m++) {
+            sum += scores[m].score;
+          }
+          var avgScore = sum / duration;
+          var windowScores = scores.slice(windowStart, k + 1);
           bestWindows.push({
             startHour:  windowStart,
-            endHour:    i,
+            endHour:    k,
             startTime:  scores[windowStart].timeStr,
-            endTime:    `${String(i + 1).padStart(2,'0')}:00`,
-            duration,
+            endTime:    String(k + 1).padStart(2,'0') + ':00',
+            duration:   duration,
             avgScore:   parseFloat(avgScore.toFixed(1)),
             grade:      scoreToGrade(avgScore).grade,
             label:      scoreToGrade(avgScore).label,
             emoji:      scoreToGrade(avgScore).emoji,
-            // 概括原因
-            reason:     _buildReason(scores.slice(windowStart, i + 1)),
+            reason:     _buildReason(windowScores),
           });
         }
         windowStart = null;
@@ -206,44 +213,66 @@ function calcDayScores(marineHourly, atmosHourly) {
     } else {
       windowStart = null;
     }
-  });
+  }
 
   // 按平均分降序，取前3
-  bestWindows.sort((a, b) => b.avgScore - a.avgScore);
-  const topWindows = bestWindows.slice(0, 3);
+  bestWindows.sort(function(a, b) { return b.avgScore - a.avgScore; });
+  var topWindows = bestWindows.slice(0, 3);
 
   // 全天综合评分（日平均）
-  const dayAvg = scores.reduce((sum, s) => sum + s.score, 0) / scores.length;
-  const dayGrade = scoreToGrade(dayAvg);
+  var daySum = 0;
+  for (var n = 0; n < scores.length; n++) {
+    daySum += scores[n].score;
+  }
+  var dayAvg = daySum / scores.length;
+  var dayGradeObj = scoreToGrade(dayAvg);
 
   return {
-    scores,
-    heatmap,
+    scores: scores,
+    heatmap: heatmap,
     bestWindows: topWindows,
-    dayGrade: { ...dayGrade, avgScore: parseFloat(dayAvg.toFixed(1)) },
+    dayGrade: { 
+      grade: dayGradeObj.grade, 
+      label: dayGradeObj.label, 
+      color: dayGradeObj.color, 
+      emoji: dayGradeObj.emoji, 
+      avgScore: parseFloat(dayAvg.toFixed(1)) 
+    },
   };
 }
 
 // ── 构造推荐理由文字 ─────────────────────────────────────────
 function _buildReason(windowScores) {
-  const reasons = [];
-  const first = windowScores[0] || {};
+  var reasons = [];
+  var first = windowScores[0] || {};
 
   if (first.tideState === 'rising')  reasons.push('涨潮期');
   if (first.tideState === 'falling') reasons.push('退潮期');
 
-  const avgPressure = windowScores
-    .filter(s => s.pressure != null)
-    .reduce((sum, s, _, arr) => sum + s.pressure / arr.length, 0);
+  var pressureCount = 0;
+  var pressureSum = 0;
+  for (var i = 0; i < windowScores.length; i++) {
+    if (windowScores[i].pressure != null) {
+      pressureSum += windowScores[i].pressure;
+      pressureCount++;
+    }
+  }
+  var avgPressure = pressureCount > 0 ? pressureSum / pressureCount : 0;
   if (avgPressure >= 1013) reasons.push('气压高');
   else if (avgPressure < 1000 && avgPressure > 0) reasons.push('气压低');
 
-  const goodWeather = windowScores.filter(s => s.wmoLabel && !s.wmoLabel.includes('雨') && !s.wmoLabel.includes('雪'));
-  if (goodWeather.length > windowScores.length * 0.7) {
+  var goodWeatherCount = 0;
+  for (var j = 0; j < windowScores.length; j++) {
+    var wmo = windowScores[j].wmoLabel;
+    if (wmo && wmo.indexOf('雨') === -1 && wmo.indexOf('雪') === -1) {
+      goodWeatherCount++;
+    }
+  }
+  if (goodWeatherCount > windowScores.length * 0.7) {
     reasons.push(first.wmoLabel || '天气晴好');
   }
 
   return reasons.length ? reasons.join(' · ') : '综合条件较好';
 }
 
-module.exports = { scoreHour, scoreToGrade, calcDayScores };
+module.exports = { scoreHour: scoreHour, scoreToGrade: scoreToGrade, calcDayScores: calcDayScores };

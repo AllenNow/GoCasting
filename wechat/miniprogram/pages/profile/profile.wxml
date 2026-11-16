@@ -1,44 +1,59 @@
-<!-- pages/profile/profile.wxml — 个人中心（精简版）-->
+<!-- pages/profile/profile.wxml — 个人中心 -->
 <view class="page-container">
 
   <!-- 用户信息头部 -->
   <view class="profile-header">
-    <view wx:if="{{ userInfo && userInfo.nickName }}" class="user-info">
-      <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
-        <image class="avatar" src="{{ userInfo.avatarUrl }}" mode="aspectFill" />
-      </button>
-      <text class="username">{{ userInfo.nickName }}</text>
-      <text class="user-sub">钓鱼爱好者</text>
+    <!-- 角色标识 -->
+    <view wx:if="{{ role === 'super_admin' }}" class="role-badge super">
+      <text>👑 超级管理员</text>
+    </view>
+    <view wx:elif="{{ role === 'competition_admin' }}" class="role-badge">
+      <text>🔑 赛事管理员</text>
     </view>
 
-    <!-- 未设置态 -->
-    <view wx:else class="user-setup">
-      <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
-        <view wx:if="{{ userInfo && userInfo.avatarUrl }}" class="avatar-wrap">
-          <image class="avatar" src="{{ userInfo.avatarUrl }}" mode="aspectFill" />
-        </view>
-        <view wx:else class="avatar-placeholder">🎣</view>
-      </button>
-      <text class="setup-hint">点击头像选择</text>
+    <!-- 头像 -->
+    <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+      <image wx:if="{{ userInfo && userInfo.avatarUrl }}" class="avatar" src="{{ userInfo.avatarUrl }}" mode="aspectFill" />
+      <view wx:else class="avatar-placeholder">🎣</view>
+    </button>
+
+    <!-- 昵称区域 -->
+    <view class="user-name-area">
       <input
-        class="nickname-input"
+        class="nickname-input {{ userInfo && userInfo.nickName ? 'has-value' : '' }}"
         type="nickname"
+        value="{{ userInfo.nickName || '' }}"
         bindinput="onNicknameInput"
         bindblur="onNicknameBlur"
-        placeholder="输入昵称完成设置"
+        placeholder="钓鱼爱好者"
+        placeholder-class="nickname-placeholder"
       />
-    </view>
-
-    <!-- 管理员标识 -->
-    <view wx:if="{{ isAdmin }}" class="admin-badge">
-      <text>🔑 管理员</text>
+      <text class="edit-hint">点击修改昵称</text>
     </view>
   </view>
 
   <!-- 功能入口 -->
   <view class="menu-section">
     <view class="card">
-      <button class="menu-item share-btn" open-type="share">
+      <!-- 超级管理员：权限管理入口 -->
+      <view wx:if="{{ role === 'super_admin' }}" class="menu-item" bindtap="goPermissionManage">
+        <text class="menu-icon">⚙️</text>
+        <text class="menu-label">权限管理</text>
+        <view wx:if="{{ pendingCount > 0 }}" class="badge">{{ pendingCount }}</view>
+        <text class="menu-arrow">›</text>
+      </view>
+
+      <!-- 普通用户：申请成为管理员 -->
+      <view wx:if="{{ role === 'viewer' }}" class="menu-item" bindtap="goApplyPermission">
+        <text class="menu-icon">📝</text>
+        <text class="menu-label">申请成为管理员</text>
+        <text wx:if="{{ applicationStatus === 'pending' }}" class="status-tag pending">审核中</text>
+        <text wx:elif="{{ applicationStatus === 'rejected' }}" class="status-tag rejected">已拒绝</text>
+        <text class="menu-arrow">›</text>
+      </view>
+
+      <!-- 分享 -->
+      <button class="menu-item" open-type="share">
         <text class="menu-icon">📤</text>
         <text class="menu-label">分享给钓友</text>
         <text class="menu-arrow">›</text>
