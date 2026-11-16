@@ -119,7 +119,17 @@ exports.main = async (event) => {
         spot: entry.spot || '',
         fish_count: 1,
         note: entry.note || '',
-        photo_url: entry.photo_url || null,
+        photo_url: entry.catch_photo_url || entry.photo_url || null,
+        catch_photo_url: entry.catch_photo_url || null,
+        spot_photo1_url: entry.spot_photo1_url || null,
+        spot_photo2_url: entry.spot_photo2_url || null,
+        catch_date: entry.catch_date || null,
+        catch_time: entry.catch_time || null,
+        tide_direction: entry.tide_direction || null,
+        tide_score: entry.tide_score || null,
+        tide_type: entry.tide_type || null,
+        spot_lat: entry.spot_lat || null,
+        spot_lon: entry.spot_lon || null,
         created_by: OPENID,
         created_at: new Date(),
       });
@@ -162,7 +172,17 @@ exports.main = async (event) => {
         total_weight_g: entry.total_weight_g || null,
         spot: entry.spot || '',
         note: entry.note || '',
-        photo_url: entry.photo_url || null,
+        photo_url: entry.catch_photo_url || entry.photo_url || null,
+        catch_photo_url: entry.catch_photo_url || null,
+        spot_photo1_url: entry.spot_photo1_url || null,
+        spot_photo2_url: entry.spot_photo2_url || null,
+        catch_date: entry.catch_date || null,
+        catch_time: entry.catch_time || null,
+        tide_direction: entry.tide_direction || null,
+        tide_score: entry.tide_score || null,
+        tide_type: entry.tide_type || null,
+        spot_lat: entry.spot_lat || null,
+        spot_lon: entry.spot_lon || null,
         updated_by: OPENID,
         updated_at: new Date(),
       };
@@ -182,7 +202,7 @@ exports.main = async (event) => {
       return { success: true, message: '更新成功' };
     }
 
-    // ===== 删除榜单记录 =====
+    // ===== 删除榜单记录（软删除，标记 deleted）=====
     if (action === 'deleteEntry') {
       const perm = await getPermission(OPENID, competitionId);
       if (!perm.canEdit) {
@@ -191,14 +211,48 @@ exports.main = async (event) => {
 
       const res = await db.collection('competitions').doc(competitionId).get();
       let entries = res.data.entries || [];
-      
-      entries = entries.filter(e => e.id !== entryId);
+      const idx = entries.findIndex(e => e.id === entryId);
+      if (idx === -1) return { success: false, error: '记录不存在' };
+
+      // 软删除：标记 deleted，不真正移除
+      entries[idx] = {
+        ...entries[idx],
+        deleted: true,
+        deleted_at: new Date(),
+        deleted_by: OPENID,
+      };
 
       await db.collection('competitions').doc(competitionId).update({
         data: { entries, updated_at: db.serverDate() },
       });
 
-      return { success: true, message: '删除成功' };
+      return { success: true, message: '已删除' };
+    }
+
+    // ===== 恢复已删除的榜单记录 =====
+    if (action === 'restoreEntry') {
+      const perm = await getPermission(OPENID, competitionId);
+      if (!perm.canEdit) {
+        return { success: false, error: '无权限管理此赛事榜单' };
+      }
+
+      const res = await db.collection('competitions').doc(competitionId).get();
+      let entries = res.data.entries || [];
+      const idx = entries.findIndex(e => e.id === entryId);
+      if (idx === -1) return { success: false, error: '记录不存在' };
+
+      // 恢复：移除 deleted 标记
+      const restored = { ...entries[idx] };
+      delete restored.deleted;
+      delete restored.deleted_at;
+      delete restored.deleted_by;
+      entries[idx] = restored;
+
+      await db.collection('competitions').doc(competitionId).update({
+        data: { entries, updated_at: db.serverDate() },
+      });
+
+      return { success: true, message: '已恢复' };
     }
 
     // ===== 分配赛事管理权限 =====
@@ -287,6 +341,9 @@ exports.main = async (event) => {
         isSuperAdmin: perm.isSuperAdmin
       };
     }
+
+    // 注：用户上报/审核相关接口（submitEntry、getPendingEntries、reviewEntry、
+    // getMySubmissions、deleteSubmission）已迁移至独立的 submissionService 云函数。
 
     return { success: false, error: '未知操作' };
   } catch (err) {

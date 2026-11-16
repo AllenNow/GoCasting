@@ -9,7 +9,13 @@ exports.main = async (event, context) => {
 
   try {
     // 获取权限配置
-    const configRes = await db.collection('admin_config').limit(1).get();
+    let configRes;
+    try {
+      configRes = await db.collection('admin_config').limit(1).get();
+    } catch (e) {
+      // admin_config 集合不存在时使用默认值
+      configRes = { data: [] };
+    }
     
     let role = 'viewer';
     let permissions = {
@@ -49,24 +55,34 @@ exports.main = async (event, context) => {
     // 获取用户的申请状态
     let applicationStatus = null;
     if (role === 'viewer') {
-      const appRes = await db.collection('permission_requests')
-        .where({ openid: OPENID })
-        .orderBy('created_at', 'desc')
-        .limit(1)
-        .get();
-      
-      if (appRes.data.length > 0) {
-        applicationStatus = appRes.data[0].status;
+      try {
+        const appRes = await db.collection('permission_requests')
+          .where({ _openid: OPENID })
+          .orderBy('created_at', 'desc')
+          .limit(1)
+          .get();
+        
+        if (appRes.data.length > 0) {
+          applicationStatus = appRes.data[0].status;
+        }
+      } catch (e) {
+        // permission_requests 集合不存在时静默忽略
+        console.log('permission_requests collection not exists');
       }
     }
 
     // 获取待审核数量（仅超级管理员需要）
     let pendingCount = 0;
     if (role === 'super_admin') {
-      const countRes = await db.collection('permission_requests')
-        .where({ status: 'pending' })
-        .count();
-      pendingCount = countRes.total;
+      try {
+        const countRes = await db.collection('permission_requests')
+          .where({ status: 'pending' })
+          .count();
+        pendingCount = countRes.total;
+      } catch (e) {
+        // permission_requests 集合不存在时静默忽略
+        console.log('permission_requests collection not exists');
+      }
     }
 
     return {

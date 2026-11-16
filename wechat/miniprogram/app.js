@@ -1,8 +1,6 @@
-// app.js — GoCasting 小程序入口 (ES5 兼容版)
+// app.js — GoCasting 小程序入口
 App({
-  onLaunch: function() {
-    var that = this;
-    
+  onLaunch() {
     if (!wx.cloud) {
       console.error('请使用 2.2.3 或以上的基础库以使用云能力');
       return;
@@ -15,27 +13,27 @@ App({
     this.globalData.db = wx.cloud.database();
 
     // 从本地缓存恢复用户信息（免去每次重新授权）
-    var cached = wx.getStorageSync('userInfo');
+    const cached = wx.getStorageSync('userInfo');
     if (cached) this.globalData.userInfo = cached;
 
     // 通过 checkPermission 云函数获取 openid + 权限信息
     wx.cloud.callFunction({ name: 'checkPermission' })
-      .then(function(res) {
+      .then(res => {
         console.log('===== 当前用户 openid:', res.result.openid, '=====');
         console.log('===== 用户角色:', res.result.role, '=====');
         console.log('===== 权限:', res.result.permissions, '=====');
-        that.globalData.openid = res.result.openid;
-        that.globalData.role = res.result.role;
-        that.globalData.permissions = res.result.permissions;
-        that.globalData.isAdmin = res.result.isAdmin === true;
+        this.globalData.openid = res.result.openid;
+        this.globalData.role = res.result.role;
+        this.globalData.permissions = res.result.permissions;
+        this.globalData.isAdmin = res.result.isAdmin === true;
 
         // 检查用户是否被封禁（使用 openid 精确查询）
         if (res.result.openid) {
-          that.globalData.db.collection('users')
+          this.globalData.db.collection('users')
             .where({ _openid: res.result.openid })
             .limit(1)
             .get()
-            .then(function(r) {
+            .then(r => {
               if (r.data.length > 0 && r.data[0].banned) {
                 wx.showModal({
                   title: '账号已被封禁',
@@ -45,10 +43,10 @@ App({
                 });
               }
             })
-            .catch(function() {});
+            .catch(() => {});
         }
       })
-      .catch(function(err) { console.warn('checkPermission 失败', err); });
+      .catch(err => { console.warn('checkPermission 失败', err); });
   },
 
   globalData: {

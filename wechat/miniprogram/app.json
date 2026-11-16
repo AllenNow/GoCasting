@@ -31,6 +31,12 @@
     "navigationBarTitleText": "钓鱼赛事助手",
     "navigationBarTextStyle": "white"
   },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于钓点地图定位，选择钓鱼位置"
+    }
+  },
+  "requiredPrivateInfos": ["chooseLocation"],
   "sitemapLocation": "sitemap.json",
   "style": "v2",
   "lazyCodeLoading": "requiredComponents"

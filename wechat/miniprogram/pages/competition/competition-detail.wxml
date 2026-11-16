@@ -22,17 +22,39 @@
       </view>
       <text wx:if="{{ competition.description }}" class="comp-desc">{{ competition.description }}</text>
 
-      <!-- 操作按钮 -->
-      <view class="action-row">
-        <!-- 分享按钮（所有用户可见）-->
-        <button class="btn-share" open-type="share">
-          <text>📤 分享榜单</text>
+      <!-- 用户操作按钮 -->
+      <view class="user-actions">
+        <view class="action-btn-primary" bindtap="openSubmitEntry">
+          <text class="btn-icon">🎣</text>
+          <text class="btn-text">上报钓获</text>
+        </view>
+        <button class="action-btn-secondary" open-type="share">
+          <text class="btn-icon">📤</text>
+          <text class="btn-text">分享榜单</text>
         </button>
-        <!-- 管理员操作 -->
-        <view wx:if="{{ canEdit }}" class="admin-actions">
-          <view class="btn-outline admin-btn" bindtap="editCompetition">✏️ 编辑</view>
-          <view wx:if="{{ canAssign }}" class="btn-outline admin-btn" bindtap="manageAdmins">👥 权限</view>
-          <view wx:if="{{ canDelete }}" class="btn-danger-outline admin-btn" bindtap="deleteCompetition">🗑️ 删除</view>
+      </view>
+
+      <!-- 管理员操作按钮 -->
+      <view wx:if="{{ canEdit }}" class="admin-actions-bar">
+        <view class="admin-action-item" bindtap="openAddEntry">
+          <text class="admin-icon">➕</text>
+          <text class="admin-label">记录</text>
+        </view>
+        <view class="admin-action-item" bindtap="openReviewPanel">
+          <text class="admin-icon">🛡️</text>
+          <text class="admin-label">审核</text>
+        </view>
+        <view class="admin-action-item" bindtap="editCompetition">
+          <text class="admin-icon">✏️</text>
+          <text class="admin-label">编辑</text>
+        </view>
+        <view wx:if="{{ canAssign }}" class="admin-action-item" bindtap="manageAdmins">
+          <text class="admin-icon">👥</text>
+          <text class="admin-label">权限</text>
+        </view>
+        <view wx:if="{{ canDelete }}" class="admin-action-item admin-action-danger" bindtap="deleteCompetition">
+          <text class="admin-icon">🗑️</text>
+          <text class="admin-label">删除</text>
         </view>
       </view>
     </view>
@@ -41,8 +63,11 @@
     <view wx:if="{{ competition.entries.length === 0 }}" class="empty-entries">
       <text class="empty-icon">🎣</text>
       <text class="empty-text">暂无上榜记录</text>
-      <view wx:if="{{ canEdit }}" class="btn-primary add-entry-btn-center" bindtap="openAddEntry">
-        添加第一条记录
+      <view class="btn-primary add-entry-btn-center" bindtap="openSubmitEntry">
+        上报我的钓获
+      </view>
+      <view wx:if="{{ canEdit }}" class="btn-outline-empty" bindtap="openAddEntry">
+        管理员直接添加
       </view>
     </view>
 
@@ -86,8 +111,9 @@
         <view class="section-header-row">
           <text class="section-title">📋 完整榜单</text>
           <view class="header-btns">
-            <view class="btn-sm-outline" bindtap="exportImage">📤 导出图片</view>
-            <view wx:if="{{ canEdit }}" class="btn-sm-green" bindtap="openAddEntry">＋ 添加记录</view>
+            <view class="btn-sm-outline" bindtap="exportImage">📤 导出</view>
+            <view class="btn-sm-outline" bindtap="openMySubmissions">📝 我的上报</view>
+            <view wx:if="{{ canEdit }}" class="btn-sm-green" bindtap="openAddEntry">＋ 添加</view>
           </view>
         </view>
 
@@ -97,7 +123,7 @@
             wx:for="{{ competition.entries }}"
             wx:key="id"
             class="entry-row {{ item.isTop3 ? 'entry-row-top3' : '' }}"
-            bindtap="{{ canEdit ? 'openEditEntry' : '' }}"
+            bindtap="openEntryDetail"
             data-id="{{ item.id }}"
           >
             <text class="entry-medal">{{ item.medal }}</text>
@@ -106,6 +132,8 @@
               <view class="entry-meta">
                 <text wx:if="{{ item.best_species }}" class="entry-species">🐟 {{ item.best_species }}</text>
                 <text wx:if="{{ item.spot }}" class="entry-spot">📍 {{ item.spot }}</text>
+                <text wx:if="{{ item.catchTimeDisplay }}" class="entry-spot">🕐 {{ item.catchTimeDisplay }}</text>
+                <text wx:if="{{ item.tideDisplay }}" class="entry-spot">🌊 {{ item.tideDisplay }}</text>
               </view>
             </view>
             <view class="entry-right">
@@ -114,10 +142,8 @@
               <!-- 副指标：重量 -->
               <text wx:if="{{ item.total_weight_g }}" class="entry-sub-stat">{{ item.weightDisplay }}</text>
               <text wx:else class="entry-sub-stat entry-sub-pending">重量待定</text>
-              <!-- 管理员删除按钮 -->
-              <view wx:if="{{ canEdit }}" class="entry-admin-btns" catchtap="stopPropagation">
-                <view class="entry-btn-del" catchtap="deleteEntry" data-id="{{ item.id }}">🗑️</view>
-              </view>
+              <!-- 详情箭头 -->
+              <text class="entry-arrow">›</text>
             </view>
           </view>
         </view>
@@ -149,114 +175,286 @@
   <view wx:if="{{ showEntryPanel }}" class="panel-overlay" bindtap="closeEntryPanel"></view>
   <view class="entry-panel {{ showEntryPanel ? 'entry-panel--visible' : '' }}">
     <view class="panel-handle"></view>
-    <text class="panel-title">{{ editingEntryId ? '编辑记录' : '添加记录' }}</text>
+    <text class="panel-title">{{ isUserSubmit ? (editingPendingId ? '修改上报' : '上报钓获') : (editingEntryId ? '编辑记录' : '添加记录') }}</text>
+    <text wx:if="{{ isUserSubmit }}" class="panel-subtitle">提交后需管理员审核通过方可上榜</text>
 
     <view class="panel-form">
-      <!-- 图片上传 -->
+      <!-- 渔获尺寸图（必填）-->
       <view class="form-group">
-        <text class="form-label">渔获照片</text>
+        <text class="form-label required">渔获尺寸图</text>
         <view class="photo-upload-area">
-          <view wx:if="{{ entryForm.photo_url }}" class="photo-preview-wrap" bindtap="choosePhoto">
-            <image class="photo-preview" src="{{ entryForm.photo_url }}" mode="aspectFill" />
-            <view class="photo-remove-btn" catchtap="removePhoto">✕</view>
+          <view wx:if="{{ entryForm.catch_photo_url }}" class="photo-preview-wrap" bindtap="choosePhoto" data-type="catch">
+            <image class="photo-preview" src="{{ entryForm.catch_photo_url }}" mode="aspectFill" />
+            <view class="photo-remove-btn" catchtap="removePhoto" data-type="catch">✕</view>
           </view>
-          <view wx:else class="photo-add-btn" bindtap="choosePhoto">
+          <view wx:else class="photo-add-btn" bindtap="choosePhoto" data-type="catch">
             <text class="photo-add-icon">📷</text>
-            <text class="photo-add-text">添加照片</text>
+            <text class="photo-add-text">渔获图</text>
           </view>
         </view>
       </view>
 
-      <!-- 钓友昵称 -->
+      <!-- 钓点环境图（可选 x2）-->
       <view class="form-group">
-        <text class="form-label required">钓友昵称 *</text>
-        <input
-          class="form-input"
-          placeholder="输入钓友昵称"
-          value="{{ entryForm.player_name }}"
-          bindinput="onEntryInput"
-          data-field="player_name"
-          maxlength="20"
-        />
+        <text class="form-label">钓点环境图（选填）</text>
+        <view class="photo-upload-area">
+          <view wx:if="{{ entryForm.spot_photo1_url }}" class="photo-preview-wrap" bindtap="choosePhoto" data-type="spot1">
+            <image class="photo-preview" src="{{ entryForm.spot_photo1_url }}" mode="aspectFill" />
+            <view class="photo-remove-btn" catchtap="removePhoto" data-type="spot1">✕</view>
+          </view>
+          <view wx:else class="photo-add-btn" bindtap="choosePhoto" data-type="spot1">
+            <text class="photo-add-icon">🏖️</text>
+            <text class="photo-add-text">环境1</text>
+          </view>
+          <view wx:if="{{ entryForm.spot_photo2_url }}" class="photo-preview-wrap" bindtap="choosePhoto" data-type="spot2">
+            <image class="photo-preview" src="{{ entryForm.spot_photo2_url }}" mode="aspectFill" />
+            <view class="photo-remove-btn" catchtap="removePhoto" data-type="spot2">✕</view>
+          </view>
+          <view wx:else class="photo-add-btn" bindtap="choosePhoto" data-type="spot2">
+            <text class="photo-add-icon">🌊</text>
+            <text class="photo-add-text">环境2</text>
+          </view>
+        </view>
       </view>
 
-      <!-- 鱼种 -->
+      <view class="form-group">
+        <text class="form-label required">钓友昵称</text>
+        <input class="form-input" placeholder="输入钓友昵称" value="{{ entryForm.player_name }}" bindinput="onEntryInput" data-field="player_name" maxlength="20" />
+      </view>
+
       <view class="form-group">
         <text class="form-label">鱼种</text>
-        <input
-          class="form-input"
-          placeholder="例：黄鳍鲷"
-          value="{{ entryForm.best_species }}"
-          bindinput="onEntryInput"
-          data-field="best_species"
-          maxlength="20"
-        />
+        <input class="form-input" placeholder="例：黄鳍鲷" value="{{ entryForm.best_species }}" bindinput="onEntryInput" data-field="best_species" maxlength="20" />
       </view>
 
-      <!-- 长度 -->
+      <view class="form-row">
+        <view class="form-group form-group-half">
+          <text class="form-label">长度（cm）</text>
+          <input class="form-input" type="digit" placeholder="38.5" value="{{ entryForm.length_cm }}" bindinput="onEntryInput" data-field="length_cm" maxlength="6" />
+        </view>
+        <view class="form-group form-group-half">
+          <text class="form-label">重量（g）</text>
+          <input class="form-input" type="digit" placeholder="1500" value="{{ entryForm.total_weight_g }}" bindinput="onEntryInput" data-field="total_weight_g" maxlength="8" />
+        </view>
+      </view>
+
       <view class="form-group">
-        <text class="form-label">长度（厘米）</text>
-        <input
-          class="form-input"
-          type="digit"
-          placeholder="例：38.5"
-          value="{{ entryForm.length_cm }}"
-          bindinput="onEntryInput"
-          data-field="length_cm"
-          maxlength="6"
-        />
+        <text class="form-label">钓获时间</text>
+        <view class="form-row">
+          <picker mode="date" value="{{ entryForm.catch_date }}" bindchange="onCatchDateChange" class="form-group-half">
+            <view class="form-input picker-input">{{ entryForm.catch_date || '选择日期' }}</view>
+          </picker>
+          <picker mode="time" value="{{ entryForm.catch_time }}" bindchange="onCatchTimeChange" class="form-group-half">
+            <view class="form-input picker-input">{{ entryForm.catch_time || '选择时间' }}</view>
+          </picker>
+        </view>
       </view>
 
-      <!-- 总重量 -->
-      <view class="form-group">
-        <text class="form-label">重量（克）</text>
-        <input
-          class="form-input"
-          type="digit"
-          placeholder="例：1500"
-          value="{{ entryForm.total_weight_g }}"
-          bindinput="onEntryInput"
-          data-field="total_weight_g"
-          maxlength="8"
-        />
-      </view>
-
-      <!-- 钓点 -->
       <view class="form-group">
         <text class="form-label">钓点</text>
-        <input
-          class="form-input"
-          placeholder="例：五缘湾"
-          value="{{ entryForm.spot }}"
-          bindinput="onEntryInput"
-          data-field="spot"
-          maxlength="20"
-        />
+        <view class="spot-input-row">
+          <input class="form-input spot-input" placeholder="例：五缘湾" value="{{ entryForm.spot }}" bindinput="onEntryInput" data-field="spot" maxlength="30" />
+          <view class="location-btn" bindtap="chooseLocation">📍 定位</view>
+        </view>
+        <text wx:if="{{ entryForm.spot_lat }}" class="loc-hint">已定位：{{ entryForm.spot_lat }}, {{ entryForm.spot_lon }}</text>
       </view>
 
-      <!-- 备注 -->
+      <view class="form-group">
+        <text class="form-label">潮水信息</text>
+        <view class="tide-row">
+          <picker mode="selector" range="{{ tideDirectionOptions }}" range-key="label" bindchange="onTideDirectionChange">
+            <view class="form-input picker-input tide-input">{{ entryForm.tide_direction === 'rising' ? '涨潮' : (entryForm.tide_direction === 'falling' ? '退潮' : '涨/退潮') }}</view>
+          </picker>
+          <picker mode="selector" range="{{ tideScoreOptions }}" bindchange="onTideScoreChange">
+            <view class="form-input picker-input tide-input">{{ entryForm.tide_score || '几分潮' }}</view>
+          </picker>
+          <picker mode="selector" range="{{ tideTypeOptions }}" range-key="label" bindchange="onTideTypeChange">
+            <view class="form-input picker-input tide-input">{{ entryForm.tide_type === 'big' ? '大潮' : (entryForm.tide_type === 'medium' ? '中潮' : (entryForm.tide_type === 'small' ? '小潮' : '潮型')) }}</view>
+          </picker>
+        </view>
+      </view>
+
       <view class="form-group">
         <text class="form-label">备注</text>
-        <input
-          class="form-input"
-          placeholder="可选备注"
-          value="{{ entryForm.note }}"
-          bindinput="onEntryInput"
-          data-field="note"
-          maxlength="50"
-        />
+        <input class="form-input" placeholder="可选备注" value="{{ entryForm.note }}" bindinput="onEntryInput" data-field="note" maxlength="50" />
       </view>
     </view>
 
     <view class="panel-actions">
       <view class="btn-outline panel-cancel-btn" bindtap="closeEntryPanel">取消</view>
-      <view
-        class="btn-primary panel-save-btn {{ saving ? 'btn-disabled' : '' }}"
-        bindtap="saveEntry"
-      >
+      <view class="btn-primary panel-save-btn {{ saving ? 'btn-disabled' : '' }}" bindtap="saveEntry">
         <text wx:if="{{ saving }}">保存中…</text>
-        <text wx:else>确认保存</text>
+        <text wx:else>{{ isUserSubmit ? '提交审核' : '确认保存' }}</text>
       </view>
+    </view>
+  </view>
+
+  <!-- ===== 管理员审核面板 ===== -->
+  <view wx:if="{{ showReviewPanel }}" class="panel-overlay" bindtap="closeReviewPanel"></view>
+  <view class="entry-panel {{ showReviewPanel ? 'entry-panel--visible' : '' }}">
+    <view class="panel-handle"></view>
+    <text class="panel-title">🛡️ 待审核上报</text>
+
+    <view wx:if="{{ reviewLoading }}" class="review-loading">加载中…</view>
+    <view wx:elif="{{ pendingList.length === 0 }}" class="review-empty">暂无待审核记录</view>
+
+    <view wx:else class="review-list">
+      <view wx:for="{{ pendingList }}" wx:key="_id" class="review-item">
+        <view class="review-item-header">
+          <text class="review-name">{{ item.player_name }}</text>
+          <text wx:if="{{ item.best_species }}" class="review-species">🐟 {{ item.best_species }}</text>
+        </view>
+        <view class="review-meta">
+          <text wx:if="{{ item.length_cm }}">{{ item.length_cm }}cm</text>
+          <text wx:if="{{ item.total_weight_g }}">{{ item.total_weight_g }}g</text>
+          <text wx:if="{{ item.spot }}">📍 {{ item.spot }}</text>
+          <text wx:if="{{ item.catch_time }}">🕐 {{ item.catch_time }}</text>
+        </view>
+        <view wx:if="{{ item.catch_photo_url }}" class="review-photos">
+          <image class="review-photo" src="{{ item.catch_photo_url }}" mode="aspectFill" bindtap="previewImage" data-url="{{ item.catch_photo_url }}" />
+          <image wx:if="{{ item.spot_photo1_url }}" class="review-photo" src="{{ item.spot_photo1_url }}" mode="aspectFill" />
+          <image wx:if="{{ item.spot_photo2_url }}" class="review-photo" src="{{ item.spot_photo2_url }}" mode="aspectFill" />
+        </view>
+        <view class="review-actions">
+          <view class="review-btn review-approve" catchtap="approveEntry" data-id="{{ item._id }}">✓ 通过</view>
+          <view class="review-btn review-reject" catchtap="rejectEntry" data-id="{{ item._id }}">✕ 拒绝</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="panel-actions">
+      <view class="btn-outline panel-cancel-btn" bindtap="closeReviewPanel">关闭</view>
+    </view>
+  </view>
+
+  <!-- ===== 我的上报面板 ===== -->
+  <view wx:if="{{ showMySubmissions }}" class="panel-overlay" bindtap="closeMySubmissions"></view>
+  <view class="entry-panel {{ showMySubmissions ? 'entry-panel--visible' : '' }}">
+    <view class="panel-handle"></view>
+    <text class="panel-title">📝 我的上报记录</text>
+
+    <view wx:if="{{ mySubmissions.length === 0 }}" class="review-empty">暂无上报记录</view>
+
+    <view wx:else class="review-list">
+      <view wx:for="{{ mySubmissions }}" wx:key="_id" class="review-item">
+        <view class="review-item-header">
+          <text class="review-name">{{ item.player_name }}</text>
+          <view class="status-tag" style="background:{{ item.statusColor }}">{{ item.statusText }}</view>
+        </view>
+        <view class="review-meta">
+          <text wx:if="{{ item.best_species }}">🐟 {{ item.best_species }}</text>
+          <text wx:if="{{ item.length_cm }}">{{ item.length_cm }}cm</text>
+          <text wx:if="{{ item.spot }}">📍 {{ item.spot }}</text>
+        </view>
+        <view wx:if="{{ item.status === 'rejected' && item.rejection_reason }}" class="reject-reason">
+          拒绝原因：{{ item.rejection_reason }}
+        </view>
+        <view wx:if="{{ item.catch_photo_url }}" class="review-photos">
+          <image class="review-photo" src="{{ item.catch_photo_url }}" mode="aspectFill" />
+        </view>
+        <view wx:if="{{ item.status === 'rejected' }}" class="review-actions">
+          <view class="review-btn review-approve" catchtap="openEditSubmission" data-id="{{ item._id }}">✏️ 修改重提</view>
+          <view class="review-btn review-reject" catchtap="deleteMySubmission" data-id="{{ item._id }}">🗑️ 删除</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="panel-actions">
+      <view class="btn-outline panel-cancel-btn" bindtap="closeMySubmissions">关闭</view>
+    </view>
+  </view>
+
+  <!-- ===== 钓获详情查看面板（所有用户）===== -->
+  <view wx:if="{{ showDetailPanel }}" class="panel-overlay" bindtap="closeDetailPanel"></view>
+  <view class="entry-panel detail-panel {{ showDetailPanel ? 'entry-panel--visible' : '' }}" wx:if="{{ detailEntry }}">
+    <view class="panel-handle"></view>
+    <view class="detail-header">
+      <text class="panel-title">🎣 钓获详情</text>
+      <text class="detail-rank">{{ detailEntry.medal }} 第{{ detailEntry.rank }}名</text>
+    </view>
+
+    <scroll-view scroll-y class="detail-scroll">
+      <!-- 渔获尺寸图 -->
+      <view wx:if="{{ detailEntry.catch_photo_url }}" class="detail-photo-main">
+        <image src="{{ detailEntry.catch_photo_url }}" mode="widthFix" class="detail-main-img" bindtap="previewImage" data-url="{{ detailEntry.catch_photo_url }}" />
+      </view>
+
+      <!-- 核心数据 -->
+      <view class="detail-stats">
+        <view class="detail-stat-item">
+          <text class="detail-stat-value">{{ detailEntry.lengthDisplay }}</text>
+          <text class="detail-stat-label">长度</text>
+        </view>
+        <view class="detail-stat-item">
+          <text class="detail-stat-value">{{ detailEntry.weightDisplay }}</text>
+          <text class="detail-stat-label">重量</text>
+        </view>
+      </view>
+
+      <!-- 信息列表 -->
+      <view class="detail-info-list">
+        <view class="detail-info-row">
+          <text class="detail-info-label">👤 钓友</text>
+          <text class="detail-info-value">{{ detailEntry.player_name }}</text>
+        </view>
+        <view wx:if="{{ detailEntry.best_species }}" class="detail-info-row">
+          <text class="detail-info-label">🐟 鱼种</text>
+          <text class="detail-info-value">{{ detailEntry.best_species }}</text>
+        </view>
+        <view wx:if="{{ detailEntry.catchTimeDisplay }}" class="detail-info-row">
+          <text class="detail-info-label">🕐 钓获时间</text>
+          <text class="detail-info-value">{{ detailEntry.catchTimeDisplay }}</text>
+        </view>
+        <view wx:if="{{ detailEntry.tideDisplay }}" class="detail-info-row">
+          <text class="detail-info-label">🌊 潮水</text>
+          <text class="detail-info-value">{{ detailEntry.tideDisplay }}</text>
+        </view>
+        <view wx:if="{{ detailEntry.spot }}" class="detail-info-row">
+          <text class="detail-info-label">📍 钓点</text>
+          <text class="detail-info-value">{{ detailEntry.spot }}</text>
+        </view>
+        <view wx:if="{{ detailEntry.note }}" class="detail-info-row">
+          <text class="detail-info-label">📝 备注</text>
+          <text class="detail-info-value">{{ detailEntry.note }}</text>
+        </view>
+      </view>
+
+      <!-- 地图定位（始终显示，支持缩放浏览）-->
+      <view class="detail-map-section">
+        <view class="detail-map-header">
+          <text class="detail-map-title">📍 {{ detailEntry.hasLocation ? '钓点位置' : '地图浏览' }}</text>
+          <text wx:if="{{ !detailEntry.hasLocation }}" class="detail-map-tip">该记录未标注位置，可缩放查看</text>
+        </view>
+        <map
+          class="detail-map"
+          latitude="{{ detailEntry.mapLat }}"
+          longitude="{{ detailEntry.mapLon }}"
+          markers="{{ detailEntry.mapMarkers }}"
+          scale="{{ detailEntry.mapScale }}"
+          enable-zoom
+          enable-scroll
+          bindtap="openSpotLocation"
+        ></map>
+        <view wx:if="{{ detailEntry.hasLocation }}" class="detail-map-coords">{{ detailEntry.spot_lat }}, {{ detailEntry.spot_lon }}（点击地图查看钓点）</view>
+      </view>
+
+      <!-- 钓点环境图 -->
+      <view wx:if="{{ detailEntry.spot_photo1_url || detailEntry.spot_photo2_url }}" class="detail-env-section">
+        <text class="detail-env-title">🏖️ 钓点环境</text>
+        <view class="detail-env-photos">
+          <image wx:if="{{ detailEntry.spot_photo1_url }}" src="{{ detailEntry.spot_photo1_url }}" mode="aspectFill" class="detail-env-img" bindtap="previewImage" data-url="{{ detailEntry.spot_photo1_url }}" />
+          <image wx:if="{{ detailEntry.spot_photo2_url }}" src="{{ detailEntry.spot_photo2_url }}" mode="aspectFill" class="detail-env-img" bindtap="previewImage" data-url="{{ detailEntry.spot_photo2_url }}" />
+        </view>
+      </view>
+    </scroll-view>
+
+    <!-- 操作按钮 -->
+    <view class="panel-actions">
+      <view class="btn-outline panel-cancel-btn" bindtap="closeDetailPanel">关闭</view>
+      <block wx:if="{{ canEdit }}">
+        <view class="btn-outline detail-edit-btn" bindtap="editFromDetail">✏️ 编辑</view>
+        <view class="btn-danger-outline detail-del-btn" bindtap="deleteFromDetail">🗑️ 删除</view>
+      </block>
     </view>
   </view>
 
