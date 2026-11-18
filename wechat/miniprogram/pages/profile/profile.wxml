@@ -43,17 +43,8 @@
         <text class="menu-arrow">›</text>
       </view>
 
-      <!-- 普通用户：申请成为管理员 -->
-      <view wx:if="{{ role === 'viewer' }}" class="menu-item" bindtap="goApplyPermission">
-        <text class="menu-icon">📝</text>
-        <text class="menu-label">申请成为管理员</text>
-        <text wx:if="{{ applicationStatus === 'pending' }}" class="status-tag pending">审核中</text>
-        <text wx:elif="{{ applicationStatus === 'rejected' }}" class="status-tag rejected">已拒绝</text>
-        <text class="menu-arrow">›</text>
-      </view>
-
-      <!-- 分享 -->
-      <button class="menu-item" open-type="share">
+      <!-- 分享（仅管理员） -->
+      <button wx:if="{{ role !== 'viewer' }}" class="menu-item" open-type="share">
         <text class="menu-icon">📤</text>
         <text class="menu-label">分享给钓友</text>
         <text class="menu-arrow">›</text>

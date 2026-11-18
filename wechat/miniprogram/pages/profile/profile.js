@@ -6,7 +6,6 @@ Page({
     userInfo: null,
     role: 'viewer', // 'super_admin' | 'competition_admin' | 'viewer'
     permissions: {},
-    applicationStatus: null, // 'pending' | 'approved' | 'rejected' | null
     pendingCount: 0, // 待审核申请数量（超管可见）
     isAdmin: false, // 兼容旧逻辑
   },
@@ -20,6 +19,7 @@ Page({
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
       this.getTabBar().init();
     }
+    wx.hideShareMenu({ menus: ['shareAppMessage', 'shareTimeline'] });
     this.checkPermission();
   },
 
@@ -33,7 +33,6 @@ Page({
           that.setData({
             role: result.role || 'viewer',
             permissions: result.permissions || {},
-            applicationStatus: result.applicationStatus || null,
             pendingCount: result.pendingCount || 0,
             isAdmin: result.isAdmin || false
           });
@@ -41,6 +40,11 @@ Page({
           app.globalData.isAdmin = result.isAdmin || false;
           app.globalData.role = result.role || 'viewer';
           app.globalData.permissions = result.permissions || {};
+          if (result.isAdmin) {
+            wx.showShareMenu({ menus: ['shareAppMessage', 'shareTimeline'] });
+          } else {
+            wx.hideShareMenu({ menus: ['shareAppMessage', 'shareTimeline'] });
+          }
         }
       })
       .catch(function(err) {
@@ -92,11 +96,6 @@ Page({
     };
   },
 
-  // 申请管理员权限
-  goApplyPermission: function() {
-    wx.navigateTo({ url: '/pages/permission/apply' });
-  },
-
   // 权限管理（超管专用）
   goPermissionManage: function() {
     wx.navigateTo({ url: '/pages/permission/manage' });
@@ -110,15 +109,5 @@ Page({
       'viewer': '普通用户'
     };
     return names[role] || '普通用户';
-  },
-
-  // 获取申请状态显示文本
-  getStatusText: function(status) {
-    var texts = {
-      'pending': '审核中',
-      'approved': '已通过',
-      'rejected': '已拒绝'
-    };
-    return texts[status] || '';
   }
 });

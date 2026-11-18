@@ -39,65 +39,15 @@ async function getPermission(OPENID, compId) {
   };
 }
 
-// 提交记录服务：用户上报、管理员审核、我的上报
+// 提交记录服务：历史上报记录查询与管理员审核
 exports.main = async (event) => {
   const { OPENID } = cloud.getWXContext();
   const { action, competitionId } = event;
 
   try {
-    // ===== 用户上报钓获（待审核）=====
+    // 普通用户上报已关闭，榜单仅由管理员维护。
     if (action === 'submitEntry') {
-      if (!competitionId) return { success: false, error: '缺少赛事ID' };
-      const entry = event.entry || {};
-      if (!entry.player_name || !entry.player_name.trim()) {
-        return { success: false, error: '请输入钓友昵称' };
-      }
-      if (!entry.catch_photo_url && !entry.photo_url) {
-        return { success: false, error: '请上传渔获尺寸图' };
-      }
-
-      // 若是修改被拒绝的记录重新提交，先删除旧的 pending 记录
-      if (event.pendingId) {
-        try {
-          const oldRes = await db.collection('pending_entries').doc(event.pendingId).get();
-          if (oldRes.data && oldRes.data.submitted_by === OPENID) {
-            await db.collection('pending_entries').doc(event.pendingId).remove();
-          }
-        } catch (e) { /* 忽略 */ }
-      }
-
-      const result = await db.collection('pending_entries').add({
-        data: {
-          competition_id: competitionId,
-          entry: {
-            player_name: entry.player_name.trim(),
-            best_species: entry.best_species || '',
-            length_cm: entry.length_cm || null,
-            total_weight_g: entry.total_weight_g || null,
-            spot: entry.spot || '',
-            note: entry.note || '',
-            photo_url: entry.catch_photo_url || entry.photo_url || null,
-            catch_photo_url: entry.catch_photo_url || null,
-            spot_photo1_url: entry.spot_photo1_url || null,
-            spot_photo2_url: entry.spot_photo2_url || null,
-            catch_date: entry.catch_date || null,
-            catch_time: entry.catch_time || null,
-            tide_direction: entry.tide_direction || null,
-            tide_score: entry.tide_score || null,
-            tide_type: entry.tide_type || null,
-            spot_lat: entry.spot_lat || null,
-            spot_lon: entry.spot_lon || null,
-          },
-          status: 'pending',
-          rejection_reason: '',
-          submitted_by: OPENID,
-          submitted_at: new Date(),
-          updated_at: new Date(),
-          reviewed_by: null,
-          reviewed_at: null,
-        }
-      });
-      return { success: true, id: result._id, message: '已提交，等待管理员审核' };
+      return { success: false, error: '用户上报已关闭，请联系管理员录入' };
     }
 
     // ===== 管理员：获取待审核列表 =====
@@ -166,18 +116,9 @@ exports.main = async (event) => {
       return { success: true, list: res.data };
     }
 
-    // ===== 用户：删除自己的上报记录 =====
+    // 普通用户不能删除上报记录，历史数据由管理员处理。
     if (action === 'deleteSubmission') {
-      const { pendingId } = event;
-      if (!pendingId) return { success: false, error: '缺少记录ID' };
-      try {
-        const pendingRes = await db.collection('pending_entries').doc(pendingId).get();
-        if (pendingRes.data.submitted_by !== OPENID) return { success: false, error: '无权操作' };
-        await db.collection('pending_entries').doc(pendingId).remove();
-        return { success: true, message: '已删除' };
-      } catch (e) {
-        return { success: false, error: '记录不存在' };
-      }
+      return { success: false, error: '无权操作，请联系管理员处理' };
     }
 
     return { success: false, error: '未知操作' };

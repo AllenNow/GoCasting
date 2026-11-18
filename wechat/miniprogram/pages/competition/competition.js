@@ -23,6 +23,8 @@ Page({
   },
 
   onLoad: function() {
+    // 默认关闭分享，仅管理员在权限校验通过后开启
+    wx.hideShareMenu({ menus: ['shareAppMessage', 'shareTimeline'] });
     this.loadCompetitions();
     this.checkPermission();
   },
@@ -46,6 +48,11 @@ Page({
         });
         app.globalData.isAdmin = isAdmin;
         app.globalData.permissions = res.result.permissions;
+        if (isAdmin || permissions.canCreateCompetition) {
+          wx.showShareMenu({ menus: ['shareAppMessage', 'shareTimeline'] });
+        } else {
+          wx.hideShareMenu({ menus: ['shareAppMessage', 'shareTimeline'] });
+        }
       }
     }).catch(function(err) {
       console.error('checkPermission error:', err);

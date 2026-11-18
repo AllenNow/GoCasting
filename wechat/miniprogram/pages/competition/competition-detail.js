@@ -12,6 +12,7 @@ const MEDAL = ['🥇', '🥈', '🥉'];
 Page({
   data: {
     competition: null,
+    fixedSpecies: '',
     top3: [],
     rest: [],
     loading: true,
@@ -23,8 +24,6 @@ Page({
     isSuperAdmin: false,
     showEntryPanel: false,
     editingEntryId: null,
-    editingPendingId: null,
-    isUserSubmit: false,
     // 详情查看面板
     showDetailPanel: false,
     detailEntry: null,
@@ -68,9 +67,6 @@ Page({
     showReviewPanel: false,
     pendingList: [],
     reviewLoading: false,
-    // 我的上报
-    showMySubmissions: false,
-    mySubmissions: [],
     lastDeleted: null,
     showUndoBar: false,
     TIDE_DIRECTION_MAP: { rising: '涨潮', falling: '退潮' },
@@ -85,6 +81,8 @@ Page({
       return;
     }
     this._id = id;
+    // 默认关闭分享，仅管理员在权限校验通过后开启
+    wx.hideShareMenu({ menus: ['shareAppMessage', 'shareTimeline'] });
     this.loadCompetition(id);
   },
 
@@ -112,6 +110,11 @@ Page({
           isSuperAdmin: res.result.isSuperAdmin,
           isAdmin: res.result.canEdit
         });
+        if (res.result.canEdit) {
+          wx.showShareMenu({ menus: ['shareAppMessage', 'shareTimeline'] });
+        } else {
+          wx.hideShareMenu({ menus: ['shareAppMessage', 'shareTimeline'] });
+        }
       }
     }).catch(function(err) {
       console.error('checkCompetitionPermission error:', err);
@@ -125,6 +128,14 @@ Page({
     var db = app.globalData.db;
     db.collection('competitions').doc(id).get().then(function(res) {
       var competition = res.data;
+      var competitionName = competition.name || '';
+      var speciesText = (competition.target_species || '') + ' ' + competitionName;
+      var fixedSpecies = '';
+      if (/沙尖之王|沙尖鱼|梭子鱼|沙梭|金梭鱼|kisu/i.test(speciesText)) {
+        fixedSpecies = '沙尖鱼';
+      } else if (/黄鳍鲷|黄刺鱼|大黄/.test(speciesText)) {
+        fixedSpecies = '黄鳍鲷';
+      }
       wx.setNavigationBarTitle({ title: competition.name });
 
       var entries = (competition.entries || []).filter(function(e) { return !e.deleted; });
@@ -183,6 +194,7 @@ Page({
 
       that.setData({
         competition: competition,
+        fixedSpecies: fixedSpecies,
         top3: sorted.slice(0, 3),
         rest: sorted.slice(3),
         loading: false,
@@ -197,20 +209,35 @@ Page({
   },
 
   editCompetition: function() {
+    if (!this.data.canEdit) {
+      wx.showToast({ title: '仅管理员可编辑赛事', icon: 'none' });
+      return;
+    }
     wx.navigateTo({ url: '/pages/admin/competition-edit?id=' + this._id });
   },
 
   deleteCompetition: function() {
     var that = this;
+    if (!this.data.canDelete) {
+      wx.showToast({ title: '无权限删除赛事', icon: 'none' });
+      return;
+    }
     wx.showModal({
       title: '删除比赛',
       content: '确定删除这场比赛？所有成绩将一并删除，不可恢复。',
       confirmColor: '#e85555',
       success: function(res) {
         if (!res.confirm) return;
-        app.globalData.db.collection('competitions').doc(that._id).remove().then(function() {
-          wx.showToast({ title: '已删除', icon: 'success' });
-          setTimeout(function() { wx.navigateBack(); }, 1000);
+        wx.cloud.callFunction({
+          name: 'updateCompetition',
+          data: { action: 'delete', competitionId: that._id },
+        }).then(function(result) {
+          if (result.result && result.result.success) {
+            wx.showToast({ title: '已删除', icon: 'success' });
+            setTimeout(function() { wx.navigateBack(); }, 1000);
+          } else {
+            wx.showToast({ title: (result.result && result.result.error) || '删除失败', icon: 'none' });
+          }
         }).catch(function() {
           wx.showToast({ title: '删除失败', icon: 'error' });
         });
@@ -219,25 +246,13 @@ Page({
   },
 
   openAddEntry: function() {
+    if (!this.data.canEdit) {
+      wx.showToast({ title: '仅管理员可添加记录', icon: 'none' });
+      return;
+    }
     this.setData({
       showEntryPanel: true,
       editingEntryId: null,
-      editingPendingId: null,
-      isUserSubmit: false,
-      catchPhotoTemp: '',
-      spotPhoto1Temp: '',
-      spotPhoto2Temp: '',
-      entryForm: this._emptyForm(),
-    });
-  },
-
-  // 用户上报钓获（待审核）
-  openSubmitEntry: function() {
-    this.setData({
-      showEntryPanel: true,
-      editingEntryId: null,
-      editingPendingId: null,
-      isUserSubmit: true,
       catchPhotoTemp: '',
       spotPhoto1Temp: '',
       spotPhoto2Temp: '',
@@ -247,7 +262,7 @@ Page({
 
   _emptyForm: function() {
     return {
-      player_name: '', best_species: '', length_cm: '', total_weight_g: '',
+      player_name: '', best_species: this.data.fixedSpecies || '', length_cm: '', total_weight_g: '',
       spot: '', note: '', photo_url: '',
       catch_photo_url: '', spot_photo1_url: '', spot_photo2_url: '',
       catch_date: '', catch_time: '', tide_direction: '', tide_score: '', tide_type: '',
@@ -256,6 +271,10 @@ Page({
   },
 
   openEditEntry: function(e) {
+    if (!this.data.canEdit) {
+      wx.showToast({ title: '仅管理员可编辑记录', icon: 'none' });
+      return;
+    }
     var id = e.currentTarget.dataset.id;
     var entries = this.data.competition.entries || [];
     var entry = null;
@@ -266,51 +285,9 @@ Page({
     this.setData({
       showEntryPanel: true,
       editingEntryId: id,
-      editingPendingId: null,
-      isUserSubmit: false,
       catchPhotoTemp: '',
       spotPhoto1Temp: '',
       spotPhoto2Temp: '',
-      entryForm: {
-        player_name: entry.player_name || '',
-        best_species: entry.best_species || '',
-        length_cm: entry.length_cm ? String(entry.length_cm) : '',
-        total_weight_g: entry.total_weight_g ? String(entry.total_weight_g) : '',
-        spot: entry.spot || '',
-        note: entry.note || '',
-        photo_url: entry.catch_photo_url || entry.photo_url || '',
-        catch_photo_url: entry.catch_photo_url || entry.photo_url || '',
-        spot_photo1_url: entry.spot_photo1_url || '',
-        spot_photo2_url: entry.spot_photo2_url || '',
-        catch_date: entry.catch_date || '',
-        catch_time: entry.catch_time || '',
-        tide_direction: entry.tide_direction || '',
-        tide_score: entry.tide_score ? String(entry.tide_score) : '',
-        tide_type: entry.tide_type || '',
-        spot_lat: entry.spot_lat ? String(entry.spot_lat) : '',
-        spot_lon: entry.spot_lon ? String(entry.spot_lon) : '',
-      },
-    });
-  },
-
-  // 用户编辑被拒绝的上报记录重新提交
-  openEditSubmission: function(e) {
-    var id = e.currentTarget.dataset.id;
-    var item = null;
-    for (var i = 0; i < this.data.mySubmissions.length; i++) {
-      if (this.data.mySubmissions[i]._id === id) { item = this.data.mySubmissions[i]; break; }
-    }
-    if (!item || !item.entry) return;
-    var entry = item.entry;
-    this.setData({
-      showEntryPanel: true,
-      editingEntryId: null,
-      editingPendingId: id,
-      isUserSubmit: true,
-      catchPhotoTemp: '',
-      spotPhoto1Temp: '',
-      spotPhoto2Temp: '',
-      showMySubmissions: false,
       entryForm: {
         player_name: entry.player_name || '',
         best_species: entry.best_species || '',
@@ -572,11 +549,13 @@ Page({
 
   saveEntry: function() {
     if (this.data.saving) return;
+    if (!this.data.canEdit) {
+      wx.showToast({ title: '仅管理员可保存记录', icon: 'none' });
+      return;
+    }
     var that = this;
     var entryForm = this.data.entryForm;
     var editingEntryId = this.data.editingEntryId;
-    var editingPendingId = this.data.editingPendingId;
-    var isUserSubmit = this.data.isUserSubmit;
 
     if (!entryForm.player_name.trim()) {
       wx.showToast({ title: '请输入钓友昵称', icon: 'none' });
@@ -618,7 +597,7 @@ Page({
       wx.showLoading({ title: '保存中…' });
       var entry = {
         player_name: entryForm.player_name.trim(),
-        best_species: entryForm.best_species.trim(),
+        best_species: (that.data.fixedSpecies || entryForm.best_species).trim(),
         length_cm: entryForm.length_cm ? Number(entryForm.length_cm) : null,
         total_weight_g: entryForm.total_weight_g ? Number(entryForm.total_weight_g) : null,
         spot: entryForm.spot.trim(),
@@ -634,18 +613,6 @@ Page({
         spot_lat: entryForm.spot_lat ? Number(entryForm.spot_lat) : null,
         spot_lon: entryForm.spot_lon ? Number(entryForm.spot_lon) : null,
       };
-
-      if (isUserSubmit) {
-        return wx.cloud.callFunction({
-          name: 'submissionService',
-          data: {
-            action: 'submitEntry',
-            competitionId: that._id,
-            entry: entry,
-            pendingId: editingPendingId || null,
-          },
-        });
-      }
 
       return wx.cloud.callFunction({
         name: 'updateCompetition',
@@ -667,11 +634,7 @@ Page({
           spotPhoto1Temp: '',
           spotPhoto2Temp: '',
         });
-        if (!isUserSubmit) {
-          that.loadCompetition(that._id);
-        } else if (that.data.showMySubmissions) {
-          that.loadMySubmissions();
-        }
+        that.loadCompetition(that._id);
       } else {
         wx.showToast({ title: res.result.error || '保存失败', icon: 'none' });
       }
@@ -773,6 +736,10 @@ Page({
 
   deleteEntry: function(e) {
     var that = this;
+    if (!this.data.canEdit) {
+      wx.showToast({ title: '仅管理员可删除记录', icon: 'none' });
+      return;
+    }
     var id = e.currentTarget.dataset.id;
     var entries = this.data.competition.entries || [];
     var entry = null;
@@ -895,50 +862,6 @@ Page({
           if (r.result.success) { wx.showToast({ title: '已拒绝', icon: 'success' }); that.loadPendingEntries(); }
           else { wx.showToast({ title: r.result.error || '操作失败', icon: 'none' }); }
         }).catch(function() { wx.hideLoading(); wx.showToast({ title: '操作失败', icon: 'error' }); });
-      }
-    });
-  },
-
-  // ===== 我的上报 =====
-  openMySubmissions: function() {
-    this.setData({ showMySubmissions: true, mySubmissions: [] });
-    this.loadMySubmissions();
-  },
-  closeMySubmissions: function() { this.setData({ showMySubmissions: false }); },
-
-  loadMySubmissions: function() {
-    var that = this;
-    wx.cloud.callFunction({ name: 'submissionService', data: { action: 'getMySubmissions' } }).then(function(res) {
-      if (res.result.success) {
-        var list = (res.result.list || []).map(function(item) {
-          var e = item.entry || {};
-          return {
-            _id: item._id, competition_id: item.competition_id,
-            status: item.status,
-            statusText: item.status === 'pending' ? '审核中' : '已拒绝',
-            statusColor: item.status === 'pending' ? '#f5a623' : '#e85555',
-            rejection_reason: item.rejection_reason,
-            player_name: e.player_name, best_species: e.best_species,
-            length_cm: e.length_cm, spot: e.spot,
-            catch_photo_url: e.catch_photo_url || e.photo_url,
-            submitted_at: item.submitted_at,
-          };
-        });
-        that.setData({ mySubmissions: list });
-      }
-    }).catch(function() {});
-  },
-
-  deleteMySubmission: function(e) {
-    var that = this;
-    var id = e.currentTarget.dataset.id;
-    wx.showModal({
-      title: '删除上报', content: '确定删除这条上报记录？', confirmColor: '#e85555',
-      success: function(res) {
-        if (!res.confirm) return;
-        wx.cloud.callFunction({ name: 'submissionService', data: { action: 'deleteSubmission', pendingId: id } }).then(function(r) {
-          if (r.result.success) { wx.showToast({ title: '已删除', icon: 'success' }); that.loadMySubmissions(); }
-        });
       }
     });
   },
@@ -1074,9 +997,41 @@ Page({
     var competition = this.data.competition;
     if (!competition) return;
 
+    var total = (competition.entries || []).length;
+    if (total === 0) {
+      wx.showToast({ title: '暂无榜单数据', icon: 'none' });
+      return;
+    }
+
+    wx.showModal({
+      title: '导出条数',
+      editable: true,
+      placeholderText: '留空则导出全部（共' + total + '条）',
+      success: function(res) {
+        if (!res.confirm) return;
+        var input = (res.content || '').trim();
+        var limit = total;
+        if (input) {
+          var num = parseInt(input, 10);
+          if (!num || num <= 0) {
+            wx.showToast({ title: '请输入有效条数', icon: 'none' });
+            return;
+          }
+          limit = Math.min(num, total);
+        }
+        that._renderExportImage(limit);
+      },
+    });
+  },
+
+  _renderExportImage: function(limit) {
+    var that = this;
+    var competition = this.data.competition;
+    if (!competition) return;
+
     wx.showLoading({ title: '生成图片…', mask: true });
 
-    var entries = (competition.entries || []).slice(0, 30);
+    var entries = (competition.entries || []).slice(0, limit);
     var entryCount = entries.length;
     var W = 750;
     var headerH = 160;

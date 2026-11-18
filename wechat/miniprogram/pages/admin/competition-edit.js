@@ -105,53 +105,42 @@ Page({
     this.setData({ saving: true });
     wx.showLoading({ title: '保存中…' });
 
-    var db = app.globalData.db;
     var record = {
       name: form.name.trim(),
       date: form.date,
       location: form.location.trim(),
       description: form.description.trim(),
       status: form.status,
-      updated_at: db.serverDate(),
     };
 
-    if (this.data.isEdit) {
-      db.collection('competitions').doc(this.data.editId).update({ data: record })
-        .then(function() {
-          wx.showToast({ title: '已更新', icon: 'success' });
-          setTimeout(function() { wx.navigateBack(); }, 1000);
-        })
-        .catch(function(err) {
-          console.error('保存比赛失败', err);
-          wx.showToast({ title: '保存失败，请重试', icon: 'error' });
-        })
-        .finally(function() {
-          wx.hideLoading();
-          that.setData({ saving: false });
-        });
-    } else {
-      // 新建时带空 entries 数组和创建者信息
-      record.entries = [];
-      record.created_at = db.serverDate();
-      record.created_by = app.globalData.openid || '';
-      record.admins = [];
-      
-      db.collection('competitions').add({ data: record })
-        .then(function(res) {
-          wx.showToast({ title: '已创建', icon: 'success' });
-          // 创建后跳转到详情页，让管理员直接录入选手成绩
-          setTimeout(function() {
-            wx.redirectTo({ url: '/pages/competition/competition-detail?id=' + res._id });
-          }, 800);
-        })
-        .catch(function(err) {
-          console.error('保存比赛失败', err);
-          wx.showToast({ title: '保存失败，请重试', icon: 'error' });
-        })
-        .finally(function() {
-          wx.hideLoading();
-          that.setData({ saving: false });
-        });
-    }
+    wx.cloud.callFunction({
+      name: 'updateCompetition',
+      data: {
+        action: this.data.isEdit ? 'update' : 'create',
+        competitionId: this.data.editId,
+        competition: record,
+      },
+    }).then(function(res) {
+      var result = res.result || {};
+      if (!result.success) {
+        wx.showToast({ title: result.error || '保存失败', icon: 'none' });
+        return;
+      }
+      if (that.data.isEdit) {
+        wx.showToast({ title: '已更新', icon: 'success' });
+        setTimeout(function() { wx.navigateBack(); }, 1000);
+      } else {
+        wx.showToast({ title: '已创建', icon: 'success' });
+        setTimeout(function() {
+          wx.redirectTo({ url: '/pages/competition/competition-detail?id=' + result.id });
+        }, 800);
+      }
+    }).catch(function(err) {
+      console.error('保存比赛失败', err);
+      wx.showToast({ title: '保存失败，请重试', icon: 'error' });
+    }).finally(function() {
+      wx.hideLoading();
+      that.setData({ saving: false });
+    });
   },
 });

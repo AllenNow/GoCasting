@@ -4,7 +4,6 @@
     "pages/competition/competition-detail",
     "pages/profile/profile",
     "pages/admin/competition-edit",
-    "pages/permission/apply",
     "pages/permission/manage"
   ],
   "tabBar": {

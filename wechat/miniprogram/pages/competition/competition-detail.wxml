@@ -22,12 +22,8 @@
       </view>
       <text wx:if="{{ competition.description }}" class="comp-desc">{{ competition.description }}</text>
 
-      <!-- 用户操作按钮 -->
-      <view class="user-actions">
-        <view class="action-btn-primary" bindtap="openSubmitEntry">
-          <text class="btn-icon">🎣</text>
-          <text class="btn-text">上报钓获</text>
-        </view>
+      <!-- 管理员分享按钮 -->
+      <view wx:if="{{ canEdit }}" class="user-actions">
         <button class="action-btn-secondary" open-type="share">
           <text class="btn-icon">📤</text>
           <text class="btn-text">分享榜单</text>
@@ -63,9 +59,6 @@
     <view wx:if="{{ competition.entries.length === 0 }}" class="empty-entries">
       <text class="empty-icon">🎣</text>
       <text class="empty-text">暂无上榜记录</text>
-      <view class="btn-primary add-entry-btn-center" bindtap="openSubmitEntry">
-        上报我的钓获
-      </view>
       <view wx:if="{{ canEdit }}" class="btn-outline-empty" bindtap="openAddEntry">
         管理员直接添加
       </view>
@@ -112,7 +105,6 @@
           <text class="section-title">📋 完整榜单</text>
           <view class="header-btns">
             <view class="btn-sm-outline" bindtap="exportImage">📤 导出</view>
-            <view class="btn-sm-outline" bindtap="openMySubmissions">📝 我的上报</view>
             <view wx:if="{{ canEdit }}" class="btn-sm-green" bindtap="openAddEntry">＋ 添加</view>
           </view>
         </view>
@@ -175,8 +167,7 @@
   <view wx:if="{{ showEntryPanel }}" class="panel-overlay" bindtap="closeEntryPanel"></view>
   <view class="entry-panel {{ showEntryPanel ? 'entry-panel--visible' : '' }}">
     <view class="panel-handle"></view>
-    <text class="panel-title">{{ isUserSubmit ? (editingPendingId ? '修改上报' : '上报钓获') : (editingEntryId ? '编辑记录' : '添加记录') }}</text>
-    <text wx:if="{{ isUserSubmit }}" class="panel-subtitle">提交后需管理员审核通过方可上榜</text>
+    <text class="panel-title">{{ editingEntryId ? '编辑记录' : '添加记录' }}</text>
 
     <view class="panel-form">
       <!-- 渔获尺寸图（必填）-->
@@ -224,7 +215,8 @@
 
       <view class="form-group">
         <text class="form-label">鱼种</text>
-        <input class="form-input" placeholder="例：黄鳍鲷" value="{{ entryForm.best_species }}" bindinput="onEntryInput" data-field="best_species" maxlength="20" />
+        <view wx:if="{{ fixedSpecies }}" class="form-input picker-input">{{ fixedSpecies }}</view>
+        <input wx:else class="form-input" placeholder="例：黄鳍鲷" value="{{ entryForm.best_species }}" bindinput="onEntryInput" data-field="best_species" maxlength="20" />
       </view>
 
       <view class="form-row">
@@ -284,7 +276,7 @@
       <view class="btn-outline panel-cancel-btn" bindtap="closeEntryPanel">取消</view>
       <view class="btn-primary panel-save-btn {{ saving ? 'btn-disabled' : '' }}" bindtap="saveEntry">
         <text wx:if="{{ saving }}">保存中…</text>
-        <text wx:else>{{ isUserSubmit ? '提交审核' : '确认保存' }}</text>
+        <text wx:else>确认保存</text>
       </view>
     </view>
   </view>
@@ -324,43 +316,6 @@
 
     <view class="panel-actions">
       <view class="btn-outline panel-cancel-btn" bindtap="closeReviewPanel">关闭</view>
-    </view>
-  </view>
-
-  <!-- ===== 我的上报面板 ===== -->
-  <view wx:if="{{ showMySubmissions }}" class="panel-overlay" bindtap="closeMySubmissions"></view>
-  <view class="entry-panel {{ showMySubmissions ? 'entry-panel--visible' : '' }}">
-    <view class="panel-handle"></view>
-    <text class="panel-title">📝 我的上报记录</text>
-
-    <view wx:if="{{ mySubmissions.length === 0 }}" class="review-empty">暂无上报记录</view>
-
-    <view wx:else class="review-list">
-      <view wx:for="{{ mySubmissions }}" wx:key="_id" class="review-item">
-        <view class="review-item-header">
-          <text class="review-name">{{ item.player_name }}</text>
-          <view class="status-tag" style="background:{{ item.statusColor }}">{{ item.statusText }}</view>
-        </view>
-        <view class="review-meta">
-          <text wx:if="{{ item.best_species }}">🐟 {{ item.best_species }}</text>
-          <text wx:if="{{ item.length_cm }}">{{ item.length_cm }}cm</text>
-          <text wx:if="{{ item.spot }}">📍 {{ item.spot }}</text>
-        </view>
-        <view wx:if="{{ item.status === 'rejected' && item.rejection_reason }}" class="reject-reason">
-          拒绝原因：{{ item.rejection_reason }}
-        </view>
-        <view wx:if="{{ item.catch_photo_url }}" class="review-photos">
-          <image class="review-photo" src="{{ item.catch_photo_url }}" mode="aspectFill" />
-        </view>
-        <view wx:if="{{ item.status === 'rejected' }}" class="review-actions">
-          <view class="review-btn review-approve" catchtap="openEditSubmission" data-id="{{ item._id }}">✏️ 修改重提</view>
-          <view class="review-btn review-reject" catchtap="deleteMySubmission" data-id="{{ item._id }}">🗑️ 删除</view>
-        </view>
-      </view>
-    </view>
-
-    <view class="panel-actions">
-      <view class="btn-outline panel-cancel-btn" bindtap="closeMySubmissions">关闭</view>
     </view>
   </view>
 
