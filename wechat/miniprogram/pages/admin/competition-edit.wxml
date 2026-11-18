@@ -1,5 +1,5 @@
 <!-- pages/admin/competition-edit.wxml — 管理员：比赛信息编辑 -->
-<view class="page-container">
+<view wx:if="{{ authorized }}" class="page-container">
   <view class="form-wrap">
 
     <!-- 比赛名称 -->

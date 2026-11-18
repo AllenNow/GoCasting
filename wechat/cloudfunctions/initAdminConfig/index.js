@@ -20,15 +20,21 @@ exports.main = async (event, context) => {
     // 检查是否已存在
     const existing = await db.collection('admin_config').limit(1).get();
     if (existing.data.length > 0) {
-      // 已存在则追加
+      // 已存在则追加，但仅允许现有超级管理员操作，避免前端任意调用提权
       const doc = existing.data[0];
-      const admins = doc.admins || [];
+      const superAdmins = doc.super_admins || doc.admins || [];
+      if (!superAdmins.includes(OPENID)) {
+        return { success: false, error: '无权限执行此操作' };
+      }
+
+      const field = doc.super_admins ? 'super_admins' : 'admins';
+      const admins = doc[field] || [];
       if (admins.includes(openid)) {
         return { success: true, message: '该 openid 已在管理员列表中', admins };
       }
       admins.push(openid);
       await db.collection('admin_config').doc(doc._id).update({
-        data: { admins, updated_at: db.serverDate() },
+        data: { [field]: admins, updated_at: db.serverDate() },
       });
       return { success: true, message: '已添加管理员', admins };
     }

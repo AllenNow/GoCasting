@@ -180,10 +180,7 @@ exports.main = async (event) => {
       const config = cfg.data[0] || {};
       const supers = config.super_admins || config.admins || [];
       const compAdmins = config.competition_admins || [];
-      const allowed = supers.includes(OPENID)
-        || compAdmins.includes(OPENID)
-        || comp.created_by === OPENID
-        || (comp.admins || []).includes(OPENID);
+      const allowed = supers.includes(OPENID) || compAdmins.includes(OPENID);
       if (!allowed) {
         return { success: false, error: '无权限导入该赛事数据' };
       }

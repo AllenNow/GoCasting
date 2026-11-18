@@ -127,6 +127,10 @@ Page({
   },
 
   addCompetition: function() {
+    if (!this.data.isAdmin) {
+      wx.showToast({ title: '仅管理员可创建比赛', icon: 'none' });
+      return;
+    }
     wx.navigateTo({ url: '/pages/admin/competition-edit' });
   },
 

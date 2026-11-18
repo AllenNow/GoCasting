@@ -14,11 +14,45 @@ Page({
   },
 
   onLoad: function() {
-    this.loadData();
+    this._checkSuperAdmin();
   },
 
   onShow: function() {
-    this.loadData();
+    if (this._superAdmin) this.loadData();
+  },
+
+  // 仅超级管理员可进入权限管理页
+  _checkSuperAdmin: function() {
+    var that = this;
+    wx.cloud.callFunction({ name: 'checkPermission' })
+      .then(function(res) {
+        var result = res.result || {};
+        if (result.success && result.role === 'super_admin') {
+          that._superAdmin = true;
+          that.loadData();
+        } else {
+          that._denyAccess();
+        }
+      })
+      .catch(function() {
+        that._denyAccess();
+      });
+  },
+
+  _denyAccess: function() {
+    wx.showModal({
+      title: '无权限',
+      content: '仅超级管理员可管理权限',
+      showCancel: false,
+      confirmText: '知道了',
+      success: function() {
+        wx.navigateBack({
+          fail: function() {
+            wx.switchTab({ url: '/pages/competition/competition' });
+          }
+        });
+      }
+    });
   },
 
   // 切换 Tab

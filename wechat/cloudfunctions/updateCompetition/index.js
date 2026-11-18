@@ -13,12 +13,15 @@ async function getPermission(OPENID, compId) {
   const competitionAdmins = config.competition_admins || [];
   const isSuperAdmin = superAdmins.includes(OPENID);
   const isCompetitionAdmin = competitionAdmins.includes(OPENID);
+  // 必须是管理员，普通用户即使是创建者或被授权者也不获得编辑入口
+  const isAdmin = isSuperAdmin || isCompetitionAdmin;
 
   if (!compId) {
     return { 
       isSuperAdmin, 
       isCompetitionAdmin,
-      canCreate: isSuperAdmin || isCompetitionAdmin,
+      isAdmin,
+      canCreate: isAdmin,
       canEdit: false, 
       canDelete: false, 
       canAssign: false 
@@ -35,11 +38,12 @@ async function getPermission(OPENID, compId) {
   return {
     isSuperAdmin,
     isCompetitionAdmin,
+    isAdmin,
     isCreator,
     isAssignedAdmin,
-    canEdit: isSuperAdmin || isCreator || isAssignedAdmin,
-    canDelete: isSuperAdmin || isCreator,
-    canAssign: isSuperAdmin || isCreator,
+    canEdit: isAdmin,
+    canDelete: isAdmin && (isSuperAdmin || isCreator),
+    canAssign: isAdmin && (isSuperAdmin || isCreator),
     competition: comp
   };
 }

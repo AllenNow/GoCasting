@@ -3,6 +3,7 @@ var app = getApp();
 
 Page({
   data: {
+    authorized: false,
     isEdit: false,
     editId: null,
     saving: false,
@@ -21,6 +22,51 @@ Page({
   },
 
   onLoad: function(options) {
+    var that = this;
+    this._checkAccess(options.id, function() {
+      that.setData({ authorized: true });
+      that._initPage(options);
+    });
+  },
+
+  // 仅管理员可创建/编辑比赛
+  _checkAccess: function(id, onAllowed) {
+    var deny = function() {
+      wx.showModal({
+        title: '无权限',
+        content: '仅管理员可创建或编辑比赛',
+        showCancel: false,
+        confirmText: '知道了',
+        success: function() {
+          wx.navigateBack({
+            fail: function() {
+              wx.switchTab({ url: '/pages/competition/competition' });
+            }
+          });
+        }
+      });
+    };
+
+    if (id) {
+      wx.cloud.callFunction({
+        name: 'updateCompetition',
+        data: { action: 'checkPermission', competitionId: id }
+      }).then(function(res) {
+        var result = res.result || {};
+        if (result.success && result.canEdit) onAllowed();
+        else deny();
+      }).catch(deny);
+    } else {
+      wx.cloud.callFunction({ name: 'checkPermission' })
+        .then(function(res) {
+          var result = res.result || {};
+          if (result.success && result.permissions && result.permissions.canCreateCompetition) onAllowed();
+          else deny();
+        }).catch(deny);
+    }
+  },
+
+  _initPage: function(options) {
     // 默认日期为今天
     var now = new Date();
     var month = String(now.getMonth() + 1).padStart(2, '0');
