@@ -8,7 +8,7 @@
       <text>👑 超级管理员</text>
     </view>
     <view wx:elif="{{ role === 'competition_admin' }}" class="role-badge">
-      <text>🔑 赛事管理员</text>
+      <text>🔑 榜单管理员</text>
     </view>
 
     <!-- 头像 -->
@@ -32,9 +32,98 @@
     </view>
   </view>
 
+  <!-- 我的渔获统计 -->
+  <view class="stats-section">
+    <view class="stats-header">
+      <text class="stats-title">我的渔获</text>
+      <text class="stats-link" bindtap="goAllCatches">全部 ›</text>
+    </view>
+    <view class="stats-grid">
+      <view class="stat-cell">
+        <text class="stat-value">{{ stats.totalCatches }}</text>
+        <text class="stat-label">总渔获</text>
+      </view>
+      <view class="stat-cell">
+        <text class="stat-value">{{ stats.totalSpecies }}</text>
+        <text class="stat-label">鱼种</text>
+      </view>
+      <view class="stat-cell">
+        <text class="stat-value">{{ stats.totalWeightKg }}</text>
+        <text class="stat-label">总重(kg)</text>
+      </view>
+      <view class="stat-cell">
+        <text class="stat-value">{{ stats.releasedCount }}</text>
+        <text class="stat-label">放流</text>
+      </view>
+    </view>
+    <view class="stats-sub">
+      <text>今年 {{ stats.thisYear }} 次</text>
+      <text>最常钓：{{ stats.topSpecies }}</text>
+    </view>
+  </view>
+
+  <!-- 最近渔获 -->
+  <view wx:if="{{ recentCatches.length > 0 }}" class="card recent-card">
+    <view class="card-head">
+      <text class="card-head-title">最近渔获</text>
+      <text class="stats-link" bindtap="goAllCatches">查看全部 ›</text>
+    </view>
+    <view
+      wx:for="{{ recentCatches }}"
+      wx:key="_id"
+      class="recent-item"
+      data-id="{{ item._id }}"
+      bindtap="goCatchDetail"
+    >
+      <image wx:if="{{ item.photo_url }}" class="recent-photo" src="{{ item.photo_url }}" mode="aspectFill" />
+      <view wx:else class="recent-photo recent-photo-empty">🐟</view>
+      <view class="recent-info">
+        <text class="recent-species">{{ item.species }}</text>
+        <text class="recent-meta">{{ item.date }}{{ item.weightKg ? '  ·  ' + item.weightKg + ' kg' : '' }}</text>
+      </view>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 成就徽章 -->
+  <view wx:if="{{ badges.length > 0 }}" class="badges-section">
+    <text class="stats-title">成就</text>
+    <scroll-view class="badges-scroll" scroll-x enhanced show-scrollbar="{{ false }}">
+      <view
+        wx:for="{{ badges }}"
+        wx:key="id"
+        class="badge-item {{ item.locked ? 'locked' : '' }}"
+      >
+        <text class="badge-icon">{{ item.icon }}</text>
+        <text class="badge-name">{{ item.name }}</text>
+      </view>
+    </scroll-view>
+  </view>
+
   <!-- 功能入口 -->
   <view class="menu-section">
     <view class="card">
+      <view class="menu-item" bindtap="goAllCatches">
+        <text class="menu-icon">🎣</text>
+        <text class="menu-label">我的渔获记录</text>
+        <text class="menu-arrow">›</text>
+      </view>
+      <view class="menu-item" bindtap="goGoScore">
+        <text class="menu-icon">📊</text>
+        <text class="menu-label">今日出钓评分</text>
+        <text class="menu-arrow">›</text>
+      </view>
+      <view class="menu-item" bindtap="goSpecies">
+        <text class="menu-icon">🐟</text>
+        <text class="menu-label">鱼种图鉴</text>
+        <text class="menu-arrow">›</text>
+      </view>
+      <view class="menu-item" bindtap="goPrivacyPolicy">
+        <text class="menu-icon">🔒</text>
+        <text class="menu-label">隐私政策</text>
+        <text class="menu-arrow">›</text>
+      </view>
+
       <!-- 超级管理员：权限管理入口 -->
       <view wx:if="{{ role === 'super_admin' }}" class="menu-item" bindtap="goPermissionManage">
         <text class="menu-icon">⚙️</text>
@@ -54,10 +143,12 @@
 
   <!-- 关于 -->
   <view class="about-section">
-    <text class="about-title">钓鱼赛事助手</text>
-    <text class="about-desc">记录钓鱼荣誉，分享垂钓快乐</text>
-    <text class="about-version">版本 1.0.0</text>
+    <text class="about-title">GoCasting</text>
+    <text class="about-desc">记录每一次出钓</text>
+    <text class="about-version">版本 1.1.0</text>
   </view>
 
   <view class="safe-bottom"></view>
 </view>
+
+<privacy-popup />

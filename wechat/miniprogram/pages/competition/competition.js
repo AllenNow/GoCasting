@@ -128,7 +128,7 @@ Page({
 
   addCompetition: function() {
     if (!this.data.isAdmin) {
-      wx.showToast({ title: '仅管理员可创建比赛', icon: 'none' });
+      wx.showToast({ title: '仅管理员可创建榜单', icon: 'none' });
       return;
     }
     wx.navigateTo({ url: '/pages/admin/competition-edit' });
@@ -144,14 +144,14 @@ Page({
 
   onShareAppMessage: function() {
     return {
-      title: '钓鱼赛事榜单 - 快来看看谁是钓鱼王',
+      title: '钓鱼榜单 - 看看本期排名',
       path: '/pages/competition/competition',
     };
   },
 
   onShareTimeline: function() {
     return {
-      title: '钓鱼赛事榜单 - 快来看看谁是钓鱼王',
+      title: '钓鱼榜单 - 看看本期排名',
     };
   },
 });

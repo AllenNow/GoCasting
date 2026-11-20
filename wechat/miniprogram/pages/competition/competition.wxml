@@ -68,3 +68,5 @@
 
   <view class="safe-bottom"></view>
 </view>
+
+<privacy-popup />

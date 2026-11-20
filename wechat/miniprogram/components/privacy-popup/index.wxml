@@ -1,0 +1,30 @@
+<!-- components/privacy-popup/index.wxml — 首次使用隐私提示 -->
+<view wx:if="{{ show }}" class="pp-mask" catchtouchmove="noop">
+  <view class="pp-dialog">
+    <view class="pp-icon">🔒</view>
+    <text class="pp-title">隐私保护提示</text>
+
+    <text class="pp-desc">
+      感谢使用 GoCasting。为提供潮汐天气、钓点地图和渔获记录等功能，我们会在你主动使用相关功能时申请位置、相册或相机权限，并按照隐私政策处理相应信息。请阅读并同意{{ contractName || '《GoCasting 隐私保护指引》' }}。
+    </text>
+
+    <view class="pp-links">
+      <text class="pp-link" bindtap="openLocalPolicy">查看隐私政策</text>
+      <text class="pp-link-sep">·</text>
+      <text class="pp-link" bindtap="openOfficialPolicy">微信官方隐私指引</text>
+    </view>
+
+    <view class="pp-actions">
+      <view class="pp-btn pp-btn-ghost" bindtap="handleDecline">暂不同意</view>
+      <button
+        id="privacy-agree-btn"
+        class="pp-btn pp-btn-primary"
+        open-type="agreePrivacyAuthorization"
+        bindtap="handleAgree"
+        bindagreeprivacyauthorization="handleAgree"
+      >同意并继续</button>
+    </view>
+
+    <text class="pp-footnote">不同意也可先浏览装备、鱼种与榜单；位置、照片等功能将在你同意后可用。</text>
+  </view>
+</view>

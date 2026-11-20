@@ -1,10 +1,20 @@
 {
   "pages": [
+    "pages/weather/weather",
+    "pages/index/index",
+    "pages/catch-log/catch-log",
+    "pages/catch-detail/catch-detail",
+    "pages/spot-map/spot-map",
+    "pages/profile/profile",
+    "pages/gear/gear",
+    "pages/gear/gear-detail",
+    "pages/go-score/go-score",
+    "pages/species/species",
     "pages/competition/competition",
     "pages/competition/competition-detail",
-    "pages/profile/profile",
     "pages/admin/competition-edit",
-    "pages/permission/manage"
+    "pages/permission/manage",
+    "pages/privacy/privacy"
   ],
   "tabBar": {
     "custom": true,
@@ -13,6 +23,18 @@
     "backgroundColor": "#ffffff",
     "borderStyle": "black",
     "list": [
+      {
+        "pagePath": "pages/weather/weather",
+        "text": "潮汐"
+      },
+      {
+        "pagePath": "pages/spot-map/spot-map",
+        "text": "钓点"
+      },
+      {
+        "pagePath": "pages/gear/gear",
+        "text": "装备"
+      },
       {
         "pagePath": "pages/competition/competition",
         "text": "榜单"
@@ -27,16 +49,20 @@
     "backgroundColor": "#f4f6f4",
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#1a7f5a",
-    "navigationBarTitleText": "钓鱼赛事助手",
+    "navigationBarTitleText": "GoCasting",
     "navigationBarTextStyle": "white"
   },
   "permission": {
     "scope.userLocation": {
-      "desc": "用于钓点地图定位，选择钓鱼位置"
+      "desc": "用于潮汐海况、钓点地图和渔获记录定位"
     }
   },
-  "requiredPrivateInfos": ["chooseLocation"],
+  "requiredPrivateInfos": ["getLocation", "chooseLocation"],
   "sitemapLocation": "sitemap.json",
   "style": "v2",
-  "lazyCodeLoading": "requiredComponents"
+  "lazyCodeLoading": "requiredComponents",
+  "__usePrivacyCheck__": true,
+  "usingComponents": {
+    "privacy-popup": "/components/privacy-popup/index"
+  }
 }

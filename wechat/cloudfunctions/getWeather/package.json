@@ -1,0 +1,10 @@
+{
+  "name": "getWeather",
+  "version": "1.0.0",
+  "description": "调用高德天气 API（绕过小程序域名限制）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3",
+    "node-fetch": "^2.6.7"
+  }
+}

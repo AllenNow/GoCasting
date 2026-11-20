@@ -1,0 +1,155 @@
+<!-- pages/gear/gear.wxml — 装备列表页 -->
+<wxs module="utils" src="./fmt.wxs"></wxs>
+
+<!-- 顶部固定区域：直接作为页面根级元素，sticky 才能对 page 滚动生效 -->
+<view class="header-sticky">
+
+  <!-- 渔竿 / 渔轮 分段切换 -->
+  <view class="gear-tab-wrap">
+    <view class="gear-segment">
+      <view class="gear-tab-item {{activeTab === 'rod' ? 'gear-tab-active' : ''}}"
+            bindtap="switchTab" data-tab="rod">渔竿</view>
+      <view class="gear-tab-item {{activeTab === 'reel' ? 'gear-tab-active' : ''}}"
+            bindtap="switchTab" data-tab="reel">渔轮</view>
+    </view>
+  </view>
+
+  <!-- 搜索 + 筛选入口 -->
+  <view class="search-filter-row">
+    <view class="search-box">
+      <text class="search-icon">🔍</text>
+      <input class="search-input" placeholder="搜索型号、规格…"
+             value="{{keyword}}" bindinput="onSearchInput"
+             confirm-type="search" />
+    </view>
+    <view class="filter-trigger" bindtap="openFilterSheet">
+      <text class="filter-trigger-icon">☰</text>
+      <text>筛选</text>
+      <text wx:if="{{activeFilterCount > 0}}" class="filter-badge">{{activeFilterCount}}</text>
+    </view>
+  </view>
+
+  <!-- 品牌快捷筛选 -->
+  <view class="brand-row">
+    <scroll-view scroll-x class="brand-scroll" enable-flex>
+      <view wx:for="{{brands}}" wx:key="*this"
+            class="sub-pill {{brandIdx === index ? 'sub-pill-active' : ''}}"
+            bindtap="onBrandChange" data-idx="{{index}}">{{item}}</view>
+    </scroll-view>
+  </view>
+
+  <!-- 已筛选提示 -->
+  <view wx:if="{{activeFilterCount > 0}}" class="filter-active-bar">
+    <text class="filter-active-text">已选 {{activeFilterCount}} 项 · {{filteredList.length}} 款</text>
+    <view class="filter-reset" bindtap="resetFilters">重置</view>
+  </view>
+
+</view>
+
+<!-- 筛选面板 -->
+<view wx:if="{{showFilterSheet}}" class="filter-mask" bindtap="closeFilterSheet" catchtouchmove="noop"></view>
+<view class="filter-sheet" wx:if="{{showFilterSheet}}">
+  <view class="sheet-header">
+    <text class="sheet-title">筛选</text>
+    <text class="sheet-close" bindtap="closeFilterSheet">✕</text>
+  </view>
+
+  <scroll-view scroll-y class="sheet-body">
+    <view class="filter-group">
+      <text class="filter-group-title">官方报价区间</text>
+      <text class="filter-group-hint">同一系列含多个型号，系列报价为最低～最高型号区间，按有交集筛选</text>
+      <view class="filter-chips">
+        <view wx:for="{{prices}}" wx:key="value"
+              class="sheet-chip {{priceIdx === index ? 'sheet-chip-active' : ''}}"
+              bindtap="onPriceChange" data-idx="{{index}}">{{item.label}}</view>
+      </view>
+    </view>
+
+    <view class="filter-group">
+      <text class="filter-group-title">市场版本</text>
+      <view class="filter-chips">
+        <view wx:for="{{markets}}" wx:key="value"
+              class="sheet-chip {{marketIdx === index ? 'sheet-chip-active' : ''}}"
+              bindtap="onMarketChange" data-idx="{{index}}">{{item.label}}</view>
+      </view>
+    </view>
+
+    <view wx:if="{{showTypePill}}" class="filter-group">
+      <text class="filter-group-title">竿型</text>
+      <view class="filter-chips">
+        <view wx:for="{{types}}" wx:key="value"
+              class="sheet-chip {{typeIdx === index ? 'sheet-chip-active' : ''}}"
+              bindtap="onTypeChange" data-idx="{{index}}">{{item.label}}</view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <view class="sheet-footer">
+    <view class="sheet-reset" bindtap="resetFilters">重置</view>
+    <view class="sheet-apply" bindtap="closeFilterSheet">查看 {{filteredList.length}} 个结果</view>
+  </view>
+</view>
+
+<!-- 内容区：独立容器，不包在 header-sticky 里 -->
+<view class="gear-content">
+
+  <view wx:if="{{!loading && seeded && activeFilterCount === 0}}" class="result-bar">
+    <text>共 {{filteredList.length}} 款</text>
+    <text wx:if="{{keyword}}" class="result-keyword">“{{keyword}}”</text>
+  </view>
+
+  <view wx:if="{{loading}}" class="loading-wrap">
+    <text>加载中…</text>
+  </view>
+
+  <view wx:elif="{{!seeded}}" class="seed-wrap card">
+    <text class="seed-icon">📦</text>
+    <text class="seed-hint">装备数据库为空</text>
+    <text class="seed-sub">点击下方按钮从内置数据初始化</text>
+    <view class="btn-primary seed-btn" bindtap="seedData">初始化装备数据</view>
+  </view>
+
+  <view wx:elif="{{filteredList.length === 0}}" class="empty-state">
+    <text class="empty-icon">🔍</text>
+    <text class="empty-text">没有符合条件的装备</text>
+    <text class="empty-subtext" wx:if="{{keyword}}">未找到相关装备，试试其他关键词</text>
+  </view>
+
+  <view wx:else class="series-list">
+    <view wx:for="{{filteredList}}" wx:key="series_id"
+          class="series-card" bindtap="onCardTap" data-id="{{item.series_id}}">
+      <view class="card-image-wrap">
+        <image wx:if="{{item.images && item.images.length > 0 && item.images[0]}}"
+               class="card-image" src="{{item.images[0]}}" mode="aspectFill" lazy-load />
+        <view wx:else class="card-image-placeholder">
+          <text class="placeholder-text">{{item.series_name}}</text>
+        </view>
+        <view class="card-pills">
+          <view wx:if="{{item.type_label && showTypePill}}" class="card-pill pill-type">{{item.type_label}}</view>
+          <view class="card-pill pill-market-{{item.market === 'CN' ? 'cn' : 'jdm'}}">
+            {{item.market === 'CN' ? '中国行货' : 'JDM'}}
+          </view>
+        </view>
+      </view>
+      <view class="card-info">
+        <view class="card-info-top">
+          <view class="card-meta">
+            <text class="card-brand">{{item.brand}}</text>
+            <text class="card-name">{{item.series_name}}</text>
+            <text wx:if="{{item.price_min || item.price_max}}" class="card-price">官方报价 {{utils.priceRange(item.price_min, item.price_max)}}</text>
+            <text wx:else class="card-price card-price-empty">暂无官方报价</text>
+            <text class="card-sub">{{item.year ? item.year + '款 · ' : ''}}{{item.model_count}}个型号</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="safe-bottom"></view>
+
+  <view class="data-disclaimer">
+    <text>装备参数与官方报价仅供参考，价格来自禧玛诺/达亿瓦官方网站，可能随官方调整，不构成购买建议；本小程序不提供购买或交易服务。</text>
+  </view>
+</view>
+
+<privacy-popup />

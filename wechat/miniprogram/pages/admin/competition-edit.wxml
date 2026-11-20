@@ -2,12 +2,12 @@
 <view wx:if="{{ authorized }}" class="page-container">
   <view class="form-wrap">
 
-    <!-- 比赛名称 -->
+    <!-- 榜单名称 -->
     <view class="form-group">
-      <text class="form-label required">比赛名称 *</text>
+      <text class="form-label required">榜单名称 *</text>
       <input
         class="form-input"
-        placeholder="例：2026 夏季远投精英赛"
+        placeholder="例：2026 夏季远投榜单"
         value="{{ form.name }}"
         bindinput="onInput"
         data-field="name"
@@ -15,9 +15,9 @@
       />
     </view>
 
-    <!-- 比赛日期 -->
+    <!-- 榜单日期 -->
     <view class="form-group">
-      <text class="form-label required">比赛日期 *</text>
+      <text class="form-label required">榜单日期 *</text>
       <picker mode="date" value="{{ form.date }}" bindchange="onDateChange">
         <view class="picker-row">
           <text class="picker-value">{{ form.date || '选择日期' }}</text>
@@ -39,9 +39,9 @@
       />
     </view>
 
-    <!-- 比赛状态 -->
+    <!-- 榜单状态 -->
     <view class="form-group">
-      <text class="form-label">比赛状态</text>
+      <text class="form-label">榜单状态</text>
       <picker
         mode="selector"
         range="{{ statusOptions }}"
@@ -57,10 +57,10 @@
 
     <!-- 简介 -->
     <view class="form-group">
-      <text class="form-label">比赛简介</text>
+      <text class="form-label">榜单说明</text>
       <textarea
         class="form-input notes-area"
-        placeholder="可选：比赛规则、评分方式等"
+        placeholder="可选：统计规则、计分方式等"
         value="{{ form.description }}"
         bindinput="onInput"
         data-field="description"
@@ -78,7 +78,7 @@
       bindtap="save"
     >
       <text wx:if="{{ saving }}">保存中…</text>
-      <text wx:else>{{ isEdit ? '更新比赛' : '创建比赛' }}</text>
+      <text wx:else>{{ isEdit ? '更新榜单' : '创建榜单' }}</text>
     </view>
   </view>
 </view>

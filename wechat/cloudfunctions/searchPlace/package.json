@@ -1,0 +1,10 @@
+{
+  "name": "searchPlace",
+  "version": "1.0.0",
+  "description": "高德 POI 关键词搜索，返回地点列表含坐标",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3",
+    "node-fetch": "^2.6.7"
+  }
+}

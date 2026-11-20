@@ -34,7 +34,7 @@ Page({
     var deny = function() {
       wx.showModal({
         title: '无权限',
-        content: '仅管理员可创建或编辑比赛',
+        content: '仅管理员可创建或编辑榜单',
         showCancel: false,
         confirmText: '知道了',
         success: function() {
@@ -76,10 +76,10 @@ Page({
 
     if (options.id) {
       this.setData({ isEdit: true, editId: options.id });
-      wx.setNavigationBarTitle({ title: '编辑比赛' });
+      wx.setNavigationBarTitle({ title: '编辑榜单' });
       this.loadCompetition(options.id);
     } else {
-      wx.setNavigationBarTitle({ title: '新建比赛' });
+      wx.setNavigationBarTitle({ title: '新建榜单' });
     }
   },
 
@@ -140,11 +140,11 @@ Page({
 
     var form = this.data.form;
     if (!form.name.trim()) {
-      wx.showToast({ title: '请输入比赛名称', icon: 'none' }); 
+      wx.showToast({ title: '请输入榜单名称', icon: 'none' }); 
       return;
     }
     if (!form.date) {
-      wx.showToast({ title: '请选择比赛日期', icon: 'none' }); 
+      wx.showToast({ title: '请选择榜单日期', icon: 'none' }); 
       return;
     }
 

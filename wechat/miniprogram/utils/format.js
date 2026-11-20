@@ -1,4 +1,4 @@
-// utils/format.js — 全局格式化工具函数 (ES5 兼容版)
+// utils/format.js — 全局格式化工具函数
 
 /**
  * 格式化鱼获重量
@@ -16,9 +16,9 @@ function formatWeight(g) {
  */
 function formatDate(dateStr) {
   if (!dateStr) return '';
-  var parts = dateStr.split('-');
+  const parts = dateStr.split('-');
   if (parts.length < 3) return dateStr;
-  return Number(parts[1]) + '月' + Number(parts[2]) + '日';
+  return `${Number(parts[1])}月${Number(parts[2])}日`;
 }
 
 /**
@@ -27,10 +27,10 @@ function formatDate(dateStr) {
  */
 function formatPrice(price) {
   if (!price && price !== 0) return '-';
-  var str = '' + price;
-  var result = '';
-  var count = 0;
-  var i = str.length - 1;
+  const str = '' + price;
+  let result = '';
+  let count = 0;
+  let i = str.length - 1;
   while (i >= 0) {
     result = str[i] + result;
     count++;
@@ -40,4 +40,4 @@ function formatPrice(price) {
   return result;
 }
 
-module.exports = { formatWeight: formatWeight, formatDate: formatDate, formatPrice: formatPrice };
+module.exports = { formatWeight, formatDate, formatPrice };

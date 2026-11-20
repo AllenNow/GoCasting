@@ -1,0 +1,84 @@
+/* pages/privacy/privacy.wxss — 隐私保护指引 */
+
+.policy-page {
+  padding-bottom: 40rpx;
+}
+
+.policy-head {
+  padding: 32rpx 32rpx 24rpx;
+  background: var(--color-card);
+}
+
+.policy-title {
+  display: block;
+  font-size: 38rpx;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--color-text-primary);
+}
+
+.policy-date {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 22rpx;
+  color: var(--color-text-hint);
+}
+
+.policy-intro {
+  display: block;
+  margin-top: 20rpx;
+  font-size: 26rpx;
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+}
+
+.policy-card {
+  margin: 20rpx 24rpx 0;
+  padding: 8rpx 28rpx 28rpx;
+  background: var(--color-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+}
+
+.policy-section {
+  padding-top: 28rpx;
+}
+
+.policy-h2 {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 12rpx;
+}
+
+.policy-p {
+  display: block;
+  font-size: 26rpx;
+  line-height: 1.75;
+  color: var(--color-text-secondary);
+  margin-bottom: 12rpx;
+}
+
+.policy-actions {
+  margin: 28rpx 24rpx 0;
+}
+
+.policy-btn {
+  height: 88rpx;
+  line-height: 88rpx;
+  text-align: center;
+  border-radius: 100rpx;
+  font-size: 28rpx;
+  font-weight: 500;
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+
+.policy-foot {
+  margin: 24rpx 40rpx 0;
+  font-size: 22rpx;
+  line-height: 1.6;
+  color: var(--color-text-hint);
+  text-align: center;
+}

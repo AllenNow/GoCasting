@@ -225,3 +225,154 @@
 .safe-bottom {
   height: 40rpx;
 }
+
+/* ===== 渔获统计 ===== */
+.stats-section {
+  margin: 24rpx;
+  padding: 28rpx 24rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.05);
+}
+
+.stats-header,
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.stats-title,
+.card-head-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.stats-link {
+  font-size: 24rpx;
+  color: #1a7f5a;
+}
+
+.stats-grid {
+  display: flex;
+}
+
+.stat-cell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6rpx;
+}
+
+.stat-value {
+  font-size: 38rpx;
+  font-weight: 700;
+  color: #1a7f5a;
+}
+
+.stat-label {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.stats-sub {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20rpx;
+  padding-top: 18rpx;
+  border-top: 1rpx solid #f5f5f5;
+  font-size: 24rpx;
+  color: #888;
+}
+
+/* ===== 最近渔获 ===== */
+.recent-card {
+  margin: 0 24rpx 24rpx;
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+.recent-item {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 0;
+  border-top: 1rpx solid #f5f5f5;
+}
+
+.recent-photo {
+  width: 84rpx;
+  height: 84rpx;
+  border-radius: 12rpx;
+  background: #eef4f0;
+}
+
+.recent-photo-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+}
+
+.recent-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-left: 18rpx;
+  gap: 6rpx;
+}
+
+.recent-species {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 600;
+}
+
+.recent-meta {
+  font-size: 22rpx;
+  color: #999;
+}
+
+/* ===== 成就 ===== */
+.badges-section {
+  margin: 0 24rpx 24rpx;
+  padding: 24rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.05);
+}
+
+.badges-scroll {
+  margin-top: 18rpx;
+  white-space: nowrap;
+}
+
+.badge-item {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  width: 128rpx;
+  margin-right: 16rpx;
+  padding: 16rpx 8rpx;
+  background: #eef8f2;
+  border-radius: 12rpx;
+}
+
+.badge-item.locked {
+  background: #f5f5f5;
+  opacity: 0.55;
+}
+
+.badge-icon {
+  font-size: 44rpx;
+}
+
+.badge-name {
+  margin-top: 8rpx;
+  font-size: 20rpx;
+  color: #666;
+  text-align: center;
+}
+

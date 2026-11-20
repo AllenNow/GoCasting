@@ -1,5 +1,10 @@
 // pages/competition/competition-detail.js — 比赛详情 & 榜单
 const app = getApp();
+const {
+  MAX_IMAGE_BYTES,
+  getFileSize,
+  compressImageToLimit,
+} = require('../../utils/image');
 
 const STATUS_MAP = {
   upcoming: { label: '即将开始', color: '#4a90d9' },
@@ -210,7 +215,7 @@ Page({
 
   editCompetition: function() {
     if (!this.data.canEdit) {
-      wx.showToast({ title: '仅管理员可编辑赛事', icon: 'none' });
+      wx.showToast({ title: '仅管理员可编辑榜单', icon: 'none' });
       return;
     }
     wx.navigateTo({ url: '/pages/admin/competition-edit?id=' + this._id });
@@ -219,12 +224,12 @@ Page({
   deleteCompetition: function() {
     var that = this;
     if (!this.data.canDelete) {
-      wx.showToast({ title: '无权限删除赛事', icon: 'none' });
+      wx.showToast({ title: '无权限删除榜单', icon: 'none' });
       return;
     }
     wx.showModal({
-      title: '删除比赛',
-      content: '确定删除这场比赛？所有成绩将一并删除，不可恢复。',
+      title: '删除榜单',
+      content: '确定删除这个榜单？所有成绩将一并删除，不可恢复。',
       confirmColor: '#e85555',
       success: function(res) {
         if (!res.confirm) return;
@@ -326,23 +331,23 @@ Page({
       sourceType: ['album', 'camera'],
       sizeType: ['compressed'],
       success: function(res) {
-        var file = res.tempFiles[0];
-        var tempPath = file.tempFilePath;
-        var fileSize = file.size;
+        var tempPath = res.tempFiles[0].tempFilePath;
 
-        if (fileSize > 1024 * 1024) {
-          wx.showLoading({ title: '压缩图片中…' });
-          that.compressImage(tempPath, fileSize).then(function(compressed) {
+        wx.showLoading({ title: '处理图片中…' });
+        compressImageToLimit(tempPath).then(function(compressed) {
+          return getFileSize(compressed).then(function(size) {
             wx.hideLoading();
+            if (size > MAX_IMAGE_BYTES) {
+              wx.showToast({ title: '图片超过 1MB，请更换', icon: 'none' });
+              return;
+            }
             that._setPhoto(type, compressed);
-          }).catch(function(err) {
-            wx.hideLoading();
-            console.error('压缩失败:', err);
-            wx.showToast({ title: '图片过大，压缩失败', icon: 'none' });
           });
-        } else {
-          that._setPhoto(type, tempPath);
-        }
+        }).catch(function(err) {
+          wx.hideLoading();
+          console.error('图片处理失败:', err);
+          wx.showToast({ title: '图片处理失败，请重试', icon: 'none' });
+        });
       },
     });
   },
@@ -376,38 +381,6 @@ Page({
       obj['entryForm.spot_photo2_url'] = '';
     }
     this.setData(obj);
-  },
-
-  compressImage: function(filePath, originalSize) {
-    return new Promise(function(resolve, reject) {
-      var targetSize = 900 * 1024;
-      var quality = Math.floor((targetSize / originalSize) * 100);
-      quality = Math.max(20, Math.min(80, quality));
-
-      wx.compressImage({
-        src: filePath,
-        quality: quality,
-        success: function(res) {
-          wx.getFileInfo({
-            filePath: res.tempFilePath,
-            success: function(info) {
-              if (info.size > 1024 * 1024) {
-                wx.compressImage({
-                  src: res.tempFilePath,
-                  quality: 20,
-                  success: function(res2) { resolve(res2.tempFilePath); },
-                  fail: reject,
-                });
-              } else {
-                resolve(res.tempFilePath);
-              }
-            },
-            fail: function() { resolve(res.tempFilePath); },
-          });
-        },
-        fail: reject,
-      });
-    });
   },
 
   removePhoto: function(e) {
@@ -445,17 +418,37 @@ Page({
   // 上传所有图片，返回 {catch_photo_url, spot_photo1_url, spot_photo2_url}
   uploadAllPhotos: function() {
     var that = this;
+    var temps = [
+      this.data.catchPhotoTemp,
+      this.data.spotPhoto1Temp,
+      this.data.spotPhoto2Temp,
+    ];
     return Promise.all([
       this._uploadOne(this.data.catchPhotoTemp || this.data.entryForm.catch_photo_url),
       this._uploadOne(this.data.spotPhoto1Temp || this.data.entryForm.spot_photo1_url),
       this._uploadOne(this.data.spotPhoto2Temp || this.data.entryForm.spot_photo2_url),
     ]).then(function(urls) {
+      // 记录本次新上传的文件，检测不通过时清理
+      that._uploadedFileIds = [];
+      temps.forEach(function(temp, i) {
+        if (temp && temp.indexOf('cloud://') !== 0 && urls[i]) {
+          that._uploadedFileIds.push(urls[i]);
+        }
+      });
       return {
         catch_photo_url: urls[0] || null,
         spot_photo1_url: urls[1] || null,
         spot_photo2_url: urls[2] || null,
       };
     });
+  },
+
+  // 删除本次新上传、但未通过检测的图片
+  _cleanupUploaded: function() {
+    var ids = this._uploadedFileIds || [];
+    this._uploadedFileIds = [];
+    if (!ids.length) return Promise.resolve();
+    return wx.cloud.deleteFile({ fileList: ids }).catch(function() {});
   },
 
   // 钓点地图定位
@@ -514,36 +507,48 @@ Page({
   // 文本内容安全检测（昵称/鱼种/钓点/备注等）
   _checkTextSafe: function(content) {
     return new Promise(function(resolve) {
-      if (!content || !content.trim()) { resolve(true); return; }
+      if (!content || !content.trim()) { resolve({ safe: true }); return; }
       wx.cloud.callFunction({
         name: 'checkText',
         data: { content: content },
       }).then(function(res) {
-        resolve(res.result && res.result.safe !== false);
-      }).catch(function() { resolve(true); }); // 检测服务异常时放行
+        var r = res.result || {};
+        var checked = r.checked !== false;
+        resolve({ safe: r.safe === true && checked, retry: r.retry === true || !checked });
+      }).catch(function() {
+        resolve({ safe: false, retry: true }); // 严格先审后存
+      });
     });
   },
 
   // 单张图片安全检测（仅检测云存储图片）
   _checkImageSafe: function(fileID) {
     return new Promise(function(resolve) {
-      if (!fileID || fileID.indexOf('cloud://') !== 0) { resolve(true); return; }
+      if (!fileID || fileID.indexOf('cloud://') !== 0) { resolve({ safe: true }); return; }
       wx.cloud.callFunction({
         name: 'checkImage',
         data: { fileID: fileID },
       }).then(function(res) {
-        resolve(res.result && res.result.safe !== false);
-      }).catch(function() { resolve(true); });
+        var r = res.result || {};
+        var checked = r.checked !== false;
+        resolve({
+          safe: r.safe === true && checked,
+          retry: r.retry === true || !checked,
+          tooLarge: r.tooLarge === true,
+        });
+      }).catch(function() {
+        resolve({ safe: false, retry: true });
+      });
     });
   },
 
-  // 检测所有上传图片，全部合规返回 true
+  // 检测所有上传图片，返回首个未通过的结果
   _checkAllImages: function(photos) {
     var that = this;
     var urls = [photos.catch_photo_url, photos.spot_photo1_url, photos.spot_photo2_url];
     return Promise.all(urls.map(function(u) { return that._checkImageSafe(u); }))
       .then(function(results) {
-        return results.every(function(r) { return r === true; });
+        return results.find(function(r) { return !r.safe; }) || { safe: true };
       });
   },
 
@@ -572,11 +577,14 @@ Page({
 
     // 1. 文字内容安全检测
     var textToCheck = [entryForm.player_name, entryForm.best_species, entryForm.spot, entryForm.note].join(' ');
-    this._checkTextSafe(textToCheck).then(function(textSafe) {
-      if (!textSafe) {
+    this._checkTextSafe(textToCheck).then(function(textResult) {
+      if (!textResult.safe) {
         wx.hideLoading();
         that.setData({ saving: false });
-        wx.showToast({ title: '文字含违规信息，请修改', icon: 'none' });
+        wx.showToast({
+          title: textResult.retry ? '检测服务暂不可用，请稍后重试' : '文字含违规信息，请修改',
+          icon: 'none',
+        });
         return Promise.reject({ handled: true });
       }
       // 2. 上传图片到云存储
@@ -584,12 +592,18 @@ Page({
       return that.uploadAllPhotos();
     }).then(function(photos) {
       // 3. 图片内容安全检测
-      return that._checkAllImages(photos).then(function(imgSafe) {
-        if (!imgSafe) {
-          wx.hideLoading();
-          that.setData({ saving: false });
-          wx.showToast({ title: '图片含违规内容，请更换', icon: 'none' });
-          return Promise.reject({ handled: true });
+      return that._checkAllImages(photos).then(function(imgResult) {
+        if (!imgResult.safe) {
+          // 未通过检测的图片不能留在云存储
+          return that._cleanupUploaded().then(function() {
+            wx.hideLoading();
+            that.setData({ saving: false });
+            var tip = '图片含违规内容，请更换';
+            if (imgResult.tooLarge) tip = '图片超过 1MB，请更换';
+            else if (imgResult.retry) tip = '检测服务暂不可用，请稍后重试';
+            wx.showToast({ title: tip, icon: 'none' });
+            return Promise.reject({ handled: true });
+          });
         }
         return photos;
       });
@@ -897,7 +911,7 @@ Page({
         }
 
         wx.showModal({
-          title: '赛事权限管理',
+          title: '榜单权限管理',
           content: content,
           confirmText: '添加管理员',
           cancelText: '关闭',
@@ -1129,7 +1143,7 @@ Page({
         ctx.textAlign = 'center';
         ctx.fillStyle = '#999999';
         ctx.font = '22px sans-serif';
-        ctx.fillText('钓鱼赛事助手', W / 2, H - 30);
+        ctx.fillText('GoCasting', W / 2, H - 30);
 
         wx.canvasToTempFilePath({
           canvas: canvas,
@@ -1169,7 +1183,7 @@ Page({
     var competition = this.data.competition;
     if (!competition) {
       return {
-        title: '钓鱼赛事榜单',
+        title: '钓鱼榜单',
         path: '/pages/competition/competition-detail?id=' + this._id,
       };
     }
@@ -1193,7 +1207,7 @@ Page({
     var competition = this.data.competition;
     if (!competition) {
       return {
-        title: '钓鱼赛事榜单 - 快来看看谁是钓鱼王',
+        title: '钓鱼榜单 - 看看本期排名',
         query: 'id=' + this._id,
       };
     }
