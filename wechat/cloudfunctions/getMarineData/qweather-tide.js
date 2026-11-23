@@ -394,8 +394,11 @@ async function readTideArchive(db, siteId, dk) {
 function applyTideDay(day, q) {
   if (!q || !Array.isArray(q.hourly) || !Array.isArray(q.extremes)) return false;
 
-  const hourly = q.hourly.length >= 18 ? q.hourly : interpolateDayHourly(q.extremes);
+  // 逐小时数据不足 18 个点时，整日曲线由高低潮余弦插值补齐，标记为插值日
+  const interpolated = !(Array.isArray(q.hourly) && q.hourly.length >= 18);
+  const hourly = interpolated ? interpolateDayHourly(q.extremes) : q.hourly;
   if (hourly.length < 18) return false;
+  day.tideInterpolated = interpolated;
 
   // 和风生效后整日统一用验潮站口径：缺整点用高低潮余弦插值补齐，
   // 不能留下个别模型 MSL 值，否则同一天曲线会跳变、涨退潮判断也会错
@@ -577,6 +580,8 @@ async function enhanceTide({ db, lat, lon, allDays, todayIdx, now, days }) {
         days: applied,
         daysApplied: applied,
         daysRequested: dates.length,
+        // 未来预报日中由高低潮插值补齐的天数，供客户端展示置信度
+        interpolatedDays: allDays.filter(d => d.tideInterpolated && d.date >= todayStr).length,
         archiveDays,
         ...(firstErr ? { daysFailed: dates.length - applied, firstError: (firstErr && firstErr.message) || String(firstErr) } : {}),
         updatedAt: new Date().toISOString(),

@@ -1,0 +1,56 @@
+<view class="sun-card">
+  <view class="sun-head">
+    <view class="sun-title-wrap">
+      <text class="sun-title">☀️ 天光</text>
+      <text class="sun-src">{{ daylight.sourceLabel }} · {{ astroAgeText }}</text>
+    </view>
+    <text class="sun-len">日照 {{ daylight.dayLengthText }}</text>
+  </view>
+
+  <!-- 太阳弧线 -->
+  <view class="sun-arc-wrap">
+    <view class="sun-arc"></view>
+    <view class="sun-horizon"></view>
+    <view
+      class="sun-dot {{ daylight.isDay ? 'sun-dot-day' : 'sun-dot-night' }}"
+      style="left: {{ daylight.sunPct }}%; bottom: {{ daylight.sunArcY }}rpx;"
+    ></view>
+    <text class="sun-edge sun-edge-left">日出 {{ daylight.sunrise }}</text>
+    <text class="sun-edge sun-edge-right">日落 {{ daylight.sunset }}</text>
+  </view>
+  <text class="sun-status">{{ daylight.statusText }}</text>
+
+  <!-- 黄金档：点按定位到下方时间轴 -->
+  <view class="golden-row">
+    <view
+      wx:for="{{ daylight.golden }}"
+      wx:key="key"
+      class="golden-chip {{ goldenActive === item.key ? 'golden-chip-active' : '' }}"
+      bindtap="onGoldenTap"
+      data-key="{{ item.key }}"
+    >
+      <text class="golden-icon">{{ item.icon }}</text>
+      <view class="golden-info">
+        <text class="golden-label">{{ item.label }}</text>
+        <text class="golden-time">{{ item.start }}–{{ item.end }}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 月升月落 + 和风钓鱼指数 -->
+  <view class="sun-foot">
+    <view class="sun-foot-item">
+      <text class="sun-foot-label">月升 / 月落</text>
+      <text class="sun-foot-val">{{ moonTimes ? moonTimes.rise + ' / ' + moonTimes.set : '-- / --' }}</text>
+    </view>
+    <view wx:if="{{ goScoreReady }}" class="sun-foot-item sun-foot-tap" bindtap="onGoScore">
+      <text class="sun-foot-label">出钓指数</text>
+      <text class="sun-foot-val sun-foot-fish">{{ goScore }} 分 · {{ goScoreLevel }} <text class="sun-foot-more">详情 ›</text></text>
+    </view>
+  </view>
+
+  <view wx:if="{{ minutelyText }}" class="sun-minutely {{ minutelyHasRain ? 'sun-minutely-rain' : '' }}">
+    <text class="sun-minutely-icon">{{ minutelyHasRain ? '☔' : '🌤' }}</text>
+    <text class="sun-minutely-text">{{ minutelyText }}</text>
+  </view>
+</view>

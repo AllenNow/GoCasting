@@ -24,10 +24,6 @@
       <text class="qt-icon">🐟</text>
       <text class="qt-label">鱼种图鉴</text>
     </view>
-    <view class="quick-tool" bindtap="goMap">
-      <text class="qt-icon">📍</text>
-      <text class="qt-label">钓点地图</text>
-    </view>
     <view class="quick-tool" bindtap="goCompetition">
       <text class="qt-icon">🏆</text>
       <text class="qt-label">钓鱼榜单</text>

@@ -39,10 +39,6 @@ Page({
     wx.navigateTo({ url: '/pages/species/species' });
   },
 
-  goMap() {
-    wx.switchTab({ url: '/pages/spot-map/spot-map' });
-  },
-
   goCompetition() {
     wx.switchTab({ url: '/pages/competition/competition' });
   },

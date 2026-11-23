@@ -12,8 +12,9 @@
 | 鱼种图鉴 | species | 纯静态资料 |
 | 装备参考库 | gear、gear-detail | 纯静态资料，展示品牌官方报价范围，无购买入口 |
 | 渔获记录 / 统计 / 成就 | index、catch-log、catch-detail、profile | **仅本人可见** |
-| 钓点地图 | spot-map | 精选钓点（管理员整理，仅供参考）+ 本人私有钓点 |
 | 钓鱼榜单 | competition、competition-detail | 管理员录入，用户只读 |
+
+> **钓点地图已暂时下线**（为提升个人主体审核通过率）。页面代码保留在 [`_disabled/pages/spot-map`](_disabled/pages/spot-map)，对应云函数保留在 [`_disabled/cloudfunctions/addOfficialSpot`](_disabled/cloudfunctions/addOfficialSpot)；后续恢复时将其移回 `miniprogram/pages` 与 `cloudfunctions`，并在 `app.json`、`custom-tab-bar`、`pages/index` 中重新注册入口。
 
 > 不包含：用户公开钓点、公开渔获动态、评论/私信、赛事报名、奖品、支付、商城。
 > 这些功能个人主体无法过审或不符合类目要求。
@@ -80,9 +81,6 @@ QWEATHER_API_KEY=你的APIKey
 | 集合名 | 数据权限 | 用途 |
 |---|---|---|
 | `catch_logs` | **仅创建者读写** | 私有渔获记录 |
-| `fishing_spots` | **仅创建者读写** | 本人私有钓点 |
-| `official_spots` | 所有用户可读，仅云函数可写 | 精选钓点（管理员整理，仅供参考） |
-| `spot_reports` | 仅云函数可写，仅管理员可读 | 钓点纠错反馈 |
 | `gear_series` | 所有用户可读，仅管理员写 | 装备系列 |
 | `gear_models` | 所有用户可读，仅管理员写 | 装备型号 |
 | `api_cache` | 仅管理员/云函数 | 第三方接口缓存 |
@@ -90,8 +88,8 @@ QWEATHER_API_KEY=你的APIKey
 
 现有榜单相关集合保持原配置：`competitions`、`competition_entries`、`admin_config`、`permission_requests`、`users`。
 
-> `catch_logs` 与 `fishing_spots` 必须设为「仅创建者读写」，否则私有记录可能被其他用户读取。
-> `official_spots` 需设为「所有用户可读」，否则普通用户看不到精选钓点；其写入统一走 `addOfficialSpot` 云函数并校验管理员身份。榜单与地图详情均不展示精选钓点的精确坐标（仅管理员可见），避免泄露钓位。
+> `catch_logs` 必须设为「仅创建者读写」，否则私有记录可能被其他用户读取。
+> 钓点相关集合（`fishing_spots`、`official_spots`、`spot_reports`）暂不启用，随钓点地图恢复时再创建；恢复时 `official_spots` 需设为「所有用户可读」，写入统一走云函数并校验管理员身份，且普通用户不展示其精确坐标。
 
 ### 4. 部署云函数
 
@@ -104,7 +102,7 @@ QWEATHER_API_KEY=你的APIKey
 - `searchPlace`（高德 POI / 城市搜索）
 - `seedGearData`（装备参考数据，仅超级管理员可执行）
 - `checkImage`、`checkText`（内容安全）
-- `addOfficialSpot`（精选钓点录入/编辑/删除 + 钓点纠错，需部署）
+- （暂不部署）`addOfficialSpot`：随钓点地图功能恢复时再上传，源码见 `_disabled/cloudfunctions`
 - 榜单相关：`checkPermission`、`submissionService`、`reviewPermission` 等
 
 ### 5. 初始化装备数据
@@ -117,11 +115,12 @@ QWEATHER_API_KEY=你的APIKey
 
 1. **服务类目**：已确定为「工具 > 信息查询」；页面文案与功能保持信息查询/记录工具定位，不出现赛事报名、交易、社区等表述。
 2. **定位权限**：`app.json` 已声明 `getLocation`、`chooseLocation`。需在公众平台「开发-接口设置」申请位置接口，并在「用户隐私保护指引」中同步声明。
-3. **隐私指引**：小程序内已内置 `pages/privacy/privacy` 隐私政策页与首次使用弹窗（`components/privacy-popup`，随 5 个 Tab 页加载）；`app.json` 已开启 `__usePrivacyCheck__`。公众平台后台需填写同名《小程序用户隐私保护指引》，并声明位置、相册、摄像头、头像昵称等实际调用的信息类型，否则对应接口会被禁用。仓库根目录 [隐私保护指引.md](../隐私保护指引.md) 为后台填写底稿，提交前补全联系邮箱与运营主体。
+3. **隐私指引**：小程序内已内置 `pages/privacy/privacy` 隐私政策页与首次使用弹窗（`components/privacy-popup`，随各 Tab 页加载）；`app.json` 已开启 `__usePrivacyCheck__`。公众平台后台需填写同名《小程序用户隐私保护指引》，并声明位置、相册、摄像头、头像昵称等实际调用的信息类型，否则对应接口会被禁用。仓库根目录 [隐私保护指引.md](../隐私保护指引.md) 为后台填写底稿，提交前补全联系邮箱与运营主体。
 4. **内容安全**：所有上传图片先过 `checkImage`；公开榜单文字过 `checkText`。
-5. **免责声明**：潮汐/天气/评分数据仅供参考，不构成出钓或安全保证；页面保留数据来源说明。小程序内已内置 `pages/disclaimer/disclaimer` 免责声明页（入口：我的 → 免责声明，钓点页首次进入弹层），覆盖数据误差、钓点合法性、禁渔区/保护区、人身财产风险、禁止电毒炸锚鱼与多杆多钩、第三方数据来源及责任限制。钓点统一表述为「精选钓点（管理员整理，仅供参考）」，不使用「官方钓点」。
-6. **不做公开 UGC**：个人渔获、钓点默认仅本人可见；不要新增公开动态、评论区、钓点共享。
-7. **第三方数据**：Open-Meteo 免费额度面向非商业用途，且服务位于境外，查询时会传输经纬度坐标；如审核问询需说明用途，后续商业化建议改用境内数据源或购买商业授权。高德数据需保留来源标识。
+5. **免责声明**：潮汐/天气/评分数据仅供参考，不构成出钓或安全保证；页面保留数据来源说明。小程序内已内置 `pages/disclaimer/disclaimer` 免责声明页（入口：我的 → 免责声明），覆盖数据误差、人身财产风险、合法垂钓要求、第三方数据来源及责任限制。
+6. **不做公开 UGC**：个人渔获默认仅本人可见；不要新增公开动态、评论区、钓点共享。
+7. **钓点地图已下线**：为降低审核不确定性，地图、定位钓点、用户录入地理位置等能力已从提审版本移除；`app.json` 中 `chooseLocation` 仍保留给管理员录入榜单钓获位置，普通用户不可自主上报地理位置。
+8. **第三方数据**：Open-Meteo 免费额度面向非商业用途，且服务位于境外，查询时会传输经纬度坐标；如审核问询需说明用途，后续商业化建议改用境内数据源或购买商业授权。高德数据需保留来源标识。
 
 ---
 

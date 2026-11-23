@@ -1,0 +1,66 @@
+<!-- 最佳垂钓时段推荐卡 -->
+<view wx:if="{{ windows.length > 0 }}" class="best-windows-wrap">
+  <view class="best-windows-header">
+    <text class="best-windows-title">🎣 建议垂钓时段</text>
+    <text class="best-windows-hint">综合潮汐·气压·水温·天气</text>
+  </view>
+  <scroll-view scroll-x class="window-scroll">
+    <view class="window-row">
+      <view wx:for="{{ windows }}" wx:key="startTime" class="window-card grade-bg-{{ item.grade }}">
+        <view class="window-card-left">
+          <text class="window-emoji">{{ item.emoji }}</text>
+          <view class="window-info">
+            <text class="window-time">{{ item.timeText }}</text>
+            <text class="window-duration">{{ item.duration }}小时 · {{ item.reason }}</text>
+          </view>
+        </view>
+        <view class="window-right">
+          <view class="window-score grade-{{ item.grade }}">
+            <text class="window-score-num">{{ item.avgScore }}</text>
+            <text class="window-score-max">/10</text>
+          </view>
+          <text
+            wx:if="{{ !isPast }}"
+            class="window-cal"
+            catchtap="onAddWindow"
+            data-idx="{{ index }}"
+          >＋日历</text>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+</view>
+
+<!-- 无最佳时段提示 -->
+<view wx:elif="{{ heatmap.length > 0 && !isPast }}" class="no-window-tip">
+  <text>⚠️ 今日条件一般，建议避开恶劣天气或低气压时段</text>
+</view>
+
+<!-- 鱼口热力图（逐小时评分） -->
+<view wx:if="{{ heatmap.length > 0 }}" class="fish-heatmap-wrap">
+  <text class="day-section-label">逐小时鱼口指数</text>
+  <scroll-view scroll-x class="heatmap-scroll">
+    <view class="heatmap-row">
+      <view wx:for="{{ heatmap }}" wx:key="hour" class="heatmap-col">
+        <!-- 柱体 -->
+        <view class="heatmap-bar-wrap">
+          <view
+            class="heatmap-bar"
+            style="height: {{ item.heightPct }}%; background: {{ item.color }};"
+          ></view>
+        </view>
+        <!-- 分值 -->
+        <text class="heatmap-score" style="color: {{ item.color }};">{{ item.score }}</text>
+        <!-- 时间（每3小时显示一次） -->
+        <text class="heatmap-time {{ item.hour % 3 === 0 ? '' : 'invisible' }}">{{ item.timeStr }}</text>
+      </view>
+    </view>
+  </scroll-view>
+  <!-- 图例 -->
+  <view class="heatmap-legend">
+    <view class="heatmap-legend-item"><view class="heatmap-legend-dot" style="background:#1a7f5a"></view><text>极佳(8+)</text></view>
+    <view class="heatmap-legend-item"><view class="heatmap-legend-dot" style="background:#2dce89"></view><text>较好(6.5+)</text></view>
+    <view class="heatmap-legend-item"><view class="heatmap-legend-dot" style="background:#e6a817"></view><text>一般(5+)</text></view>
+    <view class="heatmap-legend-item"><view class="heatmap-legend-dot" style="background:#e85555"></view><text>不宜(&lt;3.5)</text></view>
+  </view>
+</view>

@@ -264,3 +264,21 @@ view, text, image { box-sizing: border-box; }
   font-weight: 600;
   color: var(--color-text-primary);
 }
+
+/* ===== 统一刷新图标（Unicode 符号 ↻，颜色跟随 currentColor） =====
+   小程序没有内置图标字体；这里用系统字体里的顺时针箭头，
+   各端字形稳定，不再依赖 CSS 拼几何图形。 */
+.icon-refresh {
+  display: inline-block;
+  font-size: 30rpx;
+  line-height: 1;
+  color: inherit;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.icon-refresh::before { content: '↻'; }
+.icon-refresh.is-spinning { animation: icon-refresh-spin 0.9s linear infinite; }
+@keyframes icon-refresh-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

@@ -1,0 +1,47 @@
+/* 本周最佳出钓日 */
+:host { display: block; }
+
+.week-card {
+  margin: 14rpx 16rpx 0;
+  padding: 16rpx 18rpx 14rpx;
+  border-radius: 24rpx;
+  background: #fff;
+  box-shadow: 0 4rpx 20rpx rgba(30, 80, 60, 0.08);
+}
+.week-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+.week-title { font-size: 26rpx; font-weight: 700; color: #1a2a1a; }
+.week-hint { font-size: 20rpx; color: #9aa5a0; }
+.week-row { display: flex; flex-direction: column; gap: 8rpx; }
+.week-item {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  padding: 10rpx 14rpx;
+  border-radius: 16rpx;
+  background: #f6faf8;
+}
+.week-rank {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22rpx;
+  font-weight: 800;
+  color: #fff;
+  background: #b9c6c0;
+  flex-shrink: 0;
+}
+.week-rank-0 .week-rank { background: #e0a33a; }
+.week-rank-1 .week-rank { background: #8fa8a0; }
+.week-rank-2 .week-rank { background: #c19a78; }
+.week-info { display: flex; flex-direction: column; gap: 2rpx; flex: 1; min-width: 0; }
+.week-day { font-size: 25rpx; font-weight: 700; color: #1a2a1a; }
+.week-sub { font-size: 20rpx; color: #8a958f; }
+.week-score { font-size: 32rpx; font-weight: 800; flex-shrink: 0; }

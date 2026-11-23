@@ -3,7 +3,6 @@
     "pages/weather/weather",
     "pages/weather-detail/weather-detail",
     "pages/index/index",
-    "pages/spot-map/spot-map",
     "pages/profile/profile",
     "pages/go-score/go-score",
     "pages/species/species",
@@ -27,10 +26,6 @@
         "text": "潮汐"
       },
       {
-        "pagePath": "pages/spot-map/spot-map",
-        "text": "钓点"
-      },
-      {
         "pagePath": "pages/competition/competition",
         "text": "榜单"
       },
@@ -49,7 +44,7 @@
   },
   "permission": {
     "scope.userLocation": {
-      "desc": "用于查询当地潮汐海况、天气与钓点地图"
+      "desc": "用于查询当地潮汐、海况与天气"
     }
   },
   "requiredPrivateInfos": ["getLocation", "chooseLocation"],

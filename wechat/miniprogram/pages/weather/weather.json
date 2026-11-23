@@ -2,5 +2,13 @@
   "navigationBarTitleText": "潮汐 & 海况",
   "navigationBarBackgroundColor": "#1a7f5a",
   "navigationBarTextStyle": "white",
-  "enablePullDownRefresh": true
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "weather-hero": "/components/weather/weather-hero/index",
+    "week-best": "/components/weather/week-best/index",
+    "sun-card": "/components/weather/sun-card/index",
+    "day-fish": "/components/weather/day-fish/index",
+    "wave-48h": "/components/weather/wave-48h/index",
+    "ocean-detail": "/components/weather/ocean-detail/index"
+  }
 }

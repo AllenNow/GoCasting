@@ -23,8 +23,8 @@
         </view>
         <view class="hero-actions">
           <text class="hero-age">更新 {{ weatherAgeText }}</text>
-          <view class="hero-refresh {{ refreshing ? 'is-loading' : '' }}" bindtap="refresh">
-            <text class="hero-refresh-icon">⟳</text>
+          <view class="hero-refresh" bindtap="refresh">
+            <view class="icon-refresh hero-refresh-icon {{ refreshing ? 'is-spinning' : '' }}"></view>
           </view>
         </view>
       </view>
@@ -87,20 +87,27 @@
     <view class="section-card">
       <view class="section-header">
         <text class="section-title">未来 24 小时</text>
-        <text class="section-sub">{{ hourly.length }} 个整点</text>
+        <text class="section-sub">{{ astro ? '日出 ' + astro.sunrise + ' · 日落 ' + astro.sunset : hourly.length + ' 个整点' }}</text>
       </view>
-      <scroll-view wx:if="{{ hourly.length }}" class="hour-scroll" scroll-x enhanced show-scrollbar="{{ false }}">
-        <view class="hour-row">
-          <view wx:for="{{ hourly }}" wx:key="key" class="hour-cell">
-            <text class="hour-time">{{ item.label }}</text>
-            <text class="hour-icon">{{ item.icon }}</text>
-            <text class="hour-temp">{{ item.temp != null ? item.temp + '°' : '--' }}</text>
-            <text class="hour-wx">{{ item.wxLabel }}</text>
-            <text class="hour-meta hour-rain">{{ item.pop != null ? '降水 ' + item.pop + '%' : (item.precip != null ? '雨 ' + item.precip + 'mm' : '降水 --') }}</text>
-            <text class="hour-meta">{{ item.windText || '风 --' }}</text>
-            <text class="hour-meta">{{ item.humidity != null ? '湿度 ' + item.humidity + '%' : '湿度 --' }}</text>
-            <text class="hour-meta">{{ item.pressure != null ? item.pressure + 'hPa' : '气压 --' }}</text>
-            <text class="hour-meta">{{ item.cloud != null ? '云 ' + item.cloud + '%' : '云 --' }}</text>
+      <scroll-view wx:if="{{ hourCurve }}" class="hour-scroll" scroll-x enhanced
+          show-scrollbar="{{ false }}" bindscroll="onHourScroll">
+        <view class="hour-track" style="width: {{ hourCurve.width }}rpx;">
+          <view class="hour-chart" style="height: {{ hourCurve.height }}rpx;">
+            <image class="hour-chart-img" src="{{ hourCurve.src }}" mode="scaleToFill"
+                style="width: {{ hourCurve.width }}rpx; height: {{ hourCurve.height }}rpx;" />
+            <view wx:for="{{ hourCurve.items }}" wx:key="key" class="hour-col"
+                style="left: {{ item.colX }}rpx; width: {{ hourCurve.cellW }}rpx;">
+              <text wx:if="{{ index !== hourTipIndex && item.temp != null }}" class="hour-temp"
+                  style="top: {{ item.y - 34 }}rpx;">{{ item.temp }}°</text>
+              <text class="hour-icon">{{ item.icon }}</text>
+            </view>
+            <view wx:if="{{ hourTip }}" class="hour-tip" style="left: {{ hourTip.left }}rpx; top: {{ hourTip.top }}rpx;">
+              <text>{{ hourTip.text }}</text>
+            </view>
+          </view>
+          <view class="hour-times" style="padding: 0 {{ hourCurve.padX }}rpx;">
+            <text wx:for="{{ hourCurve.items }}" wx:key="key" class="hour-time"
+                style="width: {{ hourCurve.cellW }}rpx;">{{ item.label }}</text>
           </view>
         </view>
       </scroll-view>
@@ -132,6 +139,12 @@
             <text class="day-low">{{ item.tempLow != null ? item.tempLow + '°' : '--' }}</text>
           </view>
           <text class="day-arrow">{{ expandedDay === index ? '▲' : '▼' }}</text>
+        </view>
+
+        <view wx:if="{{ item.barWidth > 0 }}" class="day-temp-range">
+          <view class="day-temp-track">
+            <view class="day-temp-fill" style="left: {{ item.barLeft }}%; width: {{ item.barWidth }}%; background: {{ item.barColor }};"></view>
+          </view>
         </view>
 
         <view class="day-badges">
@@ -304,13 +317,9 @@
     </view>
 
     <!-- ═══════════ 数据来源 ═══════════ -->
-    <view class="source-card">
-      <text class="source-title">数据来源</text>
-      <view wx:for="{{ sources }}" wx:key="detail" class="source-row">
-        <text class="source-name">{{ item.name }}</text>
-        <text class="source-detail">{{ item.detail }}</text>
-      </view>
-      <text class="source-time">实况更新 {{ weatherAgeText }} · 潮汐更新 {{ marineAgeText }}</text>
+    <view class="data-note">
+      <text wx:if="{{ sourceBrief }}" class="data-note-main">数据来源 {{ sourceBrief }}</text>
+      <text class="data-note-time">实况 {{ weatherAgeText }} · 潮汐 {{ marineAgeText }}</text>
     </view>
 
   </block>

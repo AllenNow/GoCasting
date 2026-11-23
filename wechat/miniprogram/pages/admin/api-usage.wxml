@@ -5,8 +5,8 @@
     <picker mode="date" fields="month" value="{{ month }}" bindchange="onMonthChange">
       <view class="month-chip">📅 {{ monthLabel }} <text class="chip-arrow">▾</text></view>
     </picker>
-    <view class="refresh-btn {{ loading ? 'is-loading' : '' }}" catchtap="loadStats">
-      <text class="refresh-icon">↻</text>
+    <view class="refresh-btn" catchtap="loadStats">
+      <view class="icon-refresh refresh-icon {{ loading ? 'is-spinning' : '' }}"></view>
       <text>刷新</text>
     </view>
   </view>

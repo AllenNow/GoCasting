@@ -38,6 +38,25 @@ function labelIcon(label) {
   return '🌤️';
 }
 
+// 温度色条取色：0 冷（蓝）→ 1 暖（橙）
+function tempBarColor(t) {
+  const stops = [
+    [0,    [92, 156, 240]],
+    [0.35, [110, 203, 183]],
+    [0.62, [242, 205, 105]],
+    [1,    [245, 133, 62]],
+  ];
+  const x = Math.min(1, Math.max(0, t));
+  let a = stops[0];
+  let b = stops[stops.length - 1];
+  for (let i = 1; i < stops.length; i++) {
+    if (x <= stops[i][0]) { a = stops[i - 1]; b = stops[i]; break; }
+  }
+  const k = (x - a[0]) / ((b[0] - a[0]) || 1);
+  const rgb = a[1].map((v, i) => Math.round(v + (b[1][i] - v) * k));
+  return `rgb(${rgb.join(',')})`;
+}
+
 function uvLabel(v) {
   const n = Number(v);
   if (!Number.isFinite(n)) return '';
@@ -106,6 +125,97 @@ function buildHourly(byDay) {
     }));
 }
 
+// ── 24 小时温度曲线（SVG）────────────────────────────────
+const HOUR_CELL_W = 112;    // 每列宽度（rpx）
+const HOUR_PAD_X = 90;      // 左右留白，保证首尾气泡不被裁切
+const HOUR_CHART_H = 206;   // 图表高度（rpx）
+const HOUR_TOP = 62;        // 曲线最高点
+const HOUR_BOTTOM = 148;    // 曲线最低点
+const HOUR_VIEW_W = 686;    // 卡片内可滚动宽度（rpx）
+
+// 平滑曲线：Catmull-Rom → 三次贝塞尔
+function smoothLine(pts) {
+  let d = `M ${pts[0].x} ${pts[0].y}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] || pts[i];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[i + 2] || p2;
+    const c1x = p1.x + (p2.x - p0.x) / 6;
+    const c1y = p1.y + (p2.y - p0.y) / 6;
+    const c2x = p2.x - (p3.x - p1.x) / 6;
+    const c2y = p2.y - (p3.y - p1.y) / 6;
+    d += ` C ${c1x.toFixed(1)} ${c1y.toFixed(1)}, ${c2x.toFixed(1)} ${c2y.toFixed(1)}, ${p2.x} ${p2.y}`;
+  }
+  return d;
+}
+
+function buildHourCurve(hourly) {
+  if (!hourly || !hourly.length) return null;
+  const n = hourly.length;
+  const width = HOUR_PAD_X * 2 + n * HOUR_CELL_W;
+  const temps = hourly.map(h => Number(h.temp)).filter(v => Number.isFinite(v));
+  const minT = temps.length ? Math.min(...temps) : 0;
+  const maxT = temps.length ? Math.max(...temps) : 1;
+  const span = maxT - minT || 1;
+
+  const pts = hourly.map((h, i) => {
+    const t = Number(h.temp);
+    const ratio = Number.isFinite(t) ? (t - minT) / span : 0.5;
+    return {
+      x: HOUR_PAD_X + i * HOUR_CELL_W + HOUR_CELL_W / 2,
+      y: Math.round(HOUR_BOTTOM - ratio * (HOUR_BOTTOM - HOUR_TOP)),
+    };
+  });
+
+  const line = smoothLine(pts);
+  const area = `${line} L ${pts[n - 1].x} ${HOUR_CHART_H} L ${pts[0].x} ${HOUR_CHART_H} Z`;
+  const grids = pts.map(p =>
+    `<line x1="${p.x}" y1="26" x2="${p.x}" y2="${HOUR_CHART_H - 10}" stroke="#eef2ef" stroke-width="1"/>`
+  ).join('');
+  const hLines = [HOUR_TOP, HOUR_BOTTOM].map(y =>
+    `<line x1="0" y1="${y}" x2="${width}" y2="${y}" stroke="#eef2ef" stroke-width="1" stroke-dasharray="6 8"/>`
+  ).join('');
+  const dots = pts.map((p, i) => i === 0
+    ? `<circle cx="${p.x}" cy="${p.y}" r="5" fill="#fff" stroke="#1a7f5a" stroke-width="3"/>`
+    : `<circle cx="${p.x}" cy="${p.y}" r="3" fill="#fff" stroke="#1a7f5a" stroke-width="2"/>`
+  ).join('');
+
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${HOUR_CHART_H}" viewBox="0 0 ${width} ${HOUR_CHART_H}">` +
+    `<defs><linearGradient id="f" x1="0" y1="0" x2="0" y2="1">` +
+    `<stop offset="0" stop-color="#1a7f5a" stop-opacity="0.30"/>` +
+    `<stop offset="1" stop-color="#1a7f5a" stop-opacity="0.02"/>` +
+    `</linearGradient></defs>` +
+    hLines + grids +
+    `<path d="${area}" fill="url(#f)"/>` +
+    `<path d="${line}" fill="none" stroke="#1a7f5a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>` +
+    dots +
+    `</svg>`;
+
+  return {
+    src: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`,
+    width,
+    height: HOUR_CHART_H,
+    cellW: HOUR_CELL_W,
+    padX: HOUR_PAD_X,
+    items: hourly.map((h, i) => ({ ...h, x: pts[i].x, y: pts[i].y, colX: pts[i].x - HOUR_CELL_W / 2 })),
+  };
+}
+
+// 气泡内容：时间 + 天气 + 温度
+function hourTipOf(curve, idx) {
+  if (!curve || !curve.items.length) return null;
+  const i = Math.max(0, Math.min(curve.items.length - 1, idx));
+  const it = curve.items[i];
+  const parts = [it.label, it.wxLabel, it.temp != null ? `${it.temp}°` : ''].filter(Boolean);
+  return {
+    left: it.x,
+    top: Math.max(4, it.y - 54),
+    text: parts.join(' ').replace(/\s+/g, ' ').trim(),
+  };
+}
+
 // 潮型：验潮站按绝对潮差分档，模型数据在同源日内相对比较
 function tideTypeOf(allDays, todayIdx) {
   const today = allDays[todayIdx];
@@ -150,6 +260,9 @@ Page({
 
     current: null,        // 实况
     hourly: [],           // 未来 24 小时
+    hourCurve: null,      // 温度曲线（SVG + 每列坐标）
+    hourTip: null,        // 跟随滚动的提示气泡
+    hourTipIndex: 0,
     daily: [],            // 未来 7 天
     expandedDay: -1,
     astro: null,          // 日出日落 / 日照
@@ -158,7 +271,7 @@ Page({
     warnings: [],
     minutely: null,       // 分钟级降水
     marine: null,         // 潮汐与海况
-    sources: [],          // 数据来源
+    sourceBrief: '',      // 数据来源（简短）
 
     weatherAgeText: '--',
     marineAgeText: '--',
@@ -190,6 +303,28 @@ Page({
   toggleDay(e) {
     const idx = Number(e.currentTarget.dataset.idx);
     this.setData({ expandedDay: this.data.expandedDay === idx ? -1 : idx });
+  },
+
+  // 24 小时曲线横向滚动：气泡跟随视口居中的小时
+  onHourScroll(e) {
+    this._scrollLeft = (e.detail && e.detail.scrollLeft) || 0;
+    if (this._scrollTimer) return;
+    this._scrollTimer = setTimeout(() => {
+      this._scrollTimer = null;
+      this._syncHourTip();
+    }, 60);
+  },
+
+  _syncHourTip() {
+    const curve = this.data.hourCurve;
+    if (!curve || !curve.items.length || this._scrollLeft == null) return;
+    const info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
+    const rpxRatio = 750 / (info.windowWidth || 375);
+    const center = this._scrollLeft * rpxRatio + HOUR_VIEW_W / 2;
+    const raw = Math.round((center - curve.padX - curve.cellW / 2) / curve.cellW);
+    const idx = Math.max(0, Math.min(curve.items.length - 1, raw));
+    if (idx === this.data.hourTipIndex) return;
+    this.setData({ hourTipIndex: idx, hourTip: hourTipOf(curve, idx) });
   },
 
   // ══════════════════════════════════════════════════════════
@@ -375,6 +510,7 @@ Page({
     } : null;
 
     const hourly = buildHourly(atmos && atmos.byDay);
+    const hourCurve = buildHourCurve(hourly);
 
     const daily = (w.forecast || []).map(f => ({
       ...f,
@@ -386,6 +522,31 @@ Page({
         f.windScaleDay ? `${f.windScaleDay}级` : '',
       ].filter(Boolean).join(' ') || '',
     }));
+
+    // ── 温度区间色条（所有天共享同一温度范围）──────────────
+    const lows = daily.map(d => Number(d.tempLow)).filter(v => Number.isFinite(v));
+    const highs = daily.map(d => Number(d.tempHigh)).filter(v => Number.isFinite(v));
+    const gMin = lows.length ? Math.min(...lows) : null;
+    const gMax = highs.length ? Math.max(...highs) : null;
+    const gSpan = gMin != null && gMax != null && gMax > gMin ? gMax - gMin : 1;
+    daily.forEach(d => {
+      const lo = Number(d.tempLow);
+      const hi = Number(d.tempHigh);
+      if (gMin == null || !Number.isFinite(lo) || !Number.isFinite(hi)) {
+        d.barLeft = 0;
+        d.barWidth = 0;
+        d.barColor = '#cfd8d3';
+        return;
+      }
+      const left = ((lo - gMin) / gSpan) * 100;
+      let width = ((hi - lo) / gSpan) * 100;
+      width = Math.max(width, 5);                    // 极小温差也能看到色段
+      width = Math.min(width, 100 - left);
+      d.barLeft = Math.round(left * 10) / 10;
+      d.barWidth = Math.round(width * 10) / 10;
+      const mid = (lo + hi) / 2;
+      d.barColor = tempBarColor((mid - gMin) / gSpan);
+    });
 
     // ── 天文 ──────────────────────────────────────────────
     const sun = extra && extra.sun;
@@ -451,29 +612,17 @@ Page({
       };
     }
 
-    // ── 数据来源 ─────────────────────────────────────────
-    const sources = [];
-    if (weather) {
-      sources.push({
-        name: w.source === 'qweather' ? '和风天气' : '高德天气',
-        detail: '实况 · 7 天预报',
-      });
-    }
+    // ── 数据来源（底部一句话，去重）────────────────────────
+    const brands = [];
+    const addBrand = b => { if (b && brands.indexOf(b) === -1) brands.push(b); };
+    if (weather) addBrand(w.source === 'qweather' ? '和风天气' : '高德天气');
     if (hourly.length) {
-      sources.push({
-        name: hourly.some(h => h.source === 'qweather') ? '和风天气 + Open-Meteo' : 'Open-Meteo',
-        detail: '逐小时天气 · 气压 · 风 · 降水',
-      });
+      if (hourly.some(h => h.source === 'qweather')) addBrand('和风天气');
+      addBrand('Open-Meteo');
     }
-    if (extra && (extra.sun || extra.moon || extra.fishing)) {
-      sources.push({ name: '和风天气', detail: '天文 · 生活指数' });
-    }
-    if (marineView) {
-      sources.push({
-        name: marineView.siteName ? `和风验潮站 ${marineView.siteName}` : 'Open-Meteo Marine',
-        detail: '潮汐 · 海况',
-      });
-    }
+    if (extra && (extra.sun || extra.moon || extra.fishing)) addBrand('和风天气');
+    if (marineView) addBrand(marineView.siteName ? '和风验潮站' : 'Open-Meteo Marine');
+    const sourceBrief = brands.join(' · ');
 
     const minutely = extra && extra.minutely ? {
       summary: extra.minutely.summary || '',
@@ -484,6 +633,9 @@ Page({
     this.setData({
       current,
       hourly,
+      hourCurve,
+      hourTip: hourTipOf(hourCurve, 0),
+      hourTipIndex: 0,
       daily,
       astro,
       moonInfo,
@@ -491,7 +643,7 @@ Page({
       warnings: (extra && extra.warnings) || [],
       minutely,
       marine: marineView,
-      sources,
+      sourceBrief,
       weatherAgeText: ageText(this._times.weather || this._times.atmos),
       marineAgeText:  ageText(this._times.marine),
       errorMsg: '',

@@ -1,0 +1,84 @@
+<view class="section-card" wx:if="{{ currentData }}">
+  <view class="section-header">
+    <text class="section-title">🔬 海洋环境详情</text>
+  </view>
+
+  <!-- 三列：风浪 / 涌浪 / 洋流 -->
+  <view class="ocean-detail-grid">
+
+    <!-- 风浪 -->
+    <view class="ocean-detail-col">
+      <view class="ocean-col-header ocean-col-wind">
+        <text class="ocean-col-icon">💨</text>
+        <text class="ocean-col-title">风浪</text>
+      </view>
+      <view class="ocean-detail-row">
+        <text class="od-label">浪高</text>
+        <text class="od-val">{{ currentData.windWaveHeight != null ? currentData.windWaveHeight + 'm' : '—' }}</text>
+      </view>
+      <view class="ocean-detail-row">
+        <text class="od-label">浪向</text>
+        <text class="od-val">{{ currentData.waveDirectionStr }}</text>
+      </view>
+      <view class="ocean-detail-row">
+        <text class="od-label">周期</text>
+        <text class="od-val">{{ currentData.wavePeriod != null ? currentData.wavePeriod + 's' : '—' }}</text>
+      </view>
+      <view class="ocean-detail-row">
+        <text class="od-label">海况</text>
+        <text class="od-val od-val-desc">{{ currentData.waveDesc }}</text>
+      </view>
+    </view>
+
+    <!-- 涌浪 -->
+    <view class="ocean-detail-col">
+      <view class="ocean-col-header ocean-col-swell">
+        <text class="ocean-col-icon">🌊</text>
+        <text class="ocean-col-title">涌浪</text>
+      </view>
+      <view class="ocean-detail-row">
+        <text class="od-label">浪高</text>
+        <text class="od-val">{{ currentData.swellWaveHeight != null ? currentData.swellWaveHeight + 'm' : '—' }}</text>
+      </view>
+      <view class="ocean-detail-row">
+        <text class="od-label">综合</text>
+        <text class="od-val">{{ currentData.waveHeight != null ? currentData.waveHeight + 'm' : '—' }}</text>
+      </view>
+      <view class="ocean-detail-row">
+        <text class="od-label">水温</text>
+        <text class="od-val">{{ currentData.sst != null ? currentData.sst + '°C' : '—' }}</text>
+      </view>
+      <view class="ocean-detail-row">
+        <text class="od-label">潮高</text>
+        <text class="od-val">{{ currentData.seaLevelMSL != null ? currentData.seaLevelMSL + 'm' : '—' }}</text>
+      </view>
+    </view>
+
+    <!-- 洋流 -->
+    <view class="ocean-detail-col">
+      <view class="ocean-col-header ocean-col-current">
+        <text class="ocean-col-icon">🔄</text>
+        <text class="ocean-col-title">洋流</text>
+      </view>
+      <view class="ocean-detail-row">
+        <text class="od-label">流速</text>
+        <text class="od-val">{{ currentData.currentVelocity != null ? currentData.currentVelocity + 'km/h' : '—' }}</text>
+      </view>
+      <view class="ocean-detail-row">
+        <text class="od-label">流向</text>
+        <text class="od-val">{{ currentData.currentDirectionStr }}</text>
+      </view>
+      <view class="ocean-detail-row">
+        <text class="od-label">赶海</text>
+        <view class="od-ganhai-dots">
+          <view wx:for="{{ [1,2,3,4,5] }}" wx:key="*this" class="od-ganhai-dot {{ item <= gangHaiScore ? 'od-ganhai-on' : '' }}"></view>
+        </view>
+      </view>
+      <view class="ocean-detail-row">
+        <text class="od-label">评分</text>
+        <text class="od-val od-score {{ fishScore == null ? '' : (fishScore >= 7 ? 'od-score-good' : fishScore >= 4 ? 'od-score-ok' : 'od-score-bad') }}">{{ fishScoreLabel }}</text>
+      </view>
+    </view>
+
+  </view>
+</view>

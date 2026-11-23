@@ -1,0 +1,128 @@
+<!-- 顶部实况卡 -->
+<view class="hero-card">
+  <!-- 顶部：位置（可点击切换） + 当前天气 -->
+  <view class="hero-header">
+    <view class="hero-location" bindtap="onOpenPlace">
+      <text class="hero-location-icon">{{ activePlace ? activePlace.typeIcon : '📍' }}</text>
+      <text class="hero-location-name">{{ city }}</text>
+      <view wx:if="{{ isLocating }}" class="locating-spin"></view>
+      <text wx:else class="hero-location-arrow">▾</text>
+    </view>
+    <view class="hero-header-right">
+      <view class="hero-refresh" catchtap="onRefreshFast">
+        <view class="icon-refresh hero-refresh-icon {{ refreshingFast ? 'is-spinning' : '' }}"></view>
+      </view>
+      <view class="hero-weather-mini" catchtap="onOpenDetail">
+        <text class="hero-weather-desc">{{ weather ? weather.desc : '天气' }}</text>
+        <text wx:if="{{ weather }}" class="hero-weather-temp">{{ weather.temp }}°C</text>
+        <text class="hero-weather-arrow">›</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 核心：潮汐状态 + 潮高 -->
+  <view class="hero-tide-main">
+    <view class="hero-tide-state">
+      <text class="hero-tide-icon">{{ currentData.tideState.icon }}</text>
+      <text class="hero-tide-label">{{ currentData.tideState.label }}</text>
+    </view>
+    <view class="hero-tide-height">
+      <text class="hero-height-num">{{ currentData.seaLevelMSL != null ? currentData.seaLevelMSL : '--' }}</text>
+      <text class="hero-height-unit">m</text>
+    </view>
+    <text class="hero-height-hint">当前潮高{{ seaLevelDatum === 'station' ? '（当地基准面）' : '（MSL）' }}</text>
+  </view>
+
+  <!-- 四格数据 -->
+  <view class="hero-grid">
+    <view class="hero-grid-item">
+      <text class="hero-grid-icon">🌊</text>
+      <text class="hero-grid-val">{{ currentData.waveHeight != null ? currentData.waveHeight + 'm' : '--' }}</text>
+      <text class="hero-grid-label">浪高</text>
+    </view>
+    <view class="hero-grid-item">
+      <text class="hero-grid-icon">🌡️</text>
+      <text class="hero-grid-val">{{ currentData.sst != null ? currentData.sst + '°C' : '--' }}</text>
+      <text class="hero-grid-label">水温</text>
+    </view>
+    <view class="hero-grid-item">
+      <text class="hero-grid-icon">🌀</text>
+      <text class="hero-grid-val">{{ currentData.currentVelocity != null ? currentData.currentVelocity + 'km/h' : '--' }}</text>
+      <text class="hero-grid-label">洋流</text>
+    </view>
+    <view class="hero-grid-item">
+      <view class="fish-score-badge {{ fishScore == null ? 'score-na' : (fishScore >= 7 ? 'score-good' : fishScore >= 4 ? 'score-ok' : 'score-bad') }}">
+        <text class="fish-score-num">{{ fishScore == null ? '--' : fishScore }}</text>
+      </view>
+      <text class="hero-grid-label">出钓指数</text>
+    </view>
+  </view>
+
+  <!-- 下一高低潮倒计时 -->
+  <view class="hero-next-tide" wx:if="{{ nextTide }}">
+    <text class="hero-next-icon">{{ nextTide.icon }}</text>
+    <text class="hero-next-text">距{{ nextTide.label }} {{ nextTide.timeStr }}{{ nextTide.isTomorrow ? '（明天）' : '' }}还有 <text class="hero-next-strong">{{ nextTide.inText }}</text></text>
+  </view>
+
+  <!-- 更新时间 + 海况局部刷新 -->
+  <view class="hero-update-row">
+    <text class="hero-update-text">实况 {{ weatherAgeText }}</text>
+    <text class="hero-update-dot">·</text>
+    <text class="hero-update-text">海况 {{ marineAgeText }}</text>
+    <view class="mini-refresh" catchtap="onRefreshMarine">
+      <view class="icon-refresh mini-refresh-icon {{ refreshingMarine ? 'is-spinning' : '' }}"></view>
+    </view>
+  </view>
+
+  <!-- 今日洞察：最佳窗口 + 月相 / 潮型 / 气压 -->
+  <view class="hero-insight" wx:if="{{ marineLoaded }}">
+    <view class="insight-best">
+      <text class="insight-best-label">今日最佳窗口</text>
+      <block wx:if="{{ todayBestWindows.length }}">
+        <view class="insight-best-main">
+          <text class="insight-best-time">{{ todayBestWindows[0].timeText }}</text>
+          <text class="insight-best-score">{{ todayBestWindows[0].avgScore }}<text class="insight-best-max">/10</text></text>
+        </view>
+        <text class="insight-best-reason">{{ todayBestWindows[0].reason }}</text>
+      </block>
+      <text wx:else class="insight-best-empty">综合 {{ todayGrade ? todayGrade.avgScore : '--' }} 分 · 今日无突出窗口</text>
+    </view>
+    <view class="insight-chips">
+      <view class="insight-chip" wx:if="{{ moonInfo }}">
+        <text class="insight-chip-icon">{{ moonInfo.icon }}</text>
+        <text>{{ moonInfo.name }}</text>
+      </view>
+      <view class="insight-chip" wx:if="{{ tideTypeInfo }}">
+        <text>{{ tideTypeInfo.label }}</text>
+        <text class="insight-chip-sub">潮差 {{ tideRange }}m</text>
+      </view>
+      <view class="insight-chip" wx:if="{{ pressureNow != null }}">
+        <text>{{ pressureNow }}hPa</text>
+        <text class="insight-chip-sub">{{ pressureTrend }}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 海况描述 + 赶海宜指数 -->
+  <view class="hero-footer">
+    <view class="hero-wave-desc">
+      <text class="hero-wave-tag">{{ currentData.waveDesc || '海况数据加载中' }}</text>
+      <text class="hero-wave-detail">涌浪 {{ currentData.swellWaveHeight != null ? currentData.swellWaveHeight + 'm' : '--' }} · 周期 {{ currentData.wavePeriod != null ? currentData.wavePeriod + 's' : '--' }} · {{ currentData.waveDirectionStr || '--' }}向</text>
+    </view>
+    <view class="ganhai-badge ganhai-{{ gangHaiScore }}">
+      <text class="ganhai-label">赶海</text>
+      <view class="ganhai-dots">
+        <view wx:for="{{ [1,2,3,4,5] }}" wx:key="*this" class="ganhai-dot {{ item <= gangHaiScore ? 'ganhai-dot-on' : '' }}"></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 数据置信度 -->
+  <view class="hero-source" wx:if="{{ tideConfidence }}">
+    <text class="hero-source-tag src-{{ tideConfidence.level }}">{{ tideConfidence.tag }}</text>
+    <text class="hero-source-text">{{ tideConfidence.label }}<text wx:if="{{ tideConfidence.detail }}"> · {{ tideConfidence.detail }}</text></text>
+  </view>
+
+  <text class="hero-base-note" wx:if="{{ tideMeta && tideMeta.source === 'qweather' }}">潮高采用{{ tideMeta.siteName }}验潮站当地基准面，与 MSL 平均海平面不可直接对比</text>
+  <text class="hero-base-note" wx:else>潮高为 MSL 平均海平面基准，与港口潮汐表基准不同，数值不可直接对比</text>
+</view>

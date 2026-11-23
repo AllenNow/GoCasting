@@ -6,6 +6,7 @@ const app = getApp();
 const apiCache    = require('../../utils/apiCache');
 const savedPlaces = require('../../utils/savedPlaces');
 const fishScore   = require('../../utils/fishScore');
+const goScoreEngine  = require('../../utils/goScore');
 const goScoreService = require('../../utils/goScoreService');
 
 // 定位不可用时的兜底地点（不写入收藏，用户可随时切换）
@@ -95,40 +96,80 @@ function getPressureInfo(atmosHourly, nowHour) {
 // 纯函数工具
 // ══════════════════════════════════════════════════════════════
 
-function calcFishScore({ tideState, waveHeight, sst, weather, pressureDelta }) {
-  let score = 5;
-  if (tideState === 'rising' || tideState === 'falling') score += 2;
-  if (waveHeight != null) {
-    if (waveHeight < 0.5)      score += 1;
-    else if (waveHeight > 2.5) score -= 4;
-    else if (waveHeight > 1.5) score -= 2;
-  }
-  if (sst != null) {
-    if (sst >= 18 && sst <= 28)    score += 1;
-    else if (sst < 10 || sst > 32) score -= 2;
-  }
-  if (pressureDelta != null) {
-    if (pressureDelta >= 1.5)       score += 0.5;  // 气压回升，鱼口趋好
-    else if (pressureDelta <= -1.5) score -= 1.5;  // 气压骤降，鱼口变差
-  }
-  if (weather) {
-    const desc = weather.desc || '';
-    if (desc.includes('晴') || desc.includes('多云')) score += 1;
-    if (desc.includes('暴雨') || desc.includes('雷'))  score -= 3;
-    else if (desc.includes('雨'))                      score -= 1;
-    const wind = parseFloat(weather.wind_speed) || 0;
-    if (wind > 10) score -= 2;
-    else if (wind < 4) score += 0.5;
-  }
-  return Math.max(0, Math.min(10, Math.round(score)));
+// ── 下一高低潮倒计时：今天剩余极值优先，不足时顺延到明天 ──
+function buildNextTide(todayExtremes, tomorrowExtremes, now) {
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  const list = []
+    .concat((todayExtremes || []).map(e => ({ ...e, dayOffset: 0 })))
+    .concat((tomorrowExtremes || []).map(e => ({ ...e, dayOffset: 1 })));
+
+  let best = null;
+  list.forEach(e => {
+    const m = hhmmToMin(e.timeStr);
+    if (m == null) return;
+    const diffMin = m + e.dayOffset * 1440 - nowMin;
+    if (diffMin >= 0 && (!best || diffMin < best.diffMin)) {
+      best = { ...e, diffMin };
+    }
+  });
+  if (!best) return null;
+
+  const isHigh = best.type === 'high';
+  return {
+    type:    best.type,
+    label:   isHigh ? '高潮' : '低潮',
+    icon:    isHigh ? '⬆️' : '⬇️',
+    timeStr: best.timeStr,
+    level:   best.level,
+    isTomorrow: best.dayOffset === 1,
+    inText:  best.diffMin < 1 ? '即将' : durationText(best.diffMin),
+  };
 }
 
-function scoreLabel(s) {
-  if (s >= 9) return '🏆 绝佳出钓！';
-  if (s >= 7) return '🎣 非常适合';
-  if (s >= 5) return '👍 适合出钓';
-  if (s >= 3) return '🤔 条件一般';
-  return '❌ 不建议出钓';
+// ── 数据置信度：验潮站距离越近越高；模型推算统一标为低置信 ──
+function buildTideConfidence(tideMeta) {
+  if (!tideMeta || !tideMeta.source || tideMeta.source === 'model') {
+    return {
+      level:  'low',
+      tag:    '低置信',
+      label:  '模型推算',
+      detail: (tideMeta && tideMeta.reason) || '附近无可用验潮站',
+    };
+  }
+  const dist = tideMeta.distanceKm;
+  const level = dist == null ? 'mid' : (dist <= 50 ? 'high' : dist <= 150 ? 'mid' : 'low');
+  const parts = [];
+  if (dist != null) parts.push(`距 ${dist} km`);
+  if (tideMeta.interpolatedDays > 0) parts.push('部分时段插值');
+  return {
+    level,
+    tag:    level === 'high' ? '高置信' : level === 'mid' ? '中置信' : '低置信',
+    label:  `${tideMeta.siteName || '验潮站'}验潮站`,
+    detail: parts.join(' · '),
+  };
+}
+
+// ── 本周最佳出钓日：复用逐小时鱼口算法，给出未来 7 天前三名 ──
+function buildWeekBestDays(allDays, todayIdx, atmosByDay) {
+  if (!Array.isArray(allDays) || todayIdx < 0) return [];
+  const list = [];
+  const end = Math.min(allDays.length, todayIdx + 7);
+  for (let i = todayIdx; i < end; i++) {
+    const day = allDays[i];
+    if (!day || !Array.isArray(day.hourly) || !day.hourly.length) continue;
+    const { dayGrade } = fishScore.calcDayScores(day.hourly, atmosByDay[day.date] || []);
+    if (!dayGrade) continue;
+    list.push({
+      date:      day.date,
+      dateLabel: day.dateLabel,
+      weekLabel: day.weekLabel,
+      avgScore:  dayGrade.avgScore,
+      label:     dayGrade.label,
+      color:     dayGrade.color,
+      isToday:   !!day.isToday,
+    });
+  }
+  return list.sort((a, b) => b.avgScore - a.avgScore).slice(0, 3);
 }
 
 // 图表几何：必须与 weather.wxss 中 .tide-chart-body 的高度、卡片内容宽度一致。
@@ -332,12 +373,16 @@ function computeWaveBarScale(list) {
 // ── 更新时间文案 ────────────────────────────────────────────
 function ageText(ts) {
   if (!ts) return '--';
+  // 跨天数据直接给出日期，避免“25 小时前”看不出是否已过期
+  const bj = new Date(ts + 8 * 3600 * 1000);
+  const dayKey = `${bj.getUTCFullYear()}-${String(bj.getUTCMonth() + 1).padStart(2, '0')}-${String(bj.getUTCDate()).padStart(2, '0')}`;
+  if (dayKey !== apiCache.todayKeyBJ()) {
+    return `${String(bj.getUTCMonth() + 1).padStart(2, '0')}-${String(bj.getUTCDate()).padStart(2, '0')} ${String(bj.getUTCHours()).padStart(2, '0')}:${String(bj.getUTCMinutes()).padStart(2, '0')}`;
+  }
   const min = Math.max(0, Math.round((Date.now() - ts) / 60000));
   if (min <= 0) return '刚刚';
   if (min < 60) return `${min} 分钟前`;
-  const h = Math.floor(min / 60);
-  if (h < 24) return `${h} 小时前`;
-  return `${Math.floor(h / 24)} 天前`;
+  return `${Math.floor(min / 60)} 小时前`;
 }
 
 // 未来 6 小时是否有降水（用于决定是否请求和风分钟级降水）
@@ -397,6 +442,9 @@ Page({
     // ── 今日洞察（首屏）────────────────────────────────────
     todayBestWindows: [],   // 今日最佳窗口
     todayGrade: null,       // 今日综合评级
+    nextTide: null,         // 下一高低潮 { label, timeStr, inText, isTomorrow }
+    tideConfidence: null,   // 潮汐数据置信度 { level, tag, label, detail }
+    weekBestDays: [],       // 本周最佳出钓日（前三）
     moonInfo: null,         // 月相 { name, icon, age, isSpring }
     tideTypeInfo: null,     // 潮型 { label, range }
     tideRange: null,        // 今日潮差（m）
@@ -492,31 +540,12 @@ Page({
   onLoad() {
     // 读取收藏列表
     this.setData({ savedList: savedPlaces.getAll() });
-    this._initWithPrivacy();
-  },
-
-  // 首次使用先确认隐私授权，避免定位接口与隐私弹窗同时触发
-  _initWithPrivacy() {
-    if (!wx.getPrivacySetting) {
-      this._privacyBlocked = false;
-      this.loadAll();
-      return;
-    }
-    wx.getPrivacySetting({
-      success: (res) => {
-        // 未同意隐私政策时不调用定位，直接兜底默认地点
-        this._privacyBlocked = !!res.needAuthorization;
-        this.loadAll();
-      },
-      fail: () => {
-        this._privacyBlocked = false;
-        this.loadAll();
-      },
-    });
+    // 不做隐私预检：定位由 wx.getLocation 自行触发隐私/授权弹窗
+    this.loadAll();
   },
 
   onPrivacyAgree() {
-    this._privacyBlocked = false;
+    this._privacyDeclined = false;
     // 当前若是兜底地点，同意后重新尝试定位
     if (this.data.activePlace && this.data.activePlace.isDefault) {
       this.setData({ activePlace: null });
@@ -525,7 +554,8 @@ Page({
   },
 
   onPrivacyDecline() {
-    this._privacyBlocked = true;
+    // 用户明确拒绝隐私授权：不调用受保护接口，直接使用兜底地点
+    this._privacyDeclined = true;
     this.loadAll();
   },
 
@@ -555,10 +585,7 @@ Page({
   // 下拉刷新：客户端忽略本地缓存，但尊重云端 TTL（软刷新）
   // 不清理其他城市的缓存，也不强制刷新海况（计费接口）
   onPullDownRefresh() {
-    // 定位失败提示只在下拉刷新时展示，避免首屏常驻横幅
-    this._locateHintManual = true;
     this.loadAll(true).finally(() => {
-      this._locateHintManual = false;
       wx.stopPullDownRefresh();
       wx.showToast({
         title: this._refreshWasCached
@@ -575,7 +602,6 @@ Page({
   async loadAll(forceRefresh = false) {
     // 只有首屏才全屏 loading；刷新时保留旧内容，避免白屏和跳回顶部
     const firstLoad = !this.data.marineLoaded && !this.data.weatherLoaded;
-    const showLocateHint = !!this._locateHintManual;
     this.setData({
       loading: firstLoad,
       errorMsg: '', locateDenied: false,
@@ -589,8 +615,8 @@ Page({
       // 使用选定地点坐标
       ({ lat, lon } = activePlace);
       displayCity = activePlace.name;
-    } else if (this._privacyBlocked) {
-      // 未同意隐私政策：不调用定位，直接展示兜底地点
+    } else if (this._privacyDeclined) {
+      // 用户已拒绝隐私授权：不调用定位，直接展示兜底地点
       lat = DEFAULT_PLACE.lat;
       lon = DEFAULT_PLACE.lon;
       displayCity = DEFAULT_PLACE.name;
@@ -599,9 +625,7 @@ Page({
         city: DEFAULT_PLACE.name,
         isLocating: false,
         locateDenied: false,
-        errorMsg: showLocateHint
-          ? `未同意隐私政策，已显示${DEFAULT_PLACE.name}；可点击上方地点搜索其他城市`
-          : '',
+        errorMsg: `未同意隐私授权，已显示${DEFAULT_PLACE.name}；可点击上方地点搜索其他城市`,
       });
     } else {
       // GPS 定位
@@ -613,13 +637,14 @@ Page({
         displayCity = null;  // 由 getWeather 返回城市名
         // 记录真实定位，供首页/我的出钓指数复用，避免两地数据不一致
         try { wx.setStorageSync('lastGeo', { lat, lon, ts: Date.now() }); } catch (e) {}
+        this._privacyDeclined = false;
       } catch (err) {
         console.error('[weather] 定位失败:', err && (err.errMsg || err.message), err);
         // 定位不可用时兜底默认城市，保证页面有数据
         lat = DEFAULT_PLACE.lat;
         lon = DEFAULT_PLACE.lon;
         displayCity = DEFAULT_PLACE.name;
-        this._handleLocateFail(err, showLocateHint);
+        this._handleLocateFail(err);
       }
       this.setData({ isLocating: false });
     }
@@ -976,7 +1001,10 @@ Page({
     // 当前潮高的真实基准面：优先用服务端标记，旧缓存按当天数据源推断
     const seaLevelDatum  = currentData?.seaLevelDatum ||
       ((tideMeta && tideMeta.datum === 'station' && todayIsStation) ? 'station' : 'msl');
+    // 同一天内的刷新保留用户选中的日期，只有跨天时才归位到今天
+    const prevDayKey = this._marineDayKey;
     this._marineDayKey = todayDay.date || null;
+    const dayChanged = !!prevDayKey && prevDayKey !== todayDay.date;
 
     // 赶海指数：模型数据按 MSL 绝对潮位；验潮站数据按当日潮位区间相对位置
     let ganHaiScore;
@@ -1005,6 +1033,18 @@ Page({
       else break;
     }
 
+    // 刷新（onShow 静默刷新/下拉/补拉验潮站）不应把选中日期拉回今天；
+    // 按「日期」而不是数组下标恢复选中，避免 allDays 变化时错位到别的天
+    const prevSelected = this.data.selectedDayIdx;
+    const prevSelectedDate = this._selectedDate ||
+      (allDays[prevSelected] && allDays[prevSelected].date);
+    let selectedIdx = todayIdx;
+    if (!dayChanged && this.data.marineLoaded && prevSelectedDate) {
+      const byDate = allDays.findIndex(d => d.date === prevSelectedDate);
+      if (byDate >= 0) selectedIdx = byDate;
+    }
+    this._selectedDate = allDays[selectedIdx] ? allDays[selectedIdx].date : null;
+
     this.setData({
       currentData, tideChart24h, chartPoints, chartSegments, extremePoints,
       seaLevelDatum,
@@ -1025,7 +1065,7 @@ Page({
       marineLoaded: true,
       allDays, todayIdx,
       tideMeta,
-      selectedDayIdx: todayIdx,
+      selectedDayIdx: selectedIdx,
       atmosByDay,
       todayBestWindows: todayScores.bestWindows || [],
       todayGrade:       todayScores.dayGrade || null,
@@ -1036,9 +1076,12 @@ Page({
       pressureNow:      pressure.now,
       pressureTrend:    pressure.trendText,
       pressureDelta:    pressure.delta,
+      nextTide:         buildNextTide(todayExtremes, tomorrowExtremes, new Date()),
+      tideConfidence:   buildTideConfidence(tideMeta),
+      weekBestDays:     buildWeekBestDays(allDays, todayIdx, atmosByDay),
     });
 
-    this._applyDayChart(todayIdx, allDays, nowHour, atmosByDay);
+    this._applyDayChart(selectedIdx, allDays, selectedIdx === todayIdx ? nowHour : -1, atmosByDay);
     this._recalcFishScore();
     this._chartRect = null;
   },
@@ -1083,6 +1126,48 @@ Page({
 
   toggleWarn() {
     this.setData({ warnExpanded: !this.data.warnExpanded });
+  },
+
+  // 把建议垂钓窗口写入系统日历（提前 30 分钟提醒）
+  addTideWindowToCalendar(e) {
+    // 兼容：组件通过 detail.idx 抛出，旧写法从 dataset 取
+    const rawIdx = e.detail && e.detail.idx != null
+      ? e.detail.idx
+      : (e.currentTarget && e.currentTarget.dataset.idx);
+    const idx = parseInt(rawIdx, 10);
+    const win = (this.data.dayBestWindows || [])[idx];
+    const day = this.data.selectedDayData;
+    if (!win || !day || !day.date) return;
+    if (day.isPast) {
+      wx.showToast({ title: '过去的日期无法添加提醒', icon: 'none' });
+      return;
+    }
+    if (typeof wx.addPhoneCalendar !== 'function') {
+      wx.showToast({ title: '当前微信版本不支持日历提醒', icon: 'none' });
+      return;
+    }
+
+    const [y, m, d] = day.date.split('-').map(Number);
+    const start = new Date(y, m - 1, d, win.startHour, 0, 0);
+    const endH = Math.min(23, win.endHour + 1);
+    const endM = win.endHour + 1 >= 24 ? 59 : 0;
+    const end = new Date(y, m - 1, d, endH, endM, 0);
+    if (end.getTime() <= start.getTime()) end.setTime(start.getTime() + 60 * 60 * 1000);
+
+    wx.addPhoneCalendar({
+      title: `出钓提醒 · ${win.timeText}`,
+      startTime: Math.floor(start.getTime() / 1000),
+      endTime: Math.floor(end.getTime() / 1000),
+      alarm: true,
+      alarmOffset: 30 * 60,
+      description: `GoCasting 建议垂钓时段，综合评分 ${win.avgScore}/10（${win.reason || '综合条件较好'}）`,
+      success: () => wx.showToast({ title: '已加入系统日历', icon: 'success' }),
+      fail: (err) => {
+        const msg = (err && err.errMsg) || '';
+        if (msg.indexOf('cancel') >= 0) return;
+        wx.showToast({ title: '添加失败，请重试', icon: 'none' });
+      },
+    });
   },
 
   // 今日出钓指数：复用统一服务（与首页、我的同源同缓存）
@@ -1161,7 +1246,8 @@ Page({
 
   // 黄金档 chip → 滚动到时间轴并高亮对应时段
   onGoldenTap(e) {
-    const key = e.currentTarget.dataset.key;
+    // 兼容：组件通过 detail 抛出，旧写法从 dataset 取
+    const key = (e.detail && e.detail.key) || (e.currentTarget && e.currentTarget.dataset.key);
     if (!key) return;
     this.setData({ goldenActive: key });
     wx.pageScrollTo({ selector: '#timeline-card', duration: 300 });
@@ -1169,25 +1255,39 @@ Page({
     this._goldenTimer = setTimeout(() => this.setData({ goldenActive: '' }), 2400);
   },
 
+  // 出钓指数：与首页 / 我的共用 utils/goScore 引擎，口径完全一致
   _recalcFishScore() {
-    const { currentData, weather, pressureDelta } = this.data;
-    const hasAny = currentData && (
-      currentData.tideState?.value != null ||
-      currentData.waveHeight != null ||
-      currentData.sst != null
+    const { weather, allDays, todayIdx, currentData } = this.data;
+    const hour = new Date().getHours();
+    const today = allDays[todayIdx];
+    const tomorrow = allDays[todayIdx + 1];
+    const tideSeries = goScoreEngine.mergeTideSeries(
+      today && today.tideChart,
+      tomorrow && tomorrow.tideChart
     );
-    if (!hasAny) {
+
+    if (!tideSeries.length && !weather && !currentData) {
       this.setData({ fishScore: null, fishScoreLabel: '暂无数据' });
       return;
     }
-    const score = calcFishScore({
-      tideState:  currentData?.tideState?.value,
-      waveHeight: currentData?.waveHeight,
-      sst:        currentData?.sst,
+
+    // 浪高优先取当天逐小时数据，缺失时回退实况
+    const waveHeight = today && today.hourly && today.hourly[hour]
+      ? today.hourly[hour].waveHeight
+      : (currentData ? currentData.waveHeight : null);
+
+    const r = goScoreEngine.calcScore({
+      tideSeries,
+      hour,
+      tideIndex: hour,
       weather,
-      pressureDelta,
+      waveHeight,
+      date: new Date(),
     });
-    this.setData({ fishScore: score, fishScoreLabel: scoreLabel(score) });
+    this.setData({
+      fishScore: r.score,
+      fishScoreLabel: `${r.level.label} · ${r.tide.label}`,
+    });
   },
 
   async _getLocation() {
@@ -1232,7 +1332,7 @@ Page({
   },
 
   // 定位失败统一处理：切换到兜底地点，并区分是否需要引导开启权限
-  _handleLocateFail(err, showHint) {
+  _handleLocateFail(err) {
     const code = err && err.code;
     // 只有小程序侧拒绝授权才能用 openSetting 修复；系统级关闭需去手机设置
     const denied = code === 'DENIED' || code === 'AUTH_FAIL';
@@ -1245,8 +1345,8 @@ Page({
       activePlace: DEFAULT_PLACE,
       city: DEFAULT_PLACE.name,
       isLocating: false,
-      locateDenied: showHint && denied,
-      errorMsg: !showHint ? '' : code === 'PRIVACY'
+      locateDenied: denied,
+      errorMsg: code === 'PRIVACY'
         ? `定位服务暂不可用，已显示${DEFAULT_PLACE.name}；可点击上方地点搜索其他城市`
         : systemOff
           ? `系统定位服务未开启，已显示${DEFAULT_PLACE.name}；请在手机设置中允许微信使用定位`
@@ -1262,6 +1362,7 @@ Page({
     wx.openSetting({
       success(s) {
         if (s.authSetting['scope.userLocation']) {
+          that._privacyDeclined = false;
           that.setData({ locateDenied: false, errorMsg: '' });
           // 当前是兜底地点时，清空以便重新定位
           if (that.data.activePlace && that.data.activePlace.isDefault) {
@@ -1412,9 +1513,9 @@ Page({
       keyboardHeight: 0,
       panelKeyboardStyle: '',
     });
-    // 用户主动点“使用当前定位”，失败时展示提示
-    this._locateHintManual = true;
-    this.loadAll().finally(() => { this._locateHintManual = false; });
+    // 用户主动点“使用当前定位”：重新允许定位尝试
+    this._privacyDeclined = false;
+    this.loadAll();
   },
 
   // ── 收藏/取消收藏 ────────────────────────────────────────
@@ -1456,9 +1557,11 @@ Page({
     const idx = parseInt(e.currentTarget.dataset.idx);
     if (isNaN(idx)) return;
     const { allDays, todayIdx, atmosByDay } = this.data;
+    // 记录选中「日期」而非下标：后续任何一次数据重载都按日期恢复选中，避免错位
+    this._selectedDate = allDays[idx] ? allDays[idx].date : null;
     this.setData({ selectedDayIdx: idx });
     this._applyDayChart(idx, allDays, idx === todayIdx ? this._marineHour() : -1, atmosByDay);
-    // 第 8 天及以后默认只有模型值，滑到远端时按需补拉验潮站潮汐
+    // 选中日期超出已加载的验潮站天数时，按需补拉
     this._ensureTideDays(idx);
   },
 
@@ -1466,18 +1569,28 @@ Page({
     this.setData({ waveExpanded: !this.data.waveExpanded });
   },
 
-  // 按需加载：仅在用户真正查看第 8 天及以后时，才把潮汐从 7 天扩到 10 天
+  // 按需加载：仅当选中日超出已加载的验潮站天数时，才把潮汐从 7 天扩到 10 天
   _ensureTideDays(idx) {
-    if (idx < this.data.tideDays || this.data.tideDays >= 10 || this._tideExtending) return;
+    const { allDays, todayIdx, tideDays } = this.data;
+    // tideDays 是「从今天起已覆盖的天数」，idx 是 allDays 绝对下标，必须换算成相对偏移
+    const offset = idx - todayIdx;
+    if (offset < tideDays) return;
+    const date = allDays[idx] ? allDays[idx].date : null;
+    if (!date) return;
+    // 补拉进行中：只更新“最终要选中的日期”，保证最后一次点击生效
+    if (this._tideExtending) { this._pendingSelectDate = date; return; }
     this._tideExtending = true;
-    this._pendingSelectIdx = idx;
+    this._pendingSelectDate = date;
     this.refreshMarine(true, 10).then(() => {
-      const i = this._pendingSelectIdx;
-      this._pendingSelectIdx = null;
-      if (i == null || !this.data.allDays.length) return;
-      const { allDays, todayIdx, atmosByDay } = this.data;
+      const target = this._pendingSelectDate;
+      this._pendingSelectDate = null;
+      if (!target) return;
+      const { allDays: list, todayIdx: tIdx, atmosByDay: atmos } = this.data;
+      const i = list.findIndex(d => d.date === target);
+      if (i < 0) return;
+      this._selectedDate = target;
       this.setData({ selectedDayIdx: i });
-      this._applyDayChart(i, allDays, i === todayIdx ? this._marineHour() : -1, atmosByDay);
+      this._applyDayChart(i, list, i === tIdx ? this._marineHour() : -1, atmos);
     }).finally(() => { this._tideExtending = false; });
   },
 
@@ -1609,6 +1722,4 @@ Page({
       url: `/pages/weather-detail/weather-detail?lat=${lat}&lon=${lon}&city=${city}`,
     });
   },
-
-  goMap()    { wx.switchTab({ url: '/pages/spot-map/spot-map' }); },
 });

@@ -172,6 +172,94 @@ function hhmmOf(t) {
   return m2 ? `${m2[1].padStart(2, '0')}:${m2[2]}` : '';
 }
 
+// 和风 v1 时间：localTime=true 返回当地时间；带 Z 时按 UTC+8 兜底换算
+function qwTimeParts(t) {
+  const s = String(t || '');
+  if (!s) return { date: '', hhmm: '' };
+  if (/Z$/.test(s)) {
+    const ms = new Date(s).getTime();
+    if (!Number.isNaN(ms)) {
+      const d = new Date(ms + 8 * 3600 * 1000);
+      const p = n => String(n).padStart(2, '0');
+      return {
+        date: `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())}`,
+        hhmm: `${p(d.getUTCHours())}:${p(d.getUTCMinutes())}`,
+      };
+    }
+  }
+  return { date: s.slice(0, 10), hhmm: hhmmOf(s) };
+}
+
+// ── 和风每日预报 v1 → 页面 forecast 结构 ─────────────────────
+const QW_MOON_PHASE = {
+  'new-moon': '新月', 'waxing-crescent': '蛾眉月', 'first-quarter': '上弦月',
+  'waxing-gibbous': '盈凸月', 'full-moon': '满月', 'waning-gibbous': '亏凸月',
+  'last-quarter': '下弦月', 'waning-crescent': '残月',
+};
+const QW_COMPASS = {
+  n: '北风', nne: '东北偏北风', ne: '东北风', ene: '东北偏东风',
+  e: '东风', ese: '东南偏东风', se: '东南风', sse: '东南偏南风',
+  s: '南风', ssw: '西南偏南风', sw: '西南风', wsw: '西南偏西风',
+  w: '西风', wnw: '西北偏西风', nw: '西北风', nnw: '西北偏北风',
+};
+const valOf = o => (o && o.value != null && !Number.isNaN(Number(o.value)) ? Number(o.value) : null);
+
+// v1 数值对象 { value, unit } → 指定小数位（null 安全）
+function roundOf(o, digits = 0) {
+  const v = valOf(o);
+  if (v == null) return null;
+  const p = Math.pow(10, digits);
+  return Math.round(v * p) / p;
+}
+
+function qweatherDailyToForecast(days) {
+  const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+  return (Array.isArray(days) ? days : []).slice(0, 10).map((d, i) => {
+    const day = d.daytime || {};
+    const night = d.nighttime || {};
+    const astro = d.astro || {};
+    const start = qwTimeParts(d.forecastStartTime);
+    const dayText = (day.condition && day.condition.text) || '';
+    const nightText = (night.condition && night.condition.text) || '';
+    const wind = day.wind || {};
+    const dir = wind.direction || {};
+    // v1 湿度/云量为 0~1 小数，页面按百分比展示
+    const hums = [day.humidity, night.humidity].filter(v => typeof v === 'number');
+    const pDay = valOf(day.precipitation && day.precipitation.amount);
+    const pNight = valOf(night.precipitation && night.precipitation.amount);
+    const high = valOf(d.temperatureMax);
+    const low = valOf(d.temperatureMin);
+    const windSpeed = valOf(wind.speed);   // m/s
+    return {
+      date: i === 0 ? '今天' : (start.date ? weekDays[new Date(`${start.date}T12:00:00`).getDay()] : ''),
+      dateStr: start.date,
+      desc: dayText,
+      icon: weatherIcon(dayText),
+      tempHigh: high != null ? Math.round(high) : null,
+      tempLow: low != null ? Math.round(low) : null,
+      descNight: nightText,
+      iconNight: weatherIcon(nightText || dayText),
+      sunrise: qwTimeParts(astro.sunrise).hhmm,
+      sunset: qwTimeParts(astro.sunset).hhmm,
+      moonrise: qwTimeParts(astro.moonrise).hhmm,
+      moonset: qwTimeParts(astro.moonset).hhmm,
+      moonPhase: QW_MOON_PHASE[astro.moonPhase] || '',
+      moonPhaseIcon: '',
+      uvIndex: d.uvIndexMax != null ? d.uvIndexMax : null,
+      precip: pDay == null && pNight == null
+        ? null
+        : Math.round(((pDay || 0) + (pNight || 0)) * 10) / 10,
+      humidity: hums.length ? Math.round((hums.reduce((a, b) => a + b, 0) / hums.length) * 100) : null,
+      pressure: null,   // v1 每日预报不含气压
+      vis: null,        // v1 每日预报不含能见度
+      cloud: typeof day.cloudCover === 'number' ? Math.round(day.cloudCover * 100) : null,
+      windDirDay: QW_COMPASS[String(dir.compass || '').toLowerCase()] || '',
+      windScaleDay: wind.scale != null ? wind.scale : '',
+      windSpeedDay: windSpeed != null ? Math.round(windSpeed * 3.6) : null,
+    };
+  });
+}
+
 async function timedFetch(url) {
   const t0 = Date.now();
   const json = await fetch(url).then(r => r.json());
@@ -248,70 +336,52 @@ exports.main = async (event, context) => {
       // ── 1) 和风优先：实时天气 + 逐天预报（7天）──────────────
       const qwCfg = readConfig();
       if (qwCfg) {
-        const loc = `${lon.toFixed(2)},${lat.toFixed(2)}`;
         const t0 = Date.now();
+        const la = Number(lat).toFixed(2);
+        const lo = Number(lon).toFixed(2);
         const [nowR, dayR] = await Promise.allSettled([
-          apiGet(qwCfg, `/v7/weather/now?location=${encodeURIComponent(loc)}&lang=zh`),
-          apiGet(qwCfg, `/v7/weather/7d?location=${encodeURIComponent(loc)}&lang=zh`),
+          // 实时天气 v1（v7 城市实况已弃用）
+          apiGet(qwCfg, `/weather/v1/current/${la}/${lo}?localTime=true&lang=zh`),
+          // 每日预报 v1：路径为 纬度/经度，最多 10 天
+          apiGet(qwCfg, `/weather/v1/daily/${la}/${lo}?days=7&localTime=true&lang=zh`),
         ]);
-        let qwOk = false;
-        if (nowR.status === 'fulfilled' && nowR.value.now) {
-          const n = nowR.value.now;
+        let nowOk = false, dayOk = false;
+        if (nowR.status === 'fulfilled' && nowR.value.condition) {
+          const n = nowR.value;
+          const wind = n.wind || {};
+          const dir = wind.direction || {};
+          const speed = valOf(wind.speed);      // m/s
+          const visM = valOf(n.visibility);     // m
           current = {
-            temp: n.temp,
-            desc: n.text,
-            icon: n.icon || '',
-            humidity: n.humidity,
-            wind_speed: n.windScale != null ? String(n.windScale) : '—',
-            visibility: n.vis || '—',
-            // 详情页扩展字段（和风实况原生口径，旧字段保持不变）
-            feelsLike: n.feelsLike != null ? n.feelsLike : null,
-            windDir: n.windDir || '',
-            windScale: n.windScale != null ? n.windScale : null,
-            windSpeed: n.windSpeed != null ? n.windSpeed : null,
-            pressure: n.pressure != null ? n.pressure : null,
-            cloud: n.cloud != null ? n.cloud : null,
-            precip: n.precip != null ? n.precip : null,
-            dew: n.dew != null ? n.dew : null,
-            obsTime: hhmmOf(n.obsTime),
+            temp: roundOf(n.temperature),
+            desc: n.condition.text || '',
+            icon: n.condition.code || '',
+            humidity: typeof n.humidity === 'number' ? Math.round(n.humidity * 100) : null,
+            wind_speed: wind.scale != null ? String(wind.scale) : '—',
+            visibility: visM != null ? Math.round(visM / 100) / 10 : '—',
+            // 详情页扩展字段（口径已换算成页面单位）
+            feelsLike: roundOf(n.feelsLike),
+            windDir: QW_COMPASS[String(dir.compass || '').toLowerCase()] || '',
+            windScale: wind.scale != null ? wind.scale : null,
+            windSpeed: speed != null ? Math.round(speed * 3.6) : null,
+            pressure: roundOf(n.pressure),
+            cloud: typeof n.cloudCover === 'number' ? Math.round(n.cloudCover * 100) : null,
+            precip: valOf(n.precipitation && n.precipitation.amount),
+            dew: roundOf(n.dewPoint),
+            obsTime: hhmmOf(n.validTime),
           };
-          qwOk = true;
+          nowOk = true;
         }
-        if (dayR.status === 'fulfilled' && Array.isArray(dayR.value.daily) && dayR.value.daily.length) {
-          forecast = dayR.value.daily.slice(0, 7).map((c, i) => ({
-            date:     i === 0 ? '今天' : weekDays[new Date(c.fxDate + 'T12:00:00').getDay()],
-            dateStr:  c.fxDate || '',
-            desc:     c.textDay,
-            icon:     weatherIcon(c.textDay),
-            tempHigh: c.tempMax,
-            tempLow:  c.tempMin,
-            // 详情页扩展字段（和风 7 天原生口径）
-            descNight:     c.textNight || '',
-            iconNight:     weatherIcon(c.textNight || c.textDay),
-            sunrise:       hhmmOf(c.sunrise),
-            sunset:        hhmmOf(c.sunset),
-            moonrise:      hhmmOf(c.moonrise),
-            moonset:       hhmmOf(c.moonset),
-            moonPhase:     c.moonPhase || '',
-            moonPhaseIcon: c.moonPhaseIcon || '',
-            uvIndex:       c.uvIndex != null ? c.uvIndex : null,
-            precip:        c.precip != null ? c.precip : null,
-            humidity:      c.humidity != null ? c.humidity : null,
-            pressure:      c.pressure != null ? c.pressure : null,
-            vis:           c.vis != null ? c.vis : null,
-            cloud:         c.cloud != null ? c.cloud : null,
-            windDirDay:    c.windDirDay || '',
-            windScaleDay:  c.windScaleDay || '',
-            windSpeedDay:  c.windSpeedDay != null ? c.windSpeedDay : null,
-          }));
-          qwOk = true;
+        if (dayR.status === 'fulfilled' && Array.isArray(dayR.value.days) && dayR.value.days.length) {
+          forecast = qweatherDailyToForecast(dayR.value.days);
+          dayOk = true;
         }
-        qwUsed = qwOk;
+        qwUsed = nowOk || dayOk;
         logApiUsage(db, {
           openid: OPENID, apiGroup: 'qweather', apiName: 'weather_now_7d',
-          endpoint: `https://${qwCfg.host}/v7/weather/7d`,
-          success: qwOk, latencyMs: Date.now() - t0,
-          error: qwOk ? null : [nowR, dayR]
+          endpoint: `https://${qwCfg.host}/weather/v1/daily`,
+          success: nowOk && dayOk, latencyMs: Date.now() - t0,
+          error: nowOk && dayOk ? null : [nowR, dayR]
             .map(r => (r.status === 'rejected' ? String(r.reason && r.reason.message) : ''))
             .filter(Boolean).join(' / '),
         });

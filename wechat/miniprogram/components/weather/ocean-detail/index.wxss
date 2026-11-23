@@ -1,0 +1,52 @@
+/* 海洋环境详情 */
+:host { display: block; }
+
+.ocean-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8rpx;
+}
+.ocean-detail-col {
+  background: #f7fafc;
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+.ocean-col-header {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 6rpx 10rpx;
+}
+.ocean-col-wind    { background: #e8f3ff; }
+.ocean-col-swell   { background: #e8f5ef; }
+.ocean-col-current { background: #fff3e8; }
+.ocean-col-icon  { font-size: 22rpx; }
+.ocean-col-title { font-size: 20rpx; font-weight: 700; color: #333; }
+
+.ocean-detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4rpx 10rpx;
+  border-bottom: 1rpx solid rgba(0,0,0,0.04);
+}
+.ocean-detail-row:last-child { border-bottom: none; }
+.od-label { font-size: 19rpx; color: #aaa; flex-shrink: 0; }
+.od-val   { font-size: 20rpx; font-weight: 600; color: #333; text-align: right; }
+.od-val-desc { color: #1a7f5a; }
+
+/* 赶海点 */
+.od-ganhai-dots { display: flex; gap: 4rpx; }
+.od-ganhai-dot  {
+  width: 10rpx;
+  height: 10rpx;
+  border-radius: 50%;
+  background: #e0e0e0;
+}
+.od-ganhai-on { background: #1a7f5a; }
+
+/* 评分文字颜色 */
+.od-score      { font-size: 20rpx !important; }
+.od-score-good { color: #1a7f5a !important; }
+.od-score-ok   { color: #e6a817 !important; }
+.od-score-bad  { color: #e85555 !important; }

@@ -5,7 +5,7 @@
     <text class="policy-title">GoCasting 免责声明</text>
     <text class="policy-date">更新日期：{{ updateDate }} · 生效日期：{{ updateDate }}</text>
     <text class="policy-intro">
-      使用本小程序的钓点地图与相关数据前，请仔细阅读并充分理解本声明。你继续使用即表示已知悉并接受。
+      使用本小程序的潮汐、天气与出钓参考数据前，请仔细阅读并充分理解本声明。你继续使用即表示已知悉并接受。
     </text>
   </view>
 

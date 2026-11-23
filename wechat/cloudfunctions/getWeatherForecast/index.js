@@ -194,26 +194,47 @@ function qwTextInfo(text) {
 
 const toNum = v => (v == null || v === '' || Number.isNaN(Number(v)) ? null : Number(v));
 
-// 请求和风实时 + 未来24小时；任一失败返回 null，由 Open-Meteo 兜底
-async function fetchQWeather(db, openid, cfg, loc) {
-  const t0 = Date.now();
-  const [nowR, h24R] = await Promise.allSettled([
-    apiGet(cfg, `/v7/weather/now?location=${encodeURIComponent(loc)}&lang=zh`),
-    apiGet(cfg, `/v7/weather/24h?location=${encodeURIComponent(loc)}&lang=zh`),
-  ]);
-  const now  = nowR.status === 'fulfilled' ? nowR.value.now : null;
-  const hourly = h24R.status === 'fulfilled' && Array.isArray(h24R.value.hourly) ? h24R.value.hourly : [];
-  const ok = !!(now || hourly.length);
-  logApiUsage(db, {
-    openid, apiGroup: 'qweather', apiName: 'weather_atmos',
-    endpoint: `https://${cfg.host}/v7/weather/24h`,
-    success: ok, latencyMs: Date.now() - t0,
-    error: ok ? null : [nowR, h24R].map(r => r.status === 'rejected' ? String(r.reason && r.reason.message) : '').filter(Boolean).join(' / '),
-  });
-  return ok ? { now, hourly } : null;
+// 和风 v1 时间 → 本地日期与小时（带 Z 时按 UTC+8 兜底）
+function qwTimeParts(t) {
+  const s = String(t || '');
+  if (!s) return { date: '', hour: NaN };
+  let d = s;
+  if (/Z$/.test(s)) {
+    const ms = new Date(s).getTime();
+    if (!Number.isNaN(ms)) {
+      const x = new Date(ms + 8 * 3600 * 1000);
+      const p = n => String(n).padStart(2, '0');
+      d = `${x.getUTCFullYear()}-${p(x.getUTCMonth() + 1)}-${p(x.getUTCDate())}` +
+        `T${p(x.getUTCHours())}:${p(x.getUTCMinutes())}`;
+    }
+  }
+  return { date: d.slice(0, 10), hour: parseInt(d.slice(11, 13), 10) };
 }
 
-// 和风整点覆盖当日逐小时（气压/天气/风/降水/气温），保持原有 byDay 结构
+const round1 = v => (v == null ? null : Math.round(v * 10) / 10);
+
+// 请求和风实时 + 未来24小时 v1；任一失败返回 null，由 Open-Meteo 兜底
+async function fetchQWeather(db, openid, cfg, lat, lon) {
+  const t0 = Date.now();
+  const la = Number(lat).toFixed(2);
+  const lo = Number(lon).toFixed(2);
+  const [nowR, hR] = await Promise.allSettled([
+    apiGet(cfg, `/weather/v1/current/${la}/${lo}?localTime=true&lang=zh`),
+    apiGet(cfg, `/weather/v1/hourly/${la}/${lo}?hours=24&localTime=true&lang=zh`),
+  ]);
+  const now = nowR.status === 'fulfilled' ? nowR.value : null;
+  const hours = hR.status === 'fulfilled' && Array.isArray(hR.value.hours) ? hR.value.hours : [];
+  const ok = !!(now || hours.length);
+  logApiUsage(db, {
+    openid, apiGroup: 'qweather', apiName: 'weather_atmos',
+    endpoint: `https://${cfg.host}/weather/v1/hourly`,
+    success: ok, latencyMs: Date.now() - t0,
+    error: ok ? null : [nowR, hR].map(r => r.status === 'rejected' ? String(r.reason && r.reason.message) : '').filter(Boolean).join(' / '),
+  });
+  return ok ? { now, hours } : null;
+}
+
+// 和风 v1 覆盖当日逐小时（气压/天气/风/降水/气温），保持原有 byDay 结构
 function mergeQWeather(dayMap, qw) {
   const put = (dateKey, hour, patch) => {
     if (!dateKey || Number.isNaN(hour)) return;
@@ -223,32 +244,58 @@ function mergeQWeather(dayMap, qw) {
     Object.assign(row, patch);
   };
 
-  (qw.hourly || []).forEach(h => {
-    const t = String(h.fxTime || '');
-    const info = qwTextInfo(h.text);
-    put(t.slice(0, 10), parseInt(t.slice(11, 13), 10), {
-      pressure: toNum(h.pressure), wmoLabel: info.label, wmoScore: info.score,
-      windSpeed: toNum(h.windSpeed), windDir: toNum(h.wind360),
-      windDirText: h.windDir || '', windScale: toNum(h.windScale),
-      precip: toNum(h.precip), pop: toNum(h.pop),
-      tempAir: toNum(h.temp), humidity: toNum(h.humidity),
-      cloud: toNum(h.cloud), dew: toNum(h.dew),
-      text: h.text || '', icon: h.icon || '', source: 'qweather',
+  (qw.hours || []).forEach(h => {
+    const t = qwTimeParts(h.forecastTime);
+    const info = qwTextInfo(h.condition && h.condition.text);
+    const wind = h.wind || {};
+    const dir = wind.direction || {};
+    const speed = toNum(wind.speed && wind.speed.value);   // m/s
+    const prec = h.precipitation || {};
+    put(t.date, t.hour, {
+      pressure: toNum(h.pressure && h.pressure.value),
+      wmoLabel: info.label, wmoScore: info.score,
+      windSpeed: speed != null ? Math.round(speed * 3.6) : null,
+      windDir: dir.degree != null ? Number(dir.degree) : null,
+      windDirText: '',
+      windScale: wind.scale != null ? wind.scale : null,
+      precip: toNum(prec.amount && prec.amount.value),
+      pop: typeof prec.probability === 'number' ? Math.round(prec.probability * 100) : null,
+      tempAir: round1(toNum(h.temperature && h.temperature.value)),
+      humidity: typeof h.humidity === 'number' ? Math.round(h.humidity * 100) : null,
+      cloud: typeof h.cloudCover === 'number' ? Math.round(h.cloudCover * 100) : null,
+      dew: round1(toNum(h.dewPoint && h.dewPoint.value)),
+      text: (h.condition && h.condition.text) || '',
+      icon: (h.condition && h.condition.code) || '',
+      source: 'qweather',
     });
   });
 
-  if (qw.now) {
-    const t = String(qw.now.obsTime || '');
-    const info = qwTextInfo(qw.now.text);
-    put(t.slice(0, 10), parseInt(t.slice(11, 13), 10), {
-      pressure: toNum(qw.now.pressure), wmoLabel: info.label, wmoScore: info.score,
-      windSpeed: toNum(qw.now.windSpeed), windDir: toNum(qw.now.wind360),
-      windDirText: qw.now.windDir || '', windScale: toNum(qw.now.windScale),
-      precip: toNum(qw.now.precip), pop: null,
-      tempAir: toNum(qw.now.temp), humidity: toNum(qw.now.humidity),
-      cloud: toNum(qw.now.cloud), dew: toNum(qw.now.dew),
-      feelsLike: toNum(qw.now.feelsLike), vis: toNum(qw.now.vis),
-      text: qw.now.text || '', icon: qw.now.icon || '', source: 'qweather',
+  if (qw.now && qw.now.condition) {
+    const n = qw.now;
+    const t = qwTimeParts(n.validTime);
+    const info = qwTextInfo(n.condition.text);
+    const wind = n.wind || {};
+    const dir = wind.direction || {};
+    const speed = toNum(wind.speed && wind.speed.value);
+    const visM = toNum(n.visibility && n.visibility.value);
+    put(t.date, t.hour, {
+      pressure: toNum(n.pressure && n.pressure.value),
+      wmoLabel: info.label, wmoScore: info.score,
+      windSpeed: speed != null ? Math.round(speed * 3.6) : null,
+      windDir: dir.degree != null ? Number(dir.degree) : null,
+      windDirText: '',
+      windScale: wind.scale != null ? wind.scale : null,
+      precip: toNum(n.precipitation && n.precipitation.amount && n.precipitation.amount.value),
+      pop: null,
+      tempAir: round1(toNum(n.temperature && n.temperature.value)),
+      humidity: typeof n.humidity === 'number' ? Math.round(n.humidity * 100) : null,
+      cloud: typeof n.cloudCover === 'number' ? Math.round(n.cloudCover * 100) : null,
+      dew: round1(toNum(n.dewPoint && n.dewPoint.value)),
+      feelsLike: round1(toNum(n.feelsLike && n.feelsLike.value)),
+      vis: visM != null ? Math.round(visM / 100) / 10 : null,
+      text: n.condition.text || '',
+      icon: n.condition.code || '',
+      source: 'qweather',
     });
   }
 
@@ -324,8 +371,7 @@ exports.main = async (event, context) => {
       const qwCfg = readConfig();
       if (qwCfg) {
         try {
-          const loc = `${lon.toFixed(2)},${lat.toFixed(2)}`;
-          const qw = await fetchQWeather(db, OPENID, qwCfg, loc);
+          const qw = await fetchQWeather(db, OPENID, qwCfg, lat, lon);
           if (qw) mergeQWeather(dayMap, qw);
         } catch (e) {
           console.warn('[getWeatherForecast] 和风合并失败，沿用 Open-Meteo:', e.message);

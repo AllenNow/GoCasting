@@ -43,13 +43,9 @@
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
 }
 
-.refresh-btn.is-loading .refresh-icon {
-  animation: spin 1s linear infinite;
-}
-
-.refresh-icon {
+.icon-refresh.refresh-icon {
   margin-right: 8rpx;
-  font-size: 28rpx;
+  font-size: 26rpx;
 }
 
 @keyframes spin {

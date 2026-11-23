@@ -451,7 +451,7 @@ Page({
     return wx.cloud.deleteFile({ fileList: ids }).catch(function() {});
   },
 
-  // 钓点地图定位
+  // 管理员录入榜单时选择钓获位置
   chooseLocation: function() {
     var that = this;
     wx.chooseLocation({
@@ -671,65 +671,15 @@ Page({
     }
     if (!entry) return;
 
-    // 构造地图标记与中心点
-    var markers = [];
-    var hasLocation = !!(entry.spot_lat && entry.spot_lon);
-    var mapLat, mapLon, mapScale;
-    if (hasLocation) {
-      mapLat = Number(entry.spot_lat);
-      mapLon = Number(entry.spot_lon);
-      mapScale = 15;
-      markers.push({
-        id: 1,
-        latitude: mapLat,
-        longitude: mapLon,
-        title: entry.spot || '钓点',
-        width: 30,
-        height: 30,
-        callout: {
-          content: '📍 ' + (entry.spot || '钓点'),
-          color: '#1a7f5a',
-          fontSize: 13,
-          bgColor: '#ffffff',
-          padding: 6,
-          borderRadius: 6,
-          display: 'ALWAYS',
-        },
-      });
-    } else {
-      // 无定位：默认中国中心，小比例尺便于浏览全国/世界
-      mapLat = 35.0;
-      mapLon = 105.0;
-      mapScale = 4;
-    }
-
+    // 仅展示文字信息，不展示坐标与地图
     this.setData({
       showDetailPanel: true,
-      detailEntry: Object.assign({}, entry, {
-        mapMarkers: markers,
-        hasLocation: hasLocation,
-        mapLat: mapLat,
-        mapLon: mapLon,
-        mapScale: mapScale,
-      }),
+      detailEntry: Object.assign({}, entry),
     });
   },
 
   closeDetailPanel: function() {
     this.setData({ showDetailPanel: false, detailEntry: null });
-  },
-
-  // 点击地图，打开微信内置地图查看钓点位置
-  openSpotLocation: function() {
-    var entry = this.data.detailEntry;
-    if (!entry || !entry.hasLocation) return;
-    wx.openLocation({
-      latitude: Number(entry.spot_lat),
-      longitude: Number(entry.spot_lon),
-      name: entry.spot || '钓点',
-      address: entry.spot || '',
-      scale: 16,
-    });
   },
 
   // 从详情面板进入编辑（管理员）

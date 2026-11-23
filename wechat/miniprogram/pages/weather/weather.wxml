@@ -37,186 +37,63 @@
     </view>
 
     <!-- ═══════════════════════════════════════════════
-         区块1：顶部实况卡
+         区块1：顶部实况卡（组件）
     ══════════════════════════════════════════════════ -->
-    <view class="hero-card">
-      <!-- 顶部：位置（可点击切换） + 当前天气 -->
-      <view class="hero-header">
-        <view class="hero-location" bindtap="openPlacePanel">
-          <text class="hero-location-icon">{{ activePlace ? activePlace.typeIcon : '📍' }}</text>
-          <text class="hero-location-name">{{ city }}</text>
-          <view wx:if="{{ isLocating }}" class="locating-spin"></view>
-          <text wx:else class="hero-location-arrow">▾</text>
-        </view>
-        <view class="hero-header-right">
-          <view class="hero-refresh {{ refreshingFast ? 'is-loading' : '' }}" catchtap="refreshFast">
-            <text class="hero-refresh-icon">⟳</text>
-          </view>
-          <view class="hero-weather-mini" wx:if="{{ weather }}">
-            <text class="hero-weather-desc">{{ weather.desc }}</text>
-            <text class="hero-weather-temp">{{ weather.temp }}°C</text>
-          </view>
-          <view class="hero-detail" catchtap="openWeatherDetail">
-            <text class="hero-detail-text">详情</text>
-            <text class="hero-detail-arrow">›</text>
-          </view>
-        </view>
-      </view>
-
-      <!-- 核心：潮汐状态 + 潮高 -->
-      <view class="hero-tide-main">
-        <view class="hero-tide-state">
-          <text class="hero-tide-icon">{{ currentData.tideState.icon }}</text>
-          <text class="hero-tide-label">{{ currentData.tideState.label }}</text>
-        </view>
-        <view class="hero-tide-height">
-          <text class="hero-height-num">{{ currentData.seaLevelMSL != null ? currentData.seaLevelMSL : '--' }}</text>
-          <text class="hero-height-unit">m</text>
-        </view>
-        <text class="hero-height-hint">当前潮高{{ seaLevelDatum === 'station' ? '（当地基准面）' : '（MSL）' }}</text>
-      </view>
-
-      <!-- 四格数据 -->
-      <view class="hero-grid">
-        <view class="hero-grid-item">
-          <text class="hero-grid-icon">🌊</text>
-          <text class="hero-grid-val">{{ currentData.waveHeight != null ? currentData.waveHeight + 'm' : '--' }}</text>
-          <text class="hero-grid-label">浪高</text>
-        </view>
-        <view class="hero-grid-item">
-          <text class="hero-grid-icon">🌡️</text>
-          <text class="hero-grid-val">{{ currentData.sst != null ? currentData.sst + '°C' : '--' }}</text>
-          <text class="hero-grid-label">水温</text>
-        </view>
-        <view class="hero-grid-item">
-          <text class="hero-grid-icon">🌀</text>
-          <text class="hero-grid-val">{{ currentData.currentVelocity != null ? currentData.currentVelocity + 'km/h' : '--' }}</text>
-          <text class="hero-grid-label">洋流</text>
-        </view>
-        <view class="hero-grid-item">
-          <view class="fish-score-badge {{ fishScore == null ? 'score-na' : (fishScore >= 7 ? 'score-good' : fishScore >= 4 ? 'score-ok' : 'score-bad') }}">
-            <text class="fish-score-num">{{ fishScore == null ? '--' : fishScore }}</text>
-          </view>
-          <text class="hero-grid-label">出钓指数</text>
-        </view>
-      </view>
-
-      <!-- 更新时间 + 海况局部刷新 -->
-      <view class="hero-update-row">
-        <text class="hero-update-text">实况 {{ weatherAgeText }}</text>
-        <text class="hero-update-dot">·</text>
-        <text class="hero-update-text">海况 {{ marineAgeText }}</text>
-        <view class="mini-refresh {{ refreshingMarine ? 'is-loading' : '' }}" catchtap="refreshMarine">
-          <text class="mini-refresh-icon">⟳</text>
-        </view>
-      </view>
-
-      <!-- 今日洞察：最佳窗口 + 月相 / 潮型 / 气压 -->
-      <view class="hero-insight" wx:if="{{ marineLoaded }}">
-        <view class="insight-best">
-          <text class="insight-best-label">今日最佳窗口</text>
-          <block wx:if="{{ todayBestWindows.length }}">
-            <view class="insight-best-main">
-              <text class="insight-best-time">{{ todayBestWindows[0].timeText }}</text>
-              <text class="insight-best-score">{{ todayBestWindows[0].avgScore }}<text class="insight-best-max">/10</text></text>
-            </view>
-            <text class="insight-best-reason">{{ todayBestWindows[0].reason }}</text>
-          </block>
-          <text wx:else class="insight-best-empty">综合 {{ todayGrade ? todayGrade.avgScore : '--' }} 分 · 今日无突出窗口</text>
-        </view>
-        <view class="insight-chips">
-          <view class="insight-chip" wx:if="{{ moonInfo }}">
-            <text class="insight-chip-icon">{{ moonInfo.icon }}</text>
-            <text>{{ moonInfo.name }}</text>
-          </view>
-          <view class="insight-chip" wx:if="{{ tideTypeInfo }}">
-            <text>{{ tideTypeInfo.label }}</text>
-            <text class="insight-chip-sub">潮差 {{ tideRange }}m</text>
-          </view>
-          <view class="insight-chip" wx:if="{{ pressureNow != null }}">
-            <text>{{ pressureNow }}hPa</text>
-            <text class="insight-chip-sub">{{ pressureTrend }}</text>
-          </view>
-        </view>
-      </view>
-
-      <!-- 海况描述 + 赶海宜指数 -->
-      <view class="hero-footer">
-        <view class="hero-wave-desc">
-          <text class="hero-wave-tag">{{ currentData.waveDesc || '海况数据加载中' }}</text>
-          <text class="hero-wave-detail">涌浪 {{ currentData.swellWaveHeight != null ? currentData.swellWaveHeight + 'm' : '--' }} · 周期 {{ currentData.wavePeriod != null ? currentData.wavePeriod + 's' : '--' }} · {{ currentData.waveDirectionStr || '--' }}向</text>
-        </view>
-        <view class="ganhai-badge ganhai-{{ gangHaiScore }}">
-          <text class="ganhai-label">赶海</text>
-          <view class="ganhai-dots">
-            <view wx:for="{{ [1,2,3,4,5] }}" wx:key="*this" class="ganhai-dot {{ item <= gangHaiScore ? 'ganhai-dot-on' : '' }}"></view>
-          </view>
-        </view>
-      </view>
-
-      <text class="hero-base-note" wx:if="{{ tideMeta && tideMeta.source === 'qweather' }}">潮高采用{{ tideMeta.siteName }}验潮站当地基准面，与 MSL 平均海平面不可直接对比</text>
-      <text class="hero-base-note" wx:else>潮高为 MSL 平均海平面基准，与港口潮汐表基准不同，数值不可直接对比</text>
-    </view>
+    <weather-hero
+      active-place="{{ activePlace }}"
+      city="{{ city }}"
+      is-locating="{{ isLocating }}"
+      weather="{{ weather }}"
+      current-data="{{ currentData }}"
+      sea-level-datum="{{ seaLevelDatum }}"
+      fish-score="{{ fishScore }}"
+      next-tide="{{ nextTide }}"
+      weather-age-text="{{ weatherAgeText }}"
+      marine-age-text="{{ marineAgeText }}"
+      refreshing-fast="{{ refreshingFast }}"
+      refreshing-marine="{{ refreshingMarine }}"
+      marine-loaded="{{ marineLoaded }}"
+      today-best-windows="{{ todayBestWindows }}"
+      today-grade="{{ todayGrade }}"
+      moon-info="{{ moonInfo }}"
+      tide-type-info="{{ tideTypeInfo }}"
+      tide-range="{{ tideRange }}"
+      pressure-now="{{ pressureNow }}"
+      pressure-trend="{{ pressureTrend }}"
+      gang-hai-score="{{ gangHaiScore }}"
+      tide-confidence="{{ tideConfidence }}"
+      tide-meta="{{ tideMeta }}"
+      bind:openplace="openPlacePanel"
+      bind:refreshfast="refreshFast"
+      bind:opendetail="openWeatherDetail"
+      bind:refreshmarine="refreshMarine"
+    />
 
     <!-- ═══════════════════════════════════════════════
-         区块1.5：天光与黄金档（和风天文 + 本地兜底）
+         区块1.2：本周最佳出钓日（组件）
     ══════════════════════════════════════════════════ -->
-    <view wx:if="{{ daylight }}" class="sun-card">
-      <view class="sun-head">
-        <view class="sun-title-wrap">
-          <text class="sun-title">☀️ 天光</text>
-          <text class="sun-src">{{ daylight.sourceLabel }} · {{ astroAgeText }}</text>
-        </view>
-        <text class="sun-len">日照 {{ daylight.dayLengthText }}</text>
-      </view>
+    <week-best
+      wx:if="{{ weekBestDays.length }}"
+      items="{{ weekBestDays }}"
+    />
 
-      <!-- 太阳弧线 -->
-      <view class="sun-arc-wrap">
-        <view class="sun-arc"></view>
-        <view class="sun-horizon"></view>
-        <view
-          class="sun-dot {{ daylight.isDay ? 'sun-dot-day' : 'sun-dot-night' }}"
-          style="left: {{ daylight.sunPct }}%; bottom: {{ daylight.sunArcY }}rpx;"
-        ></view>
-        <text class="sun-edge sun-edge-left">日出 {{ daylight.sunrise }}</text>
-        <text class="sun-edge sun-edge-right">日落 {{ daylight.sunset }}</text>
-      </view>
-      <text class="sun-status">{{ daylight.statusText }}</text>
-
-      <!-- 黄金档：点按定位到下方时间轴 -->
-      <view class="golden-row">
-        <view
-          wx:for="{{ daylight.golden }}"
-          wx:key="key"
-          class="golden-chip {{ goldenActive === item.key ? 'golden-chip-active' : '' }}"
-          bindtap="onGoldenTap"
-          data-key="{{ item.key }}"
-        >
-          <text class="golden-icon">{{ item.icon }}</text>
-          <view class="golden-info">
-            <text class="golden-label">{{ item.label }}</text>
-            <text class="golden-time">{{ item.start }}–{{ item.end }}</text>
-          </view>
-        </view>
-      </view>
-
-      <!-- 月升月落 + 和风钓鱼指数 -->
-      <view class="sun-foot">
-        <view class="sun-foot-item">
-          <text class="sun-foot-label">月升 / 月落</text>
-          <text class="sun-foot-val">{{ moonTimes ? moonTimes.rise + ' / ' + moonTimes.set : '-- / --' }}</text>
-        </view>
-        <view wx:if="{{ goScoreReady }}" class="sun-foot-item sun-foot-tap" bindtap="goGoScore">
-          <text class="sun-foot-label">出钓指数</text>
-          <text class="sun-foot-val sun-foot-fish">{{ goScore }} 分 · {{ goScoreLevel }} <text class="sun-foot-more">详情 ›</text></text>
-        </view>
-      </view>
-
-      <view wx:if="{{ minutelyText }}" class="sun-minutely {{ minutelyHasRain ? 'sun-minutely-rain' : '' }}">
-        <text class="sun-minutely-icon">{{ minutelyHasRain ? '☔' : '🌤' }}</text>
-        <text class="sun-minutely-text">{{ minutelyText }}</text>
-      </view>
-    </view>
+    <!-- ═══════════════════════════════════════════════
+         区块1.5：天光与黄金档（组件）
+    ══════════════════════════════════════════════════ -->
+    <sun-card
+      wx:if="{{ daylight }}"
+      daylight="{{ daylight }}"
+      astro-age-text="{{ astroAgeText }}"
+      moon-times="{{ moonTimes }}"
+      go-score="{{ goScore }}"
+      go-score-level="{{ goScoreLevel }}"
+      go-score-ready="{{ goScoreReady }}"
+      minutely-text="{{ minutelyText }}"
+      minutely-has-rain="{{ minutelyHasRain }}"
+      golden-active="{{ goldenActive }}"
+      bind:goldentap="onGoldenTap"
+      bind:goscore="goGoScore"
+    />
 
     <!-- ═══════════════════════════════════════════════
          区块3：潮汐曲线 + 14天日历（过去7天 + 未来7天）
@@ -393,65 +270,13 @@
       <view wx:if="{{ selectedDayData }}" class="day-detail-wrap">
 
 
-        <!-- ── 最佳垂钓时段推荐卡 ── -->
-        <view wx:if="{{ dayBestWindows.length > 0 }}" class="best-windows-wrap">
-          <view class="best-windows-header">
-            <text class="best-windows-title">🎣 建议垂钓时段</text>
-            <text class="best-windows-hint">综合潮汐·气压·水温·天气</text>
-          </view>
-          <scroll-view scroll-x class="window-scroll">
-            <view class="window-row">
-              <view wx:for="{{ dayBestWindows }}" wx:key="startTime" class="window-card grade-bg-{{ item.grade }}">
-                <view class="window-card-left">
-                  <text class="window-emoji">{{ item.emoji }}</text>
-                  <view class="window-info">
-                    <text class="window-time">{{ item.timeText }}</text>
-                    <text class="window-duration">{{ item.duration }}小时 · {{ item.reason }}</text>
-                  </view>
-                </view>
-                <view class="window-score grade-{{ item.grade }}">
-                  <text class="window-score-num">{{ item.avgScore }}</text>
-                  <text class="window-score-max">/10</text>
-                </view>
-              </view>
-            </view>
-          </scroll-view>
-        </view>
-
-        <!-- 无最佳时段提示 -->
-        <view wx:elif="{{ dayFishHeatmap.length > 0 && !selectedDayData.isPast }}" class="no-window-tip">
-          <text>⚠️ 今日条件一般，建议避开恶劣天气或低气压时段</text>
-        </view>
-
-        <!-- ── 鱼口热力图（逐小时评分）── -->
-        <view wx:if="{{ dayFishHeatmap.length > 0 }}" class="fish-heatmap-wrap">
-          <text class="day-section-label">逐小时鱼口指数</text>
-          <scroll-view scroll-x class="heatmap-scroll">
-            <view class="heatmap-row">
-              <view wx:for="{{ dayFishHeatmap }}" wx:key="hour" class="heatmap-col">
-                <!-- 柱体 -->
-                <view class="heatmap-bar-wrap">
-                  <view
-                    class="heatmap-bar"
-                    style="height: {{ item.heightPct }}%; background: {{ item.color }};"
-                  ></view>
-                </view>
-                <!-- 分值 -->
-                <text class="heatmap-score" style="color: {{ item.color }};">{{ item.score }}</text>
-                <!-- 时间（每3小时显示一次） -->
-                <text class="heatmap-time {{ item.hour % 3 === 0 ? '' : 'invisible' }}">{{ item.timeStr }}</text>
-              </view>
-            </view>
-          </scroll-view>
-          <!-- 图例 -->
-          <view class="heatmap-legend">
-            <view class="heatmap-legend-item"><view class="heatmap-legend-dot" style="background:#1a7f5a"></view><text>极佳(8+)</text></view>
-            <view class="heatmap-legend-item"><view class="heatmap-legend-dot" style="background:#2dce89"></view><text>较好(6.5+)</text></view>
-            <view class="heatmap-legend-item"><view class="heatmap-legend-dot" style="background:#e6a817"></view><text>一般(5+)</text></view>
-            <view class="heatmap-legend-item"><view class="heatmap-legend-dot" style="background:#e85555"></view><text>不宜(&lt;3.5)</text></view>
-          </view>
-        </view>
-
+        <!-- 鱼口模块（组件：建议时段 + 热力图） -->
+        <day-fish
+          windows="{{ dayBestWindows }}"
+          is-past="{{ selectedDayData.isPast }}"
+          heatmap="{{ dayFishHeatmap }}"
+          bind:addwindow="addTideWindowToCalendar"
+        />
 
         <!-- ── 逐小时浪况（默认收起，点标题展开以节省纵向空间）── -->
         <view wx:if="{{ selectedDayData.hourly.length > 0 }}" class="day-wave-wrap">
@@ -572,156 +397,26 @@
     </view>
 
     <!-- ═══════════════════════════════════════════════
-         区块4：48小时浪况趋势（横向滚动）
+         区块4：48小时浪况趋势（组件）
     ══════════════════════════════════════════════════ -->
-    <view class="section-card">
-      <view class="section-header">
-        <text class="section-title">📊 48小时浪况趋势</text>
-        <view class="wave-legend">
-          <view class="wl-item"><view class="wl-dot wl-dot-wave"></view><text class="wl-text">综合浪高</text></view>
-          <view class="wl-item"><view class="wl-dot wl-dot-swell"></view><text class="wl-text">涌浪</text></view>
-        </view>
-      </view>
-
-      <!-- 横向滚动区域 -->
-      <scroll-view scroll-x class="wave-scroll">
-        <view class="wave-scroll-inner">
-          <!-- 浪况数据列 -->
-          <view
-            wx:for="{{ hourlyForecast48h }}"
-            wx:key="index"
-            class="wave-col {{ index % 6 === 0 ? 'wave-col-mark' : '' }}"
-          >
-            <!-- 时间标签（每6小时显示） -->
-            <text class="wave-col-time {{ index % 6 === 0 ? '' : 'invisible' }}">{{ item.timeStr }}</text>
-
-            <!-- 浪高柱（双色，按 48h 最大浪高自适应量程） -->
-            <view class="wave-bar-group wave-bar-group-48h">
-              <!-- 涌浪（底层） -->
-              <view
-                class="wave-bar wave-bar-swell"
-                style="height: {{ item.swellHeight != null ? (item.swellHeight / waveBarScale * 72 + 4) : 4 }}rpx;"
-              ></view>
-              <!-- 风浪（叠加） -->
-              <view
-                class="wave-bar wave-bar-wind"
-                style="height: {{ item.waveHeight != null ? (item.waveHeight / waveBarScale * 72 + 4) : 4 }}rpx;"
-              ></view>
-            </view>
-
-            <!-- 浪高数值（每2小时显示，避免数字挤在一起） -->
-            <text class="wave-col-val {{ index % 2 === 0 ? '' : 'invisible' }}">{{ item.waveHeight != null ? item.waveHeight : '—' }}</text>
-
-            <!-- 水温（每6小时显示） -->
-            <text class="wave-col-sst {{ index % 6 === 0 ? '' : 'invisible' }}">{{ item.sst != null ? item.sst + '°' : '' }}</text>
-          </view>
-        </view>
-      </scroll-view>
-
-      <!-- 图例说明 -->
-      <view class="wave-footer-note">
-        <text class="wave-note-text">单位：m，水温单位：°C，左右滑动查看更多</text>
-      </view>
-    </view>
+    <wave-48h
+      list="{{ hourlyForecast48h }}"
+      scale="{{ waveBarScale }}"
+    />
 
     <!-- ═══════════════════════════════════════════════
-         区块6：海洋环境详情
+         区块6：海洋环境详情（组件）
     ══════════════════════════════════════════════════ -->
-    <view class="section-card" wx:if="{{ currentData }}">
-      <view class="section-header">
-        <text class="section-title">🔬 海洋环境详情</text>
-      </view>
-
-      <!-- 三列：风浪 / 涌浪 / 洋流 -->
-      <view class="ocean-detail-grid">
-
-        <!-- 风浪 -->
-        <view class="ocean-detail-col">
-          <view class="ocean-col-header ocean-col-wind">
-            <text class="ocean-col-icon">💨</text>
-            <text class="ocean-col-title">风浪</text>
-          </view>
-          <view class="ocean-detail-row">
-            <text class="od-label">浪高</text>
-            <text class="od-val">{{ currentData.windWaveHeight != null ? currentData.windWaveHeight + 'm' : '—' }}</text>
-          </view>
-          <view class="ocean-detail-row">
-            <text class="od-label">浪向</text>
-            <text class="od-val">{{ currentData.waveDirectionStr }}</text>
-          </view>
-          <view class="ocean-detail-row">
-            <text class="od-label">周期</text>
-            <text class="od-val">{{ currentData.wavePeriod != null ? currentData.wavePeriod + 's' : '—' }}</text>
-          </view>
-          <view class="ocean-detail-row">
-            <text class="od-label">海况</text>
-            <text class="od-val od-val-desc">{{ currentData.waveDesc }}</text>
-          </view>
-        </view>
-
-        <!-- 涌浪 -->
-        <view class="ocean-detail-col">
-          <view class="ocean-col-header ocean-col-swell">
-            <text class="ocean-col-icon">🌊</text>
-            <text class="ocean-col-title">涌浪</text>
-          </view>
-          <view class="ocean-detail-row">
-            <text class="od-label">浪高</text>
-            <text class="od-val">{{ currentData.swellWaveHeight != null ? currentData.swellWaveHeight + 'm' : '—' }}</text>
-          </view>
-          <view class="ocean-detail-row">
-            <text class="od-label">综合</text>
-            <text class="od-val">{{ currentData.waveHeight != null ? currentData.waveHeight + 'm' : '—' }}</text>
-          </view>
-          <view class="ocean-detail-row">
-            <text class="od-label">水温</text>
-            <text class="od-val">{{ currentData.sst != null ? currentData.sst + '°C' : '—' }}</text>
-          </view>
-          <view class="ocean-detail-row">
-            <text class="od-label">潮高</text>
-            <text class="od-val">{{ currentData.seaLevelMSL != null ? currentData.seaLevelMSL + 'm' : '—' }}</text>
-          </view>
-        </view>
-
-        <!-- 洋流 -->
-        <view class="ocean-detail-col">
-          <view class="ocean-col-header ocean-col-current">
-            <text class="ocean-col-icon">🔄</text>
-            <text class="ocean-col-title">洋流</text>
-          </view>
-          <view class="ocean-detail-row">
-            <text class="od-label">流速</text>
-            <text class="od-val">{{ currentData.currentVelocity != null ? currentData.currentVelocity + 'km/h' : '—' }}</text>
-          </view>
-          <view class="ocean-detail-row">
-            <text class="od-label">流向</text>
-            <text class="od-val">{{ currentData.currentDirectionStr }}</text>
-          </view>
-          <view class="ocean-detail-row">
-            <text class="od-label">赶海</text>
-            <view class="od-ganhai-dots">
-              <view wx:for="{{ [1,2,3,4,5] }}" wx:key="*this" class="od-ganhai-dot {{ item <= gangHaiScore ? 'od-ganhai-on' : '' }}"></view>
-            </view>
-          </view>
-          <view class="ocean-detail-row">
-            <text class="od-label">评分</text>
-            <text class="od-val od-score {{ fishScore == null ? '' : (fishScore >= 7 ? 'od-score-good' : fishScore >= 4 ? 'od-score-ok' : 'od-score-bad') }}">{{ fishScoreLabel }}</text>
-          </view>
-        </view>
-
-      </view>
-    </view>
+    <ocean-detail
+      current-data="{{ currentData }}"
+      gang-hai-score="{{ gangHaiScore }}"
+      fish-score="{{ fishScore }}"
+      fish-score-label="{{ fishScoreLabel }}"
+    />
 
     <!-- ═══════════════════════════════════════════════
          底部快捷操作
     ══════════════════════════════════════════════════ -->
-    <view class="bottom-actions">
-      <view class="btn-action btn-map" bindtap="goMap">
-        <text class="btn-action-icon">🗺️</text>
-        <text class="btn-action-text">查看钓点</text>
-      </view>
-    </view>
-
     <view class="safe-bottom"></view>
   </block>
 

@@ -1,0 +1,16 @@
+<view class="week-card">
+  <view class="week-head">
+    <text class="week-title">📅 本周最佳出钓日</text>
+    <text class="week-hint">综合潮汐·气压·水温·天气</text>
+  </view>
+  <view class="week-row">
+    <view wx:for="{{ items }}" wx:key="date" class="week-item week-rank-{{ index }}">
+      <text class="week-rank">{{ index + 1 }}</text>
+      <view class="week-info">
+        <text class="week-day">{{ item.dateLabel }}</text>
+        <text class="week-sub">{{ item.weekLabel }} · {{ item.label }}</text>
+      </view>
+      <text class="week-score" style="color: {{ item.color }};">{{ item.avgScore }}</text>
+    </view>
+  </view>
+</view>

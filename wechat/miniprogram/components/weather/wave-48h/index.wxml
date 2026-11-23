@@ -1,0 +1,49 @@
+<view class="section-card">
+  <view class="section-header">
+    <text class="section-title">📊 48小时浪况趋势</text>
+    <view class="wave-legend">
+      <view class="wl-item"><view class="wl-dot wl-dot-wave"></view><text class="wl-text">综合浪高</text></view>
+      <view class="wl-item"><view class="wl-dot wl-dot-swell"></view><text class="wl-text">涌浪</text></view>
+    </view>
+  </view>
+
+  <!-- 横向滚动区域 -->
+  <scroll-view scroll-x class="wave-scroll">
+    <view class="wave-scroll-inner">
+      <!-- 浪况数据列 -->
+      <view
+        wx:for="{{ list }}"
+        wx:key="index"
+        class="wave-col {{ index % 6 === 0 ? 'wave-col-mark' : '' }}"
+      >
+        <!-- 时间标签（每6小时显示） -->
+        <text class="wave-col-time {{ index % 6 === 0 ? '' : 'invisible' }}">{{ item.timeStr }}</text>
+
+        <!-- 浪高柱（双色，按 48h 最大浪高自适应量程） -->
+        <view class="wave-bar-group wave-bar-group-48h">
+          <!-- 涌浪（底层） -->
+          <view
+            class="wave-bar wave-bar-swell"
+            style="height: {{ item.swellHeight != null ? (item.swellHeight / scale * 72 + 4) : 4 }}rpx;"
+          ></view>
+          <!-- 风浪（叠加） -->
+          <view
+            class="wave-bar wave-bar-wind"
+            style="height: {{ item.waveHeight != null ? (item.waveHeight / scale * 72 + 4) : 4 }}rpx;"
+          ></view>
+        </view>
+
+        <!-- 浪高数值（每2小时显示，避免数字挤在一起） -->
+        <text class="wave-col-val {{ index % 2 === 0 ? '' : 'invisible' }}">{{ item.waveHeight != null ? item.waveHeight : '—' }}</text>
+
+        <!-- 水温（每6小时显示） -->
+        <text class="wave-col-sst {{ index % 6 === 0 ? '' : 'invisible' }}">{{ item.sst != null ? item.sst + '°' : '' }}</text>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 图例说明 -->
+  <view class="wave-footer-note">
+    <text class="wave-note-text">单位：m，水温单位：°C，左右滑动查看更多</text>
+  </view>
+</view>
