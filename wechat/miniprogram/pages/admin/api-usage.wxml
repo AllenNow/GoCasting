@@ -1,0 +1,81 @@
+<!-- pages/admin/api-usage.wxml — 第三方 API 用量与费用（超管专用）-->
+<view class="page">
+  <!-- 顶部：月份选择 + 刷新 -->
+  <view class="topbar">
+    <picker mode="date" fields="month" value="{{ month }}" bindchange="onMonthChange">
+      <view class="month-chip">📅 {{ monthLabel }} <text class="chip-arrow">▾</text></view>
+    </picker>
+    <view class="refresh-btn {{ loading ? 'is-loading' : '' }}" catchtap="loadStats">
+      <text class="refresh-icon">↻</text>
+      <text>刷新</text>
+    </view>
+  </view>
+
+  <!-- 汇总卡 -->
+  <view class="summary">
+    <view class="summary-main">
+      <text class="summary-label">本期第三方 API 费用</text>
+      <text class="summary-cost">¥ {{ totals.costText }}</text>
+      <text class="summary-sub">计费 {{ totals.billedText }} 次 · {{ totals.apiCount }} 个接口</text>
+    </view>
+    <view class="summary-grid">
+      <view class="grid-item">
+        <text class="grid-num">{{ totals.callsText }}</text>
+        <text class="grid-label">总调用</text>
+      </view>
+      <view class="grid-item">
+        <text class="grid-num">{{ totals.successRate }}%</text>
+        <text class="grid-label">成功率</text>
+      </view>
+      <view class="grid-item">
+        <text class="grid-num">{{ totals.failed }}</text>
+        <text class="grid-label">失败</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 每日调用量 -->
+  <view class="card">
+    <view class="card-title">每日调用量</view>
+    <scroll-view scroll-x class="chart-scroll" wx:if="{{ days.length }}">
+      <view class="chart">
+        <view class="chart-col" wx:for="{{ days }}" wx:key="date">
+          <view class="chart-bar-wrap">
+            <view class="chart-bar" style="height: {{ item.height }}%"></view>
+          </view>
+          <text class="chart-x">{{ item.day }}</text>
+        </view>
+      </view>
+    </scroll-view>
+    <view wx:else class="empty">本月暂无调用记录</view>
+  </view>
+
+  <!-- 按接口明细 -->
+  <view class="card">
+    <view class="card-title">按接口明细</view>
+
+    <view wx:if="{{ items.length === 0 }}" class="empty">
+      <text class="empty-icon">📭</text>
+      <text>{{ collectionMissing ? '暂无数据（api_usage_logs 集合为空）' : '本月暂无调用记录' }}</text>
+    </view>
+
+    <view wx:for="{{ items }}" wx:key="key" class="api-row">
+      <view class="api-head">
+        <text class="api-name">{{ item.label }}</text>
+        <text class="api-cost">{{ item.costText }}</text>
+      </view>
+      <view class="api-meta">
+        <text>{{ item.callsText }} 次</text>
+        <text>成功率 {{ item.successRate }}%</text>
+        <text>均耗时 {{ item.avgLatencyText }}</text>
+      </view>
+      <view class="api-price">
+        <text class="price-tag">{{ item.unitText }}</text>
+        <text class="price-note">{{ item.note }}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="tip">仅统计真实回源到第三方的调用，缓存命中不计费。</view>
+  <view class="safe-bottom"></view>
+</view>

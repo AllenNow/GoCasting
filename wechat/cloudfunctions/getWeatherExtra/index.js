@@ -261,7 +261,8 @@ exports.main = async (event, context) => {
     return { success: true, data: { source: 'none', reason: '未配置和风天气凭据' } };
   }
 
-  const loc = `${lon.toFixed(4)},${lat.toFixed(4)}`;
+  // 和风 v7 接口要求经度,纬度最多两位小数（分钟级降水等接口超精度会报参数错误）
+  const loc = `${lon.toFixed(2)},${lat.toFixed(2)}`;
   const today = dateKey(new Date());
 
   try {

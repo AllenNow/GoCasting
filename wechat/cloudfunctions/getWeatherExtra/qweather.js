@@ -5,6 +5,20 @@
 const crypto = require('crypto');
 const fetch  = require('node-fetch');
 
+// 环境变量里的私钥常见问题：换行丢失/被引号包裹/END 与正文粘连/CRLF 混合，
+// 统一还原成标准 PEM（每行 64 字符），避免 crypto 报 "bad end line"
+function normalizePrivateKey(raw) {
+  let s = String(raw || '').trim();
+  if (!s) return '';
+  s = s.replace(/^['"`]+/, '').replace(/['"`]+$/, '');
+  s = s.replace(/\\r/g, '').replace(/\\n/g, '\n').replace(/\r/g, '');
+  const m = s.match(/-----BEGIN ([A-Z0-9 ]+)-----([\s\S]*?)-----END \1-----/);
+  if (!m) return s;
+  const body = m[2].replace(/[^A-Za-z0-9+/=]/g, '');
+  const lines = body.match(/.{1,64}/g) || [];
+  return `-----BEGIN ${m[1]}-----\n${lines.join('\n')}\n-----END ${m[1]}-----\n`;
+}
+
 function readConfig() {
   const host = (process.env.QWEATHER_API_HOST || '')
     .trim()
@@ -12,12 +26,13 @@ function readConfig() {
     .replace(/\/+$/, '');
   if (!host) return null;
 
-  const privateKey = (process.env.QWEATHER_PRIVATE_KEY || '').replace(/\\n/g, '\n').trim();
-  const projectId  = (process.env.QWEATHER_PROJECT_ID || '').trim();
-  const keyId      = (process.env.QWEATHER_KEY_ID || '').trim();
+  const privateKey  = normalizePrivateKey(process.env.QWEATHER_PRIVATE_KEY);
+  const projectId   = (process.env.QWEATHER_PROJECT_ID || '').trim();
+  const keyId       = (process.env.QWEATHER_KEY_ID || '').trim();
+  const developerId = (process.env.QWEATHER_DEVELOPER_ID || '').trim();
 
   if (privateKey && projectId && keyId) {
-    return { host, mode: 'jwt', privateKey, projectId, keyId };
+    return { host, mode: 'jwt', privateKey, projectId, keyId, developerId };
   }
 
   const apiKey = (process.env.QWEATHER_API_KEY || '').trim();
@@ -35,10 +50,23 @@ function b64url(buf) {
 
 function signJwt(cfg) {
   const iat = Math.floor(Date.now() / 1000) - 30;
-  const header  = { alg: 'Ed25519', kid: cfg.keyId };
-  const payload = { sub: cfg.projectId, iat, exp: iat + 3600 };
+  // 和风 JWT 规范：alg 必须为 EdDSA，payload 需要 iss（开发者 ID），有效期 15 分钟
+  if (!cfg.developerId) {
+    console.warn('[qweather] 缺少 QWEATHER_DEVELOPER_ID，JWT 可能被拒绝');
+  }
+  const header  = { alg: 'EdDSA', kid: cfg.keyId };
+  const payload = { iss: cfg.developerId, sub: cfg.projectId, iat, exp: iat + 900 };
   const signingInput = `${b64url(Buffer.from(JSON.stringify(header)))}.${b64url(Buffer.from(JSON.stringify(payload)))}`;
-  const signature = crypto.sign(null, Buffer.from(signingInput), crypto.createPrivateKey(cfg.privateKey));
+  let key;
+  try {
+    key = crypto.createPrivateKey(cfg.privateKey);
+  } catch (e) {
+    // 只输出结构信息，不输出私钥内容，便于判断是格式问题还是粘贴不完整
+    const k = String(cfg.privateKey || '');
+    const diag = `len=${k.length},BEGIN=${k.includes('-----BEGIN')},END=${k.includes('-----END')},lines=${k.split('\n').length}`;
+    throw new Error(`QWEATHER_PRIVATE_KEY 无法解析（${e.message}；${diag}）：请确认环境变量含完整的 BEGIN/END 私钥`);
+  }
+  const signature = crypto.sign(null, Buffer.from(signingInput), key);
   return `${signingInput}.${b64url(signature)}`;
 }
 

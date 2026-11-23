@@ -95,7 +95,14 @@ Page({
           wx.saveImageToPhotosAlbum({
             filePath: r.tempFilePath,
             success: () => wx.showToast({ title: '已保存到相册', icon: 'success' }),
-            fail: () => wx.showToast({ title: '需要相册权限', icon: 'none' }),
+            fail: () => {
+              wx.showModal({
+                title: '需要相册权限',
+                content: '请在设置中允许“保存到相册”。',
+                confirmText: '去设置',
+                success: (m) => { if (m.confirm) wx.openSetting(); },
+              });
+            },
           });
         },
         fail: () => { wx.hideLoading(); wx.showToast({ title: '生成失败', icon: 'none' }); },

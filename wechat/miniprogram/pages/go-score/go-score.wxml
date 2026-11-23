@@ -14,6 +14,7 @@
         <text class="big-score-max">/10</text>
       </view>
       <text class="score-level" style="color:{{ scoreColor }}">{{ scoreLevel }}</text>
+      <text wx:if="{{ updatedAtText }}" class="score-updated">更新于 {{ updatedAtText }} · {{ sourceText }}</text>
       <text wx:if="{{ errorMsg }}" class="error-hint">⚠️ {{ errorMsg }}</text>
     </view>
   </view>
@@ -29,6 +30,19 @@
         <view class="stars-row">
           <view wx:for="{{ [1,2,3] }}" wx:for-item="s" wx:key="s" class="star {{ s <= item.stars ? 'star-on' : 'star-off' }}"></view>
         </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 最近 7 天评分（本地记录，跨设备不同步） -->
+  <view wx:if="{{ !loading && history.length > 1 }}" class="history-card card">
+    <text class="card-title">最近 {{ history.length }} 天</text>
+    <view class="history-row">
+      <view wx:for="{{ history }}" wx:key="date" class="history-col">
+        <text class="history-score">{{ item.score }}</text>
+        <view class="history-bar {{ item.score >= 8 ? 'bar-great' : item.score >= 6 ? 'bar-good' : item.score >= 4 ? 'bar-ok' : 'bar-bad' }}"
+          style="height:{{ 10 + item.score * 6 }}rpx;"></view>
+        <text class="history-date">{{ item.label }}</text>
       </view>
     </view>
   </view>
@@ -78,6 +92,8 @@
   <view class="data-disclaimer">
     <text>评分基于公开气象与潮汐数据计算，仅供参考，不构成出钓或安全建议。</text>
   </view>
+
+  <privacy-popup />
 </view>
 
 <!-- ===================================================

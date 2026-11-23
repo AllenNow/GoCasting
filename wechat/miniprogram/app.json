@@ -1,6 +1,7 @@
 {
   "pages": [
     "pages/weather/weather",
+    "pages/weather-detail/weather-detail",
     "pages/index/index",
     "pages/catch-log/catch-log",
     "pages/catch-detail/catch-detail",
@@ -13,6 +14,7 @@
     "pages/competition/competition",
     "pages/competition/competition-detail",
     "pages/admin/competition-edit",
+    "pages/admin/api-usage",
     "pages/permission/manage",
     "pages/privacy/privacy"
   ],

@@ -5,8 +5,29 @@
     <text class="pp-title">隐私保护提示</text>
 
     <text class="pp-desc">
-      感谢使用 GoCasting。为提供潮汐天气、钓点地图和渔获记录等功能，我们会在你主动使用相关功能时申请位置、相册或相机权限，并按照隐私政策处理相应信息。请阅读并同意{{ contractName || '《GoCasting 隐私保护指引》' }}。
+      感谢使用 GoCasting。为提供潮汐天气、钓点地图和渔获记录等功能，我们仅在你主动使用对应功能时申请以下权限，并按照隐私政策处理相应信息：
     </text>
+
+    <view class="pp-scope">
+      <view class="pp-scope-item">
+        <text class="pp-dot"></text>
+        <text class="pp-scope-text">位置：当地潮汐、海况、天气与附近钓点</text>
+      </view>
+      <view class="pp-scope-item">
+        <text class="pp-dot"></text>
+        <text class="pp-scope-text">相册 / 相机：上传渔获与赛事照片</text>
+      </view>
+      <view class="pp-scope-item">
+        <text class="pp-dot"></text>
+        <text class="pp-scope-text">保存到相册：保存分享卡片，不读取其他照片</text>
+      </view>
+      <view class="pp-scope-item">
+        <text class="pp-dot"></text>
+        <text class="pp-scope-text">头像昵称：仅用于个人中心展示</text>
+      </view>
+    </view>
+
+    <text class="pp-desc">请阅读并同意{{ contractName || '《GoCasting 隐私保护指引》' }}。</text>
 
     <view class="pp-links">
       <text class="pp-link" bindtap="openLocalPolicy">查看隐私政策</text>

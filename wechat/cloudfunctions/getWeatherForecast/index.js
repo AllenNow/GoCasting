@@ -6,6 +6,7 @@
 const cloud = require('wx-server-sdk');
 const fetch  = require('node-fetch');
 const { logApiUsage } = require('./logApiUsage');
+const { readConfig, apiGet } = require('./qweather');
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 const CACHE_TTL_MS  = 60 * 60 * 1000;   // 1小时
@@ -167,6 +168,93 @@ function wmoInfo(code) {
   return WMO_MAP[code] || { label: '未知', score: 0 };
 }
 
+// ── 和风天气：文字现象 → 中文简称 + 评分影响 ────────────────
+// 顺序从重到轻，先匹配冰雹/雷暴，再匹配雨雪，最后晴阴
+const QW_TEXT_RULES = [
+  [/冰雹/, '冰雹', -3], [/雷/, '雷暴', -3],
+  [/暴雨|强降雨|大暴雨/, '大雨', -2],
+  [/中雨/, '中雨', -1.5],
+  [/大雨/, '大雨', -2],
+  [/小雪|中雪|大雪|阵雪|雪/, '雪', -2],
+  [/阵雨|雷阵雨/, '阵雨', -1.5],
+  [/小雨|毛毛雨|细雨|雨/, '小雨', -1],
+  [/雾|霾|沙尘|浮尘/, '雾', -0.5],
+  [/阴/, '阴', 0],
+  [/多云|少云|晴间多云/, '多云', 0.5],
+  [/晴/, '晴', 1],
+];
+
+function qwTextInfo(text) {
+  const s = String(text || '');
+  for (const [re, label, score] of QW_TEXT_RULES) {
+    if (re.test(s)) return { label, score };
+  }
+  return { label: s || '未知', score: 0 };
+}
+
+const toNum = v => (v == null || v === '' || Number.isNaN(Number(v)) ? null : Number(v));
+
+// 请求和风实时 + 未来24小时；任一失败返回 null，由 Open-Meteo 兜底
+async function fetchQWeather(db, openid, cfg, loc) {
+  const t0 = Date.now();
+  const [nowR, h24R] = await Promise.allSettled([
+    apiGet(cfg, `/v7/weather/now?location=${encodeURIComponent(loc)}&lang=zh`),
+    apiGet(cfg, `/v7/weather/24h?location=${encodeURIComponent(loc)}&lang=zh`),
+  ]);
+  const now  = nowR.status === 'fulfilled' ? nowR.value.now : null;
+  const hourly = h24R.status === 'fulfilled' && Array.isArray(h24R.value.hourly) ? h24R.value.hourly : [];
+  const ok = !!(now || hourly.length);
+  logApiUsage(db, {
+    openid, apiGroup: 'qweather', apiName: 'weather_atmos',
+    endpoint: `https://${cfg.host}/v7/weather/24h`,
+    success: ok, latencyMs: Date.now() - t0,
+    error: ok ? null : [nowR, h24R].map(r => r.status === 'rejected' ? String(r.reason && r.reason.message) : '').filter(Boolean).join(' / '),
+  });
+  return ok ? { now, hourly } : null;
+}
+
+// 和风整点覆盖当日逐小时（气压/天气/风/降水/气温），保持原有 byDay 结构
+function mergeQWeather(dayMap, qw) {
+  const put = (dateKey, hour, patch) => {
+    if (!dateKey || Number.isNaN(hour)) return;
+    if (!dayMap[dateKey]) dayMap[dateKey] = [];
+    let row = dayMap[dateKey].find(x => x.hour === hour);
+    if (!row) { row = { hour }; dayMap[dateKey].push(row); }
+    Object.assign(row, patch);
+  };
+
+  (qw.hourly || []).forEach(h => {
+    const t = String(h.fxTime || '');
+    const info = qwTextInfo(h.text);
+    put(t.slice(0, 10), parseInt(t.slice(11, 13), 10), {
+      pressure: toNum(h.pressure), wmoLabel: info.label, wmoScore: info.score,
+      windSpeed: toNum(h.windSpeed), windDir: toNum(h.wind360),
+      windDirText: h.windDir || '', windScale: toNum(h.windScale),
+      precip: toNum(h.precip), pop: toNum(h.pop),
+      tempAir: toNum(h.temp), humidity: toNum(h.humidity),
+      cloud: toNum(h.cloud), dew: toNum(h.dew),
+      text: h.text || '', icon: h.icon || '', source: 'qweather',
+    });
+  });
+
+  if (qw.now) {
+    const t = String(qw.now.obsTime || '');
+    const info = qwTextInfo(qw.now.text);
+    put(t.slice(0, 10), parseInt(t.slice(11, 13), 10), {
+      pressure: toNum(qw.now.pressure), wmoLabel: info.label, wmoScore: info.score,
+      windSpeed: toNum(qw.now.windSpeed), windDir: toNum(qw.now.wind360),
+      windDirText: qw.now.windDir || '', windScale: toNum(qw.now.windScale),
+      precip: toNum(qw.now.precip), pop: null,
+      tempAir: toNum(qw.now.temp), humidity: toNum(qw.now.humidity),
+      cloud: toNum(qw.now.cloud), dew: toNum(qw.now.dew),
+      feelsLike: toNum(qw.now.feelsLike), vis: toNum(qw.now.vis),
+      text: qw.now.text || '', icon: qw.now.icon || '', source: 'qweather',
+    });
+  }
+
+  Object.keys(dayMap).forEach(k => dayMap[k].sort((a, b) => a.hour - b.hour));
+}
+
 exports.main = async (event, context) => {
   const { lat, lon } = event;
   const { OPENID } = cloud.getWXContext();
@@ -231,6 +319,18 @@ exports.main = async (event, context) => {
           tempAir:     H.temperature_2m?.[i]   != null ? parseFloat(H.temperature_2m[i].toFixed(1))   : null,
         });
       });
+
+      // ── 和风优先：能拿到时用和风覆盖当日逐小时（气压/天气/风/降水/气温）──
+      const qwCfg = readConfig();
+      if (qwCfg) {
+        try {
+          const loc = `${lon.toFixed(2)},${lat.toFixed(2)}`;
+          const qw = await fetchQWeather(db, OPENID, qwCfg, loc);
+          if (qw) mergeQWeather(dayMap, qw);
+        } catch (e) {
+          console.warn('[getWeatherForecast] 和风合并失败，沿用 Open-Meteo:', e.message);
+        }
+      }
 
       return { byDay: dayMap, generatedAt: new Date().toISOString() };
     });

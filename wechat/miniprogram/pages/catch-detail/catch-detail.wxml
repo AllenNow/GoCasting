@@ -75,6 +75,7 @@
     </view>
   </view>
 
+  <privacy-popup />
 </view>
 
 <!-- 加载中 -->

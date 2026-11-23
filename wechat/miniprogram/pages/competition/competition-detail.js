@@ -1159,7 +1159,14 @@ Page({
                   wx.saveImageToPhotosAlbum({
                     filePath: tempPath,
                     success: function() { wx.showToast({ title: '已保存到相册', icon: 'success' }); },
-                    fail: function() { wx.showToast({ title: '请授权相册权限', icon: 'none' }); },
+                    fail: function() {
+                      wx.showModal({
+                        title: '需要相册权限',
+                        content: '请在设置中允许“保存到相册”。',
+                        confirmText: '去设置',
+                        success: function(m) { if (m.confirm) wx.openSetting(); },
+                      });
+                    },
                   });
                 } else if (actionRes.tapIndex === 1) {
                   wx.shareFileMessage({

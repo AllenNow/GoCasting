@@ -1,5 +1,6 @@
 // pages/index/index.js — 渔获列表首页
 const app = getApp();
+const goScoreService = require('../../utils/goScoreService');
 
 Page({
   data: {
@@ -11,6 +12,9 @@ Page({
       topSpecies: '—',
     },
     today: '',            // 今日日期展示
+    todayScore: '--',
+    scoreColor: '#1a7f5a',
+    scoreReady: false,
   },
 
   onLoad() {
@@ -29,6 +33,19 @@ Page({
     }
     // 每次切换回来刷新列表
     this.loadCatches();
+    this.loadTodayScore();
+  },
+
+  // 今日出钓指数：与我的、评分详情共用同一缓存与服务
+  loadTodayScore() {
+    goScoreService.getTodayScore().then(r => {
+      if (!r) return;
+      this.setData({
+        todayScore: r.score,
+        scoreColor: r.level.color,
+        scoreReady: true,
+      });
+    }).catch(() => {});
   },
 
   // 从云数据库加载当前用户的渔获记录

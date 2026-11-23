@@ -1,0 +1,317 @@
+<!-- pages/weather-detail/weather-detail.wxml — 天气详情 -->
+<view class="page-bg">
+
+  <!-- 加载状态 -->
+  <view wx:if="{{ loading && !current }}" class="loading-full">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">正在汇总天气数据…</text>
+  </view>
+
+  <block wx:else>
+
+    <view wx:if="{{ errorMsg }}" class="error-bar">
+      <text class="error-icon">⚠️</text>
+      <text class="error-text">{{ errorMsg }}</text>
+    </view>
+
+    <!-- ═══════════ 实况 ═══════════ -->
+    <view class="hero">
+      <view class="hero-top">
+        <view class="hero-place">
+          <text class="hero-place-icon">📍</text>
+          <text class="hero-place-name">{{ city }}</text>
+        </view>
+        <view class="hero-actions">
+          <text class="hero-age">更新 {{ weatherAgeText }}</text>
+          <view class="hero-refresh {{ refreshing ? 'is-loading' : '' }}" bindtap="refresh">
+            <text class="hero-refresh-icon">⟳</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="hero-main">
+        <view class="hero-temp-row">
+          <text class="hero-temp">{{ current && current.temp != null ? current.temp : '--' }}</text>
+          <text class="hero-deg">°C</text>
+        </view>
+        <view class="hero-desc-wrap">
+          <text class="hero-desc">{{ current && current.desc ? current.desc : '--' }}</text>
+          <text class="hero-feels">体感 {{ current && current.feelsLike != null ? current.feelsLike + '°' : '--' }}</text>
+        </view>
+      </view>
+
+      <view class="hero-chips">
+        <view class="hero-chip">
+          <text class="hero-chip-label">湿度</text>
+          <text class="hero-chip-val">{{ current && current.humidity != null ? current.humidity + '%' : '--' }}</text>
+        </view>
+        <view class="hero-chip">
+          <text class="hero-chip-label">风</text>
+          <text class="hero-chip-val">{{ current && current.windText ? current.windText : '--' }}</text>
+        </view>
+        <view class="hero-chip">
+          <text class="hero-chip-label">观测</text>
+          <text class="hero-chip-val">{{ current && current.obsTime ? current.obsTime : '--' }}</text>
+        </view>
+      </view>
+
+      <view class="hero-metrics">
+        <view class="metric">
+          <text class="metric-label">气压</text>
+          <text class="metric-val">{{ current && current.pressure != null ? current.pressure : '--' }}<text class="metric-unit">hPa</text></text>
+        </view>
+        <view class="metric">
+          <text class="metric-label">能见度</text>
+          <text class="metric-val">{{ current && current.visibility != null ? current.visibility : '--' }}<text class="metric-unit">km</text></text>
+        </view>
+        <view class="metric">
+          <text class="metric-label">云量</text>
+          <text class="metric-val">{{ current && current.cloud != null ? current.cloud : '--' }}<text class="metric-unit">%</text></text>
+        </view>
+        <view class="metric">
+          <text class="metric-label">降水</text>
+          <text class="metric-val">{{ current && current.precip != null ? current.precip : '--' }}<text class="metric-unit">mm</text></text>
+        </view>
+        <view class="metric">
+          <text class="metric-label">露点</text>
+          <text class="metric-val">{{ current && current.dew != null ? current.dew : '--' }}<text class="metric-unit">°C</text></text>
+        </view>
+        <view class="metric">
+          <text class="metric-label">风速</text>
+          <text class="metric-val">{{ current && current.windSpeed != null ? current.windSpeed : '--' }}<text class="metric-unit">km/h</text></text>
+        </view>
+      </view>
+    </view>
+
+    <!-- ═══════════ 未来 24 小时 ═══════════ -->
+    <view class="section-card">
+      <view class="section-header">
+        <text class="section-title">未来 24 小时</text>
+        <text class="section-sub">{{ hourly.length }} 个整点</text>
+      </view>
+      <scroll-view wx:if="{{ hourly.length }}" class="hour-scroll" scroll-x enhanced show-scrollbar="{{ false }}">
+        <view class="hour-row">
+          <view wx:for="{{ hourly }}" wx:key="key" class="hour-cell">
+            <text class="hour-time">{{ item.label }}</text>
+            <text class="hour-icon">{{ item.icon }}</text>
+            <text class="hour-temp">{{ item.temp != null ? item.temp + '°' : '--' }}</text>
+            <text class="hour-wx">{{ item.wxLabel }}</text>
+            <text class="hour-meta hour-rain">{{ item.pop != null ? '降水 ' + item.pop + '%' : (item.precip != null ? '雨 ' + item.precip + 'mm' : '降水 --') }}</text>
+            <text class="hour-meta">{{ item.windText || '风 --' }}</text>
+            <text class="hour-meta">{{ item.humidity != null ? '湿度 ' + item.humidity + '%' : '湿度 --' }}</text>
+            <text class="hour-meta">{{ item.pressure != null ? item.pressure + 'hPa' : '气压 --' }}</text>
+            <text class="hour-meta">{{ item.cloud != null ? '云 ' + item.cloud + '%' : '云 --' }}</text>
+          </view>
+        </view>
+      </scroll-view>
+      <text wx:else class="empty-line">逐小时数据暂不可用</text>
+    </view>
+
+    <!-- ═══════════ 未来 7 天 ═══════════ -->
+    <view class="section-card">
+      <view class="section-header">
+        <text class="section-title">未来 7 天</text>
+        <text class="section-sub">点击查看详情</text>
+      </view>
+      <view wx:for="{{ daily }}" wx:key="date" class="day-item {{ expandedDay === index ? 'day-item-open' : '' }}" bindtap="toggleDay" data-idx="{{ index }}">
+        <view class="day-main">
+          <view class="day-date">
+            <text class="day-name">{{ item.date }}</text>
+            <text class="day-date-sub">{{ item.dateStr ? item.dateLabel + ' ' + item.week : item.dateStr }}</text>
+          </view>
+          <view class="day-icons">
+            <text class="day-icon">{{ item.icon }}</text>
+            <text class="day-icon-night">{{ item.iconNight }}</text>
+          </view>
+          <view class="day-desc">
+            <text class="day-desc-main">{{ item.desc || '--' }}</text>
+            <text class="day-desc-night">夜间 {{ item.descNight || '--' }}</text>
+          </view>
+          <view class="day-temp">
+            <text class="day-high">{{ item.tempHigh != null ? item.tempHigh + '°' : '--' }}</text>
+            <text class="day-low">{{ item.tempLow != null ? item.tempLow + '°' : '--' }}</text>
+          </view>
+          <text class="day-arrow">{{ expandedDay === index ? '▲' : '▼' }}</text>
+        </view>
+
+        <view class="day-badges">
+          <text class="day-badge">💧 {{ item.precip != null ? item.precip + 'mm' : '--' }}</text>
+          <text class="day-badge">☀️ UV {{ item.uvIndex != null ? item.uvIndex : '--' }}</text>
+          <text class="day-badge">🌬 {{ item.windText || '--' }}</text>
+        </view>
+
+        <view wx:if="{{ expandedDay === index }}" class="day-detail">
+          <view class="dd-cell"><text class="dd-label">日出</text><text class="dd-val">{{ item.sunrise || '--' }}</text></view>
+          <view class="dd-cell"><text class="dd-label">日落</text><text class="dd-val">{{ item.sunset || '--' }}</text></view>
+          <view class="dd-cell"><text class="dd-label">月升</text><text class="dd-val">{{ item.moonrise || '--' }}</text></view>
+          <view class="dd-cell"><text class="dd-label">月落</text><text class="dd-val">{{ item.moonset || '--' }}</text></view>
+          <view class="dd-cell"><text class="dd-label">湿度</text><text class="dd-val">{{ item.humidity != null ? item.humidity + '%' : '--' }}</text></view>
+          <view class="dd-cell"><text class="dd-label">气压</text><text class="dd-val">{{ item.pressure != null ? item.pressure + ' hPa' : '--' }}</text></view>
+          <view class="dd-cell"><text class="dd-label">能见度</text><text class="dd-val">{{ item.vis != null ? item.vis + ' km' : '--' }}</text></view>
+          <view class="dd-cell"><text class="dd-label">云量</text><text class="dd-val">{{ item.cloud != null ? item.cloud + '%' : '--' }}</text></view>
+          <view class="dd-cell"><text class="dd-label">风速</text><text class="dd-val">{{ item.windSpeedDay != null ? item.windSpeedDay + ' km/h' : '--' }}</text></view>
+          <view class="dd-cell"><text class="dd-label">月相</text><text class="dd-val">{{ item.moonPhase || '--' }}</text></view>
+          <view class="dd-cell"><text class="dd-label">紫外线</text><text class="dd-val">{{ item.uvIndex != null ? item.uvIndex + (item.uvLabel ? ' · ' + item.uvLabel : '') : '--' }}</text></view>
+        </view>
+      </view>
+      <text wx:if="{{ !daily.length }}" class="empty-line">7 天预报暂不可用</text>
+    </view>
+
+    <!-- ═══════════ 天文与生活 ═══════════ -->
+    <view class="section-card" wx:if="{{ astro || moonInfo || fishing }}">
+      <view class="section-header">
+        <text class="section-title">天文与生活</text>
+        <text class="section-sub">{{ astro && astro.dayLength !== '--' ? '日照 ' + astro.dayLength : '' }}</text>
+      </view>
+
+      <view class="sun-row" wx:if="{{ astro }}">
+        <view class="sun-item">
+          <text class="sun-icon">🌅</text>
+          <text class="sun-val">{{ astro.sunrise }}</text>
+          <text class="sun-label">日出</text>
+        </view>
+        <view class="sun-item">
+          <text class="sun-icon">🌇</text>
+          <text class="sun-val">{{ astro.sunset }}</text>
+          <text class="sun-label">日落</text>
+        </view>
+        <view class="sun-item">
+          <text class="sun-icon">⏱</text>
+          <text class="sun-val">{{ astro.dayLength }}</text>
+          <text class="sun-label">日照时长</text>
+        </view>
+      </view>
+
+      <view class="sun-row" wx:if="{{ moonInfo }}">
+        <view class="sun-item">
+          <text class="sun-icon">{{ moonInfo.icon }}</text>
+          <text class="sun-val">{{ moonInfo.name }}</text>
+          <text class="sun-label">月相</text>
+        </view>
+        <view class="sun-item">
+          <text class="sun-icon">✨</text>
+          <text class="sun-val">{{ moonInfo.illum || '--' }}</text>
+          <text class="sun-label">照明度</text>
+        </view>
+        <view class="sun-item">
+          <text class="sun-icon">🌙</text>
+          <text class="sun-val">{{ moonInfo.rise }} / {{ moonInfo.set }}</text>
+          <text class="sun-label">月升 / 月落</text>
+        </view>
+      </view>
+
+      <view wx:if="{{ fishing }}" class="fish-index">
+        <view class="fish-index-head">
+          <text class="fish-index-title">🎣 钓鱼指数</text>
+          <text class="fish-index-cat">{{ fishing.category || '--' }}</text>
+        </view>
+        <text class="fish-index-text">{{ fishing.text || '暂无指数说明' }}</text>
+      </view>
+    </view>
+
+    <!-- ═══════════ 预警与降水 ═══════════ -->
+    <view class="section-card" wx:if="{{ warnings.length || minutely }}">
+      <view class="section-header">
+        <text class="section-title">预警与降水</text>
+      </view>
+
+      <view wx:if="{{ minutely }}" class="rain-tip {{ minutely.hasRain ? 'rain-tip-wet' : '' }}">
+        <text class="rain-icon">{{ minutely.hasRain ? '☔' : '🌤' }}</text>
+        <view class="rain-body">
+          <text class="rain-summary">{{ minutely.summary || (minutely.hasRain ? '近期有降水' : '近期无明显降水') }}</text>
+          <text wx:if="{{ minutely.hasRain && minutely.nextRainMin != null }}" class="rain-sub">预计 {{ minutely.nextRainMin }} 分钟后开始</text>
+        </view>
+      </view>
+
+      <view wx:for="{{ warnings }}" wx:key="id" class="warn-item">
+        <view class="warn-head">
+          <view class="warn-dot warn-dot-{{ item.colorClass }}"></view>
+          <text class="warn-title">{{ item.title }}</text>
+          <text wx:if="{{ item.pubTime }}" class="warn-time">{{ item.pubTime }}</text>
+        </view>
+        <text class="warn-text">{{ item.text }}</text>
+      </view>
+      <text wx:if="{{ !warnings.length }}" class="empty-line">当前无生效中的天气预警</text>
+    </view>
+
+    <!-- ═══════════ 海洋与潮汐 ═══════════ -->
+    <view class="section-card" wx:if="{{ marine }}">
+      <view class="section-header">
+        <text class="section-title">海洋与潮汐</text>
+        <text class="section-sub">{{ marine.sourceLabel }} · {{ marineAgeText }}</text>
+      </view>
+
+      <view class="tide-top">
+        <view class="tide-main">
+          <text class="tide-val">{{ marine.seaLevel != null ? marine.seaLevel : '--' }}<text class="tide-unit">m</text></text>
+          <text class="tide-hint">当前潮高</text>
+        </view>
+        <view class="tide-tags">
+          <view wx:if="{{ marine.tideState }}" class="tide-tag">
+            <text>{{ marine.tideState.icon }} {{ marine.tideState.label }}</text>
+          </view>
+          <view class="tide-tag">
+            <text>{{ marine.tideType }}</text>
+            <text class="tide-tag-sub">潮差 {{ marine.tideRange != null ? marine.tideRange + 'm' : '--' }}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="marine-grid">
+        <view class="marine-cell">
+          <text class="marine-label">浪高</text>
+          <text class="marine-val">{{ marine.waveHeight != null ? marine.waveHeight + 'm' : '--' }}</text>
+          <text class="marine-sub">{{ marine.waveDesc || '--' }}</text>
+        </view>
+        <view class="marine-cell">
+          <text class="marine-label">涌浪</text>
+          <text class="marine-val">{{ marine.swellWaveHeight != null ? marine.swellWaveHeight + 'm' : '--' }}</text>
+        </view>
+        <view class="marine-cell">
+          <text class="marine-label">风浪</text>
+          <text class="marine-val">{{ marine.windWaveHeight != null ? marine.windWaveHeight + 'm' : '--' }}</text>
+        </view>
+        <view class="marine-cell">
+          <text class="marine-label">周期</text>
+          <text class="marine-val">{{ marine.wavePeriod != null ? marine.wavePeriod + 's' : '--' }}</text>
+        </view>
+        <view class="marine-cell">
+          <text class="marine-label">浪向</text>
+          <text class="marine-val">{{ marine.waveDir || '--' }}</text>
+        </view>
+        <view class="marine-cell">
+          <text class="marine-label">水温</text>
+          <text class="marine-val">{{ marine.sst != null ? marine.sst + '°C' : '--' }}</text>
+        </view>
+        <view class="marine-cell">
+          <text class="marine-label">洋流</text>
+          <text class="marine-val">{{ marine.currentVelocity != null ? marine.currentVelocity + 'km/h' : '--' }}</text>
+          <text class="marine-sub">{{ marine.currentDirectionStr || '--' }}</text>
+        </view>
+      </view>
+
+      <view wx:if="{{ marine.extremes.length }}" class="extremes">
+        <text class="extremes-title">今日高低潮</text>
+        <view class="extremes-row">
+          <view wx:for="{{ marine.extremes }}" wx:key="timeStr" class="extreme-chip extreme-{{ item.type }}">
+            <text class="extreme-time">{{ item.icon }} {{ item.timeStr }}</text>
+            <text class="extreme-level">{{ item.level != null ? item.level + 'm' : '--' }}</text>
+          </view>
+        </view>
+      </view>
+
+      <text class="datum-note">{{ marine.datumNote }}</text>
+    </view>
+
+    <!-- ═══════════ 数据来源 ═══════════ -->
+    <view class="source-card">
+      <text class="source-title">数据来源</text>
+      <view wx:for="{{ sources }}" wx:key="detail" class="source-row">
+        <text class="source-name">{{ item.name }}</text>
+        <text class="source-detail">{{ item.detail }}</text>
+      </view>
+      <text class="source-time">实况更新 {{ weatherAgeText }} · 潮汐更新 {{ marineAgeText }}</text>
+    </view>
+
+  </block>
+</view>

@@ -326,8 +326,18 @@ Page({
         });
         wx.showToast({ title: '位置已获取', icon: 'success' });
       },
-      fail: () => {
-        wx.showToast({ title: '获取位置失败', icon: 'error' });
+      fail: (err) => {
+        const msg = (err && err.errMsg) || '';
+        if (/privacy agreement|api scope is not declared/i.test(msg)) {
+          wx.showToast({ title: '定位暂不可用，请手动填写钓点', icon: 'none' });
+          return;
+        }
+        wx.showModal({
+          title: '需要位置权限',
+          content: '开启定位后可自动填入钓点坐标，也可以手动填写。',
+          confirmText: '去开启',
+          success: (r) => { if (r.confirm) wx.openSetting(); },
+        });
       },
     });
   },
@@ -547,7 +557,14 @@ Page({
             wx.saveImageToPhotosAlbum({
               filePath: tempPath,
               success: () => wx.showToast({ title: '已保存到相册', icon: 'success' }),
-              fail: () => wx.showToast({ title: '保存失败，请授权相册权限', icon: 'none' }),
+              fail: () => {
+                wx.showModal({
+                  title: '需要相册权限',
+                  content: '请在设置中允许“保存到相册”，或长按图片手动保存。',
+                  confirmText: '去设置',
+                  success: (m) => { if (m.confirm) wx.openSetting(); },
+                });
+              },
             });
           } else if (r.tapIndex === 1) {
             wx.shareFileMessage({

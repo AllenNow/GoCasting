@@ -1,5 +1,6 @@
 // pages/profile/profile.js — 个人中心 (ES5 兼容版)
 var app = getApp();
+var goScoreService = require('../../utils/goScoreService');
 
 Page({
   data: {
@@ -8,6 +9,10 @@ Page({
     permissions: {},
     pendingCount: 0, // 待审核申请数量（超管可见）
     isAdmin: false, // 兼容旧逻辑
+    todayScore: '--',
+    scoreColor: '#1a7f5a',
+    scoreReady: false,
+    scoreSub: '点击查看详情',
     stats: {
       totalCatches: 0,
       totalSpecies: 0,
@@ -33,6 +38,26 @@ Page({
     wx.hideShareMenu({ menus: ['shareAppMessage', 'shareTimeline'] });
     this.checkPermission();
     this.loadStats();
+    this.loadTodayScore();
+  },
+
+  // 今日出钓指数：与首页、评分页共用同一服务与缓存
+  loadTodayScore: function() {
+    var that = this;
+    goScoreService.getTodayScore().then(function(r) {
+      if (!r) return;
+      var d = new Date(r.updatedAt || Date.now());
+      var hh = String(d.getHours()).padStart(2, '0');
+      var mm = String(d.getMinutes()).padStart(2, '0');
+      that.setData({
+        todayScore: r.score,
+        scoreColor: r.level.color,
+        scoreReady: true,
+        scoreSub: r.level.short + ' · 更新于 ' + hh + ':' + mm,
+      });
+    }).catch(function() {
+      that.setData({ scoreSub: '点击查看详情' });
+    });
   },
 
   // 加载本人渔获统计（catch_logs 集合权限为仅创建者可读写）
@@ -231,6 +256,11 @@ Page({
   // 权限管理（超管专用）
   goPermissionManage: function() {
     wx.navigateTo({ url: '/pages/permission/manage' });
+  },
+
+  // API 用量与费用（超管专用）
+  goApiUsage: function() {
+    wx.navigateTo({ url: '/pages/admin/api-usage' });
   },
 
   // 获取角色显示文本

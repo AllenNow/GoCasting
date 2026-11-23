@@ -194,6 +194,27 @@ function getStats() {
   }
 }
 
+/**
+ * 北京时间的 YYYY-MM-DD（潮汐按天生成，跨天后 old payload 的 todayIdx 会错一天）
+ * 不依赖设备时区，与云函数的口径一致
+ */
+function todayKeyBJ() {
+  const t = new Date(Date.now() + 8 * 60 * 60 * 1000);
+  const m = String(t.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(t.getUTCDate()).padStart(2, '0');
+  return `${t.getUTCFullYear()}-${m}-${d}`;
+}
+
+/**
+ * 海况 payload 是否属于北京时间今天
+ * @param {any} data - getMarineData 返回的 data
+ */
+function isMarineToday(data) {
+  if (!data || !Array.isArray(data.allDays)) return false;
+  const day = data.allDays[data.todayIdx];
+  return !!day && day.date === todayKeyBJ();
+}
+
 module.exports = {
   TTL,
   get,
@@ -205,4 +226,6 @@ module.exports = {
   invalidateAll,
   invalidateByName,
   getStats,
+  todayKeyBJ,
+  isMarineToday,
 };

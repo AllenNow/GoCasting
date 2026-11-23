@@ -62,6 +62,10 @@
             <text class="hero-weather-desc">{{ weather.desc }}</text>
             <text class="hero-weather-temp">{{ weather.temp }}°C</text>
           </view>
+          <view class="hero-detail" catchtap="openWeatherDetail">
+            <text class="hero-detail-text">详情</text>
+            <text class="hero-detail-arrow">›</text>
+          </view>
         </view>
       </view>
 
@@ -75,7 +79,7 @@
           <text class="hero-height-num">{{ currentData.seaLevelMSL != null ? currentData.seaLevelMSL : '--' }}</text>
           <text class="hero-height-unit">m</text>
         </view>
-        <text class="hero-height-hint">当前潮高{{ tideMeta && tideMeta.datum === 'station' ? '（当地基准面）' : '（MSL）' }}</text>
+        <text class="hero-height-hint">当前潮高{{ seaLevelDatum === 'station' ? '（当地基准面）' : '（MSL）' }}</text>
       </view>
 
       <!-- 四格数据 -->
@@ -119,7 +123,7 @@
           <text class="insight-best-label">今日最佳窗口</text>
           <block wx:if="{{ todayBestWindows.length }}">
             <view class="insight-best-main">
-              <text class="insight-best-time">{{ todayBestWindows[0].startTime }}–{{ todayBestWindows[0].endTime }}</text>
+              <text class="insight-best-time">{{ todayBestWindows[0].timeText }}</text>
               <text class="insight-best-score">{{ todayBestWindows[0].avgScore }}<text class="insight-best-max">/10</text></text>
             </view>
             <text class="insight-best-reason">{{ todayBestWindows[0].reason }}</text>
@@ -156,7 +160,7 @@
         </view>
       </view>
 
-      <text class="hero-base-note" wx:if="{{ tideMeta && tideMeta.source === 'qweather' }}">潮高来自和风天气{{ tideMeta.siteName }}验潮站{{ tideMeta.distanceKm != null ? '（距 ' + tideMeta.distanceKm + 'km）' : '' }}，为当地潮汐基准面，与 MSL 平均海平面不可直接对比</text>
+      <text class="hero-base-note" wx:if="{{ tideMeta && tideMeta.source === 'qweather' }}">潮高采用{{ tideMeta.siteName }}验潮站当地基准面，与 MSL 平均海平面不可直接对比</text>
       <text class="hero-base-note" wx:else>潮高为 MSL 平均海平面基准，与港口潮汐表基准不同，数值不可直接对比</text>
     </view>
 
@@ -208,15 +212,284 @@
           <text class="sun-foot-label">月升 / 月落</text>
           <text class="sun-foot-val">{{ moonTimes ? moonTimes.rise + ' / ' + moonTimes.set : '-- / --' }}</text>
         </view>
-        <view wx:if="{{ qweatherFishing }}" class="sun-foot-item sun-foot-tap" bindtap="showFishingTip">
-          <text class="sun-foot-label">和风钓鱼指数</text>
-          <text class="sun-foot-val sun-foot-fish">{{ qweatherFishing.category || '--' }} <text class="sun-foot-more">详情 ›</text></text>
+        <view wx:if="{{ goScoreReady }}" class="sun-foot-item sun-foot-tap" bindtap="goGoScore">
+          <text class="sun-foot-label">出钓指数</text>
+          <text class="sun-foot-val sun-foot-fish">{{ goScore }} 分 · {{ goScoreLevel }} <text class="sun-foot-more">详情 ›</text></text>
         </view>
       </view>
 
       <view wx:if="{{ minutelyText }}" class="sun-minutely {{ minutelyHasRain ? 'sun-minutely-rain' : '' }}">
         <text class="sun-minutely-icon">{{ minutelyHasRain ? '☔' : '🌤' }}</text>
         <text class="sun-minutely-text">{{ minutelyText }}</text>
+      </view>
+    </view>
+
+    <!-- ═══════════════════════════════════════════════
+         区块3：潮汐曲线 + 14天日历（过去7天 + 未来7天）
+         日历选日期，上方曲线与下方数据同步切换
+    ══════════════════════════════════════════════════ -->
+    <view class="section-card cal-section" wx:if="{{ allDays.length > 0 }}">
+      <view class="section-header">
+        <text class="section-title">📅 潮汐日历</text>
+        <view class="cal-legend-row">
+          <view class="cal-legend-dot cal-legend-past"></view><text class="cal-legend-text">历史</text>
+          <view class="cal-legend-dot cal-legend-today"></view><text class="cal-legend-text">今天</text>
+          <view class="cal-legend-dot cal-legend-future"></view><text class="cal-legend-text">预报</text>
+        </view>
+      </view>
+
+      <!-- ── 选中日：标题 + 潮位曲线（置顶） ── -->
+      <view wx:if="{{ selectedDayData }}" class="day-detail-top">
+        <!-- 详情标题 -->
+        <view class="day-detail-header">
+          <view class="day-detail-title-row">
+            <text class="day-detail-title">{{ selectedDayData.dateLabel }} {{ selectedDayData.weekLabel }}{{ selectedDayData.isPast ? '（历史）' : selectedDayData.isToday ? '' : '（预报）' }}</text>
+            <!-- 全天综合鱼口评级 -->
+            <view wx:if="{{ dayGrade }}" class="day-grade-badge grade-{{ dayGrade.grade }}">
+              <text class="day-grade-emoji">{{ dayGrade.emoji }}</text>
+              <text class="day-grade-label">{{ dayGrade.label }} {{ dayGrade.avgScore }}</text>
+            </view>
+          </view>
+          <view class="day-detail-meta">
+            <text class="day-meta-wave">浪高 {{ selectedDayData.waveHeightMax != null ? selectedDayData.waveHeightMax + 'm' : '—' }}</text>
+            <text class="day-meta-sep">·</text>
+            <text class="day-meta-swell">涌 {{ selectedDayData.swellHeightMax != null ? selectedDayData.swellHeightMax + 'm' : '—' }}</text>
+            <text class="day-meta-sep">·</text>
+            <text class="day-meta-dir">{{ selectedDayData.waveDirStr }}</text>
+            <text class="day-meta-sep">·</text>
+            <text class="day-meta-dir">周期 {{ selectedDayData.wavePeriodMax != null ? selectedDayData.wavePeriodMax + 's' : '—' }}</text>
+          </view>
+        </view>
+
+        <!-- 潮汐来源与高低潮图例合并为一行，节省纵向空间 -->
+        <view class="day-chart-meta">
+          <view wx:if="{{ dayChartPoints.length > 0 }}" class="day-chart-legend">
+            <text class="day-chart-max">高潮 {{ dayHighTide != null ? dayHighTide : '--' }}m</text>
+            <text class="day-chart-min">低潮 {{ dayLowTide != null ? dayLowTide : '--' }}m</text>
+          </view>
+          <text wx:if="{{ selectedDayData.tideSource === 'qweather' }}" class="day-source-badge src-station">验潮站</text>
+          <text wx:elif="{{ selectedDayData.tideSource === 'qweather-archive' }}" class="day-source-badge src-archive">存档</text>
+          <text wx:elif="{{ selectedDayData.tideSource === 'model' }}" class="day-source-badge src-model">模型</text>
+        </view>
+
+        <!-- 基准面混排提示：当天缺验潮站数据时，不能与其它日期的站值直接比较 -->
+        <text wx:if="{{ dayDatumMixed }}" class="day-datum-tip">⚠️ 本日无验潮站数据，潮高为模型 MSL 基准，与其它日期（当地基准面）不可直接比较</text>
+
+        <!-- ── 潮位折线图 ── -->
+        <view wx:if="{{ dayChartPoints.length > 0 }}" class="day-chart-section">
+
+          <view class="tide-chart-wrap">
+            <!-- Y轴刻度 -->
+            <view class="chart-yaxis">
+              <text class="yaxis-label">{{ dayChartAxisMax }}m</text>
+              <text class="yaxis-label">{{ dayChartAxisMin }}m</text>
+            </view>
+
+            <view class="tide-chart-body"
+              bindtouchstart="onChartTouchStart"
+              catchtouchmove="onChartTouchMove"
+              bindtouchend="onChartTouchEnd"
+            >
+            <view class="chart-gridline" style="top: 25%"></view>
+            <view class="chart-gridline" style="top: 50%"></view>
+            <view class="chart-gridline" style="top: 75%"></view>
+
+            <view wx:for="{{ dayChartPoints }}" wx:key="index"
+              class="chart-point"
+              style="left: {{ item.x }}%; top: {{ item.y }}%;"
+            ></view>
+
+            <view wx:for="{{ dayChartSegments }}" wx:key="index"
+              class="chart-line-seg"
+              style="left: {{ item.x }}%; top: {{ item.y }}%; width: {{ item.w }}%; transform: rotate({{ item.angle }}deg);"
+            ></view>
+
+            <!-- 今天才显示当前时刻游标 -->
+            <view wx:if="{{ selectedDayData.isToday && dayCurrentPointX >= 0 }}" class="chart-cursor {{ dayCurrentPointX > 86 ? 'cursor-flip' : '' }}" style="left: {{ dayCurrentPointX }}%">
+              <view class="chart-cursor-line"></view>
+              <view class="chart-cursor-dot"></view>
+              <text class="chart-cursor-label">现在</text>
+            </view>
+
+            <!-- 探针 -->
+            <view wx:if="{{ probeVisible }}" class="probe-line" style="left: {{ probeX }}%;">
+              <view class="probe-line-bar"></view>
+              <view class="probe-dot" style="top: {{ probePointY }}%;"></view>
+              <view class="probe-handle"></view>
+            </view>
+
+            <!-- 极值标注 -->
+            <view wx:for="{{ dayExtremePoints }}" wx:key="timeStr"
+              class="chart-extreme {{ item.type === 'high' ? 'chart-extreme-high' : 'chart-extreme-low' }}"
+              style="left: {{ item.x }}%; top: {{ item.y }}%;"
+            >
+              <text class="chart-extreme-icon">{{ item.type === 'high' ? '▲' : '▼' }}</text>
+              <text class="chart-extreme-time">{{ item.timeStr }}</text>
+              <text class="chart-extreme-val">{{ item.level }}m</text>
+            </view>
+          </view>
+
+          <!-- 探针 tooltip -->
+          <view wx:if="{{ probeVisible && probeTooltip }}"
+            class="probe-tooltip {{ probeX > 62 ? 'probe-tooltip-left' : 'probe-tooltip-right' }}"
+            style="left: {{ probeX }}%;"
+          >
+            <view class="probe-tt-header">
+              <text class="probe-tt-time">{{ probeTooltip.timeStr }}</text>
+              <text class="probe-tt-state">{{ probeTooltip.tideState }}</text>
+            </view>
+            <view class="probe-tt-body">
+              <text class="probe-tt-label">潮高</text>
+              <text class="probe-tt-val">{{ probeTooltip.level }} m</text>
+            </view>
+            <view wx:if="{{ probeTooltip.score != null }}" class="probe-tt-body">
+              <text class="probe-tt-label">鱼口</text>
+              <text class="probe-tt-val" style="color: {{ probeTooltip.scoreColor }};">{{ probeTooltip.score }}<text class="probe-tt-unit"> {{ probeTooltip.scoreLabel }}</text></text>
+            </view>
+            </view>
+          </view>
+
+          <view class="chart-xaxis">
+            <text class="xaxis-label">00:00</text>
+            <text class="xaxis-label">06:00</text>
+            <text class="xaxis-label">12:00</text>
+            <text class="xaxis-label">18:00</text>
+            <text class="xaxis-label">24:00</text>
+          </view>
+        </view>
+      </view>
+
+
+      <!-- 横向日历滚动 -->
+      <scroll-view
+        scroll-x
+        class="calendar-scroll"
+        scroll-into-view="cal-day-{{ selectedDayIdx }}"
+        scroll-with-animation
+      >
+        <view class="calendar-row">
+          <view
+            wx:for="{{ allDays }}"
+            wx:key="date"
+            id="cal-day-{{ index }}"
+            class="calendar-day {{ item.isToday ? 'cal-today' : '' }} {{ item.isPast ? 'cal-past' : '' }} {{ selectedDayIdx === index ? 'calendar-day-active' : '' }}"
+            bindtap="selectDay"
+            data-idx="{{ index }}"
+          >
+            <!-- 星期 + 月/日 同一行 -->
+            <view class="cal-head">
+              <text class="cal-week {{ item.isToday ? 'cal-week-today' : '' }}">{{ item.isToday ? '今天' : item.weekLabel }}</text>
+              <text class="cal-date">{{ item.dateLabel }}</text>
+            </view>
+            <!-- 浪况：图标与浪高同一行 -->
+            <view class="cal-wave-row">
+              <text class="cal-wave-emoji">{{ item.isPast ? '📋' : item.waveHeightMax <= 0.5 ? '🏖️' : item.waveHeightMax <= 1.5 ? '🌊' : '⛈️' }}</text>
+              <text class="cal-wave-val {{ item.isPast ? 'cal-val-past' : '' }}">{{ item.waveHeightMax != null ? item.waveHeightMax + 'm' : '—' }}</text>
+            </view>
+            <!-- 最高/最低潮：同一行 -->
+            <view class="cal-tide-range" wx:if="{{ item.tideLevelMax != null }}">
+              <text class="cal-tide-hi">↑{{ item.tideLevelMax }}</text>
+              <text class="cal-tide-lo">↓{{ item.tideLevelMin }}</text>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+
+      <!-- ── 选中天展开详情 ───────────────────────────── -->
+      <view wx:if="{{ selectedDayData }}" class="day-detail-wrap">
+
+
+        <!-- ── 最佳垂钓时段推荐卡 ── -->
+        <view wx:if="{{ dayBestWindows.length > 0 }}" class="best-windows-wrap">
+          <view class="best-windows-header">
+            <text class="best-windows-title">🎣 建议垂钓时段</text>
+            <text class="best-windows-hint">综合潮汐·气压·水温·天气</text>
+          </view>
+          <scroll-view scroll-x class="window-scroll">
+            <view class="window-row">
+              <view wx:for="{{ dayBestWindows }}" wx:key="startTime" class="window-card grade-bg-{{ item.grade }}">
+                <view class="window-card-left">
+                  <text class="window-emoji">{{ item.emoji }}</text>
+                  <view class="window-info">
+                    <text class="window-time">{{ item.timeText }}</text>
+                    <text class="window-duration">{{ item.duration }}小时 · {{ item.reason }}</text>
+                  </view>
+                </view>
+                <view class="window-score grade-{{ item.grade }}">
+                  <text class="window-score-num">{{ item.avgScore }}</text>
+                  <text class="window-score-max">/10</text>
+                </view>
+              </view>
+            </view>
+          </scroll-view>
+        </view>
+
+        <!-- 无最佳时段提示 -->
+        <view wx:elif="{{ dayFishHeatmap.length > 0 && !selectedDayData.isPast }}" class="no-window-tip">
+          <text>⚠️ 今日条件一般，建议避开恶劣天气或低气压时段</text>
+        </view>
+
+        <!-- ── 鱼口热力图（逐小时评分）── -->
+        <view wx:if="{{ dayFishHeatmap.length > 0 }}" class="fish-heatmap-wrap">
+          <text class="day-section-label">逐小时鱼口指数</text>
+          <scroll-view scroll-x class="heatmap-scroll">
+            <view class="heatmap-row">
+              <view wx:for="{{ dayFishHeatmap }}" wx:key="hour" class="heatmap-col">
+                <!-- 柱体 -->
+                <view class="heatmap-bar-wrap">
+                  <view
+                    class="heatmap-bar"
+                    style="height: {{ item.heightPct }}%; background: {{ item.color }};"
+                  ></view>
+                </view>
+                <!-- 分值 -->
+                <text class="heatmap-score" style="color: {{ item.color }};">{{ item.score }}</text>
+                <!-- 时间（每3小时显示一次） -->
+                <text class="heatmap-time {{ item.hour % 3 === 0 ? '' : 'invisible' }}">{{ item.timeStr }}</text>
+              </view>
+            </view>
+          </scroll-view>
+          <!-- 图例 -->
+          <view class="heatmap-legend">
+            <view class="heatmap-legend-item"><view class="heatmap-legend-dot" style="background:#1a7f5a"></view><text>极佳(8+)</text></view>
+            <view class="heatmap-legend-item"><view class="heatmap-legend-dot" style="background:#2dce89"></view><text>较好(6.5+)</text></view>
+            <view class="heatmap-legend-item"><view class="heatmap-legend-dot" style="background:#e6a817"></view><text>一般(5+)</text></view>
+            <view class="heatmap-legend-item"><view class="heatmap-legend-dot" style="background:#e85555"></view><text>不宜(&lt;3.5)</text></view>
+          </view>
+        </view>
+
+
+        <!-- ── 逐小时浪况（默认收起，点标题展开以节省纵向空间）── -->
+        <view wx:if="{{ selectedDayData.hourly.length > 0 }}" class="day-wave-wrap">
+          <view class="wave-toggle-row" bindtap="toggleWave">
+            <text class="day-section-label">逐小时浪况</text>
+            <text class="wave-toggle">{{ waveExpanded ? '收起 ▴' : '展开 ▾' }}</text>
+          </view>
+          <block wx:if="{{ waveExpanded }}">
+          <scroll-view scroll-x class="wave-scroll">
+            <view class="wave-scroll-inner">
+              <view
+                wx:for="{{ selectedDayData.hourly }}"
+                wx:key="index"
+                class="wave-col {{ index % 6 === 0 ? 'wave-col-mark' : '' }}"
+              >
+                <text class="wave-col-time {{ index % 6 === 0 ? '' : 'invisible' }}">{{ item.timeStr }}</text>
+                <view class="wave-bar-group">
+                  <view class="wave-bar wave-bar-swell"
+                    style="height: {{ item.swellHeight != null ? (item.swellHeight / 3 * 92 + 4) : 4 }}rpx;"
+                  ></view>
+                  <view class="wave-bar wave-bar-wind"
+                    style="height: {{ item.waveHeight != null ? (item.waveHeight / 3 * 92 + 4) : 4 }}rpx;"
+                  ></view>
+                </view>
+                <text class="wave-col-val">{{ item.waveHeight != null ? item.waveHeight : '—' }}</text>
+                <text class="wave-col-sst {{ index % 6 === 0 ? '' : 'invisible' }}">{{ item.sst != null ? item.sst + '°' : '' }}</text>
+              </view>
+            </view>
+          </scroll-view>
+          </block>
+        </view>
+
       </view>
     </view>
 
@@ -305,183 +578,6 @@
     </view>
 
     <!-- ═══════════════════════════════════════════════
-         区块2：24小时潮位折线图
-    ══════════════════════════════════════════════════ -->
-    <view class="section-card">
-      <view class="section-header">
-        <text class="section-title">📈 今日潮位曲线</text>
-        <view class="chart-legend">
-          <text class="legend-item legend-max">高潮 {{ chartMaxLevel }}m</text>
-          <text class="legend-item legend-min">低潮 {{ chartMinLevel }}m</text>
-        </view>
-      </view>
-
-      <!-- 折线图容器 -->
-      <view class="tide-chart-wrap">
-        <!-- Y轴刻度 -->
-        <view class="chart-yaxis">
-          <text class="yaxis-label">{{ chartMaxLevel }}m</text>
-          <text class="yaxis-label">{{ chartMinLevel }}m</text>
-        </view>
-
-        <!-- 折线图主体（用CSS绝对定位实现） -->
-        <view
-          class="tide-chart-body"
-          bindtouchstart="onChartTouchStart"
-          catchtouchmove="onChartTouchMove"
-          bindtouchend="onChartTouchEnd"
-        >
-          <!-- 背景网格线 -->
-          <view class="chart-gridline" style="top: 25%"></view>
-          <view class="chart-gridline" style="top: 50%"></view>
-          <view class="chart-gridline" style="top: 75%"></view>
-
-          <!-- 潮位折线：用每个点绝对定位小圆点 -->
-          <view
-            wx:for="{{ chartPoints }}"
-            wx:key="index"
-            class="chart-point {{ item.timeStr === '00:00' || item.timeStr === '06:00' || item.timeStr === '12:00' || item.timeStr === '18:00' ? 'chart-point-tick' : '' }}"
-            style="left: {{ item.x }}%; top: {{ item.y }}%;"
-          ></view>
-
-          <!-- 折线段（JS预计算好角度，WXML直接引用） -->
-          <view
-            wx:for="{{ chartSegments }}"
-            wx:key="index"
-            class="chart-line-seg"
-            style="left: {{ item.x }}%; top: {{ item.y }}%; width: {{ item.w }}%; transform: rotate({{ item.angle }}deg);"
-          ></view>
-
-          <!-- 当前时刻游标（固定，红色） -->
-          <view class="chart-cursor" style="left: {{ currentPointX }}%">
-            <view class="chart-cursor-line"></view>
-            <view class="chart-cursor-dot"></view>
-            <text class="chart-cursor-label">现在</text>
-          </view>
-
-          <!-- ── 可拖动探针游标（蓝色竖线 + 交点圆点 + 顶部把手） ── -->
-          <view
-            wx:if="{{ probeVisible }}"
-            class="probe-line"
-            style="left: {{ probeX }}%;"
-          >
-            <view class="probe-line-bar"></view>
-            <view class="probe-dot" style="top: {{ probePointY }}%;"></view>
-            <view class="probe-handle"></view>
-          </view>
-
-          <!-- 高低潮极值标注 -->
-          <view
-            wx:for="{{ extremePoints }}"
-            wx:key="timeStr"
-            class="chart-extreme {{ item.type === 'high' ? 'chart-extreme-high' : 'chart-extreme-low' }}"
-            style="left: {{ item.x }}%; top: {{ item.y }}%;"
-          >
-            <text class="chart-extreme-icon">{{ item.type === 'high' ? '▲' : '▼' }}</text>
-            <text class="chart-extreme-time">{{ item.timeStr }}</text>
-            <text class="chart-extreme-val">{{ item.level }}m</text>
-          </view>
-        </view>
-
-        <!-- ── 探针 Tooltip（在图表外层，不受 overflow:hidden 裁剪） ── -->
-        <view
-          wx:if="{{ probeVisible && probeTooltip }}"
-          class="probe-tooltip {{ probeX > 62 ? 'probe-tooltip-left' : 'probe-tooltip-right' }}"
-          style="left: {{ probeX }}%;"
-        >
-          <view class="probe-tt-header">
-            <text class="probe-tt-time">{{ probeTooltip.timeStr }}</text>
-            <text class="probe-tt-state">{{ probeTooltip.tideState }}</text>
-          </view>
-          <view class="probe-tt-body">
-            <text class="probe-tt-label">潮高</text>
-            <text class="probe-tt-val">{{ probeTooltip.level }} m</text>
-          </view>
-          <view wx:if="{{ probeTooltip.score != null }}" class="probe-tt-body">
-            <text class="probe-tt-label">鱼口</text>
-            <text class="probe-tt-val" style="color: {{ probeTooltip.scoreColor }};">{{ probeTooltip.score }}<text class="probe-tt-unit"> {{ probeTooltip.scoreLabel }}</text></text>
-          </view>
-        </view>
-
-        <!-- X轴时间刻度 -->
-        <view class="chart-xaxis">
-          <text class="xaxis-label">00:00</text>
-          <text class="xaxis-label">06:00</text>
-          <text class="xaxis-label">12:00</text>
-          <text class="xaxis-label">18:00</text>
-          <text class="xaxis-label">24:00</text>
-        </view>
-      </view>
-    </view>
-
-    <!-- ═══════════════════════════════════════════════
-         区块3：今日 & 明日高低潮时刻表
-    ══════════════════════════════════════════════════ -->
-    <view class="section-card">
-      <view class="section-header">
-        <text class="section-title">🕐 高低潮时刻</text>
-      </view>
-
-      <!-- 今日 -->
-      <text class="day-label">今日</text>
-      <view class="extreme-table">
-        <view class="extreme-table-head">
-          <text class="et-col-time">时间</text>
-          <text class="et-col-type">潮型</text>
-          <text class="et-col-height">潮高</text>
-          <text class="et-col-bar">趋势</text>
-        </view>
-        <view wx:for="{{ todayExtremes }}" wx:key="timeStr" class="extreme-table-row">
-          <view class="et-col-time">
-            <text class="et-time">{{ item.timeStr }}</text>
-          </view>
-          <view class="et-col-type">
-            <view class="tide-type-badge {{ item.type === 'high' ? 'badge-high' : 'badge-low' }}">
-              <text>{{ item.icon }} {{ item.label }}</text>
-            </view>
-          </view>
-          <view class="et-col-height">
-            <text class="et-height {{ item.type === 'high' ? 'height-high' : 'height-low' }}">{{ item.level }}m</text>
-          </view>
-          <view class="et-col-bar">
-            <view class="et-bar-bg">
-              <view
-                class="et-bar-fill {{ item.type === 'high' ? 'bar-high' : 'bar-low' }}"
-                style="width: {{ item.type === 'high' ? 85 : 25 }}%"
-              ></view>
-            </view>
-          </view>
-        </view>
-      </view>
-
-      <!-- 明日 -->
-      <text class="day-label" style="margin-top: 24rpx;">明日</text>
-      <view class="extreme-table">
-        <view wx:for="{{ tomorrowExtremes }}" wx:key="timeStr" class="extreme-table-row">
-          <view class="et-col-time">
-            <text class="et-time et-time-dim">{{ item.timeStr }}</text>
-          </view>
-          <view class="et-col-type">
-            <view class="tide-type-badge {{ item.type === 'high' ? 'badge-high' : 'badge-low' }} badge-dim">
-              <text>{{ item.icon }} {{ item.label }}</text>
-            </view>
-          </view>
-          <view class="et-col-height">
-            <text class="et-height et-height-dim">{{ item.level }}m</text>
-          </view>
-          <view class="et-col-bar">
-            <view class="et-bar-bg">
-              <view
-                class="et-bar-fill {{ item.type === 'high' ? 'bar-high' : 'bar-low' }} bar-dim"
-                style="width: {{ item.type === 'high' ? 85 : 25 }}%"
-              ></view>
-            </view>
-          </view>
-        </view>
-      </view>
-    </view>
-
-    <!-- ═══════════════════════════════════════════════
          区块4：48小时浪况趋势（横向滚动）
     ══════════════════════════════════════════════════ -->
     <view class="section-card">
@@ -505,22 +601,22 @@
             <!-- 时间标签（每6小时显示） -->
             <text class="wave-col-time {{ index % 6 === 0 ? '' : 'invisible' }}">{{ item.timeStr }}</text>
 
-            <!-- 浪高柱（双色） -->
-            <view class="wave-bar-group">
+            <!-- 浪高柱（双色，按 48h 最大浪高自适应量程） -->
+            <view class="wave-bar-group wave-bar-group-48h">
               <!-- 涌浪（底层） -->
               <view
                 class="wave-bar wave-bar-swell"
-                style="height: {{ item.swellHeight != null ? (item.swellHeight / 3 * 120 + 4) : 4 }}rpx;"
+                style="height: {{ item.swellHeight != null ? (item.swellHeight / waveBarScale * 72 + 4) : 4 }}rpx;"
               ></view>
               <!-- 风浪（叠加） -->
               <view
                 class="wave-bar wave-bar-wind"
-                style="height: {{ item.waveHeight != null ? (item.waveHeight / 3 * 120 + 4) : 4 }}rpx;"
+                style="height: {{ item.waveHeight != null ? (item.waveHeight / waveBarScale * 72 + 4) : 4 }}rpx;"
               ></view>
             </view>
 
-            <!-- 浪高数值 -->
-            <text class="wave-col-val">{{ item.waveHeight != null ? item.waveHeight : '—' }}</text>
+            <!-- 浪高数值（每2小时显示，避免数字挤在一起） -->
+            <text class="wave-col-val {{ index % 2 === 0 ? '' : 'invisible' }}">{{ item.waveHeight != null ? item.waveHeight : '—' }}</text>
 
             <!-- 水温（每6小时显示） -->
             <text class="wave-col-sst {{ index % 6 === 0 ? '' : 'invisible' }}">{{ item.sst != null ? item.sst + '°' : '' }}</text>
@@ -531,300 +627,6 @@
       <!-- 图例说明 -->
       <view class="wave-footer-note">
         <text class="wave-note-text">单位：m，水温单位：°C，左右滑动查看更多</text>
-      </view>
-    </view>
-
-    <!-- ═══════════════════════════════════════════════
-         区块5：14天日历（过去7天 + 未来7天）
-         点击某天展开该天潮位折线图+高低潮+浪况
-    ══════════════════════════════════════════════════ -->
-    <view class="section-card" wx:if="{{ allDays.length > 0 }}">
-      <view class="section-header">
-        <text class="section-title">📅 14天潮汐日历</text>
-        <view class="cal-legend-row">
-          <view class="cal-legend-dot cal-legend-past"></view><text class="cal-legend-text">历史</text>
-          <view class="cal-legend-dot cal-legend-today"></view><text class="cal-legend-text">今天</text>
-          <view class="cal-legend-dot cal-legend-future"></view><text class="cal-legend-text">预报</text>
-        </view>
-      </view>
-
-      <!-- 横向日历滚动 -->
-      <scroll-view
-        scroll-x
-        class="calendar-scroll"
-        scroll-into-view="cal-day-{{ selectedDayIdx }}"
-        scroll-with-animation
-      >
-        <view class="calendar-row">
-          <view
-            wx:for="{{ allDays }}"
-            wx:key="date"
-            id="cal-day-{{ index }}"
-            class="calendar-day {{ item.isToday ? 'cal-today' : '' }} {{ item.isPast ? 'cal-past' : '' }} {{ selectedDayIdx === index ? 'calendar-day-active' : '' }}"
-            bindtap="selectDay"
-            data-idx="{{ index }}"
-          >
-            <!-- 星期 -->
-            <text class="cal-week {{ item.isToday ? 'cal-week-today' : '' }}">{{ item.isToday ? '今天' : item.weekLabel }}</text>
-            <!-- 月/日 -->
-            <text class="cal-date">{{ item.dateLabel }}</text>
-            <!-- 浪况 emoji -->
-            <view class="cal-wave-icon">
-              <text class="cal-wave-emoji">
-                {{ item.isPast ? '📋' : item.waveHeightMax <= 0.5 ? '🏖️' : item.waveHeightMax <= 1.5 ? '🌊' : '⛈️' }}
-              </text>
-            </view>
-            <!-- 最大浪高 -->
-            <text class="cal-wave-val {{ item.isPast ? 'cal-val-past' : '' }}">
-              {{ item.waveHeightMax != null ? item.waveHeightMax + 'm' : '—' }}
-            </text>
-            <!-- 最高/最低潮 -->
-            <view class="cal-tide-range" wx:if="{{ item.tideLevelMax != null }}">
-              <text class="cal-tide-hi">↑{{ item.tideLevelMax }}</text>
-              <text class="cal-tide-lo">↓{{ item.tideLevelMin }}</text>
-            </view>
-          </view>
-        </view>
-      </scroll-view>
-
-      <!-- ── 选中天展开详情 ───────────────────────────── -->
-      <view wx:if="{{ selectedDayData }}" class="day-detail-wrap">
-
-        <!-- 详情标题 -->
-        <view class="day-detail-header">
-          <view class="day-detail-title-row">
-            <text class="day-detail-title">
-              {{ selectedDayData.dateLabel }} {{ selectedDayData.weekLabel }}
-              {{ selectedDayData.isPast ? '（历史）' : selectedDayData.isToday ? '' : '（预报）' }}
-            </text>
-            <!-- 全天综合鱼口评级 -->
-            <view wx:if="{{ dayGrade }}" class="day-grade-badge grade-{{ dayGrade.grade }}">
-              <text class="day-grade-emoji">{{ dayGrade.emoji }}</text>
-              <text class="day-grade-label">{{ dayGrade.label }} {{ dayGrade.avgScore }}</text>
-            </view>
-          </view>
-          <view class="day-detail-meta">
-            <text class="day-meta-wave">浪高 {{ selectedDayData.waveHeightMax != null ? selectedDayData.waveHeightMax + 'm' : '—' }}</text>
-            <text class="day-meta-sep">·</text>
-            <text class="day-meta-swell">涌 {{ selectedDayData.swellHeightMax != null ? selectedDayData.swellHeightMax + 'm' : '—' }}</text>
-            <text class="day-meta-sep">·</text>
-            <text class="day-meta-dir">{{ selectedDayData.waveDirStr }}</text>
-          </view>
-        </view>
-
-        <!-- 潮汐数据来源（逐日） -->
-        <text wx:if="{{ selectedDayData.tideSource === 'qweather' }}" class="day-source-badge src-station">潮汐来源：验潮站预报</text>
-        <text wx:elif="{{ selectedDayData.tideSource === 'qweather-archive' }}" class="day-source-badge src-archive">潮汐来源：验潮站存档（保留30天）</text>
-        <text wx:elif="{{ selectedDayData.tideSource === 'model' }}" class="day-source-badge src-model">潮汐来源：模型推算</text>
-
-        <!-- ── 最佳垂钓时段推荐卡 ── -->
-        <view wx:if="{{ dayBestWindows.length > 0 }}" class="best-windows-wrap">
-          <view class="best-windows-header">
-            <text class="best-windows-title">🎣 建议垂钓时段</text>
-            <text class="best-windows-hint">综合潮汐·气压·水温·天气</text>
-          </view>
-          <view wx:for="{{ dayBestWindows }}" wx:key="startTime" class="window-card grade-bg-{{ item.grade }}">
-            <view class="window-card-left">
-              <text class="window-emoji">{{ item.emoji }}</text>
-              <view class="window-info">
-                <text class="window-time">{{ item.startTime }} — {{ item.endTime }}</text>
-                <text class="window-duration">{{ item.duration }}小时 · {{ item.reason }}</text>
-              </view>
-            </view>
-            <view class="window-score grade-{{ item.grade }}">
-              <text class="window-score-num">{{ item.avgScore }}</text>
-              <text class="window-score-max">/10</text>
-            </view>
-          </view>
-        </view>
-
-        <!-- 无最佳时段提示 -->
-        <view wx:elif="{{ dayFishHeatmap.length > 0 && !selectedDayData.isPast }}" class="no-window-tip">
-          <text>⚠️ 今日条件一般，建议避开恶劣天气或低气压时段</text>
-        </view>
-
-        <!-- ── 鱼口热力图（逐小时评分）── -->
-        <view wx:if="{{ dayFishHeatmap.length > 0 }}" class="fish-heatmap-wrap">
-          <text class="day-section-label">逐小时鱼口指数</text>
-          <scroll-view scroll-x class="heatmap-scroll">
-            <view class="heatmap-row">
-              <view wx:for="{{ dayFishHeatmap }}" wx:key="hour" class="heatmap-col">
-                <!-- 柱体 -->
-                <view class="heatmap-bar-wrap">
-                  <view
-                    class="heatmap-bar"
-                    style="height: {{ item.heightPct }}%; background: {{ item.color }};"
-                  ></view>
-                </view>
-                <!-- 分值 -->
-                <text class="heatmap-score" style="color: {{ item.color }};">{{ item.score }}</text>
-                <!-- 时间（每3小时显示一次） -->
-                <text class="heatmap-time {{ item.hour % 3 === 0 ? '' : 'invisible' }}">{{ item.timeStr }}</text>
-              </view>
-            </view>
-          </scroll-view>
-          <!-- 图例 -->
-          <view class="heatmap-legend">
-            <view class="heatmap-legend-item"><view class="heatmap-legend-dot" style="background:#1a7f5a"></view><text>极佳(8+)</text></view>
-            <view class="heatmap-legend-item"><view class="heatmap-legend-dot" style="background:#2dce89"></view><text>较好(6.5+)</text></view>
-            <view class="heatmap-legend-item"><view class="heatmap-legend-dot" style="background:#e6a817"></view><text>一般(5+)</text></view>
-            <view class="heatmap-legend-item"><view class="heatmap-legend-dot" style="background:#e85555"></view><text>不宜(&lt;3.5)</text></view>
-          </view>
-        </view>
-
-        <!-- ── 潮位折线图 ── -->
-        <view wx:if="{{ dayChartPoints.length > 0 }}" class="day-chart-section">
-          <view class="day-chart-legend">
-            <text class="day-chart-max">高潮 {{ dayChartMaxLevel }}m</text>
-            <text class="day-chart-min">低潮 {{ dayChartMinLevel }}m</text>
-          </view>
-
-          <view class="tide-chart-body"
-            bindtouchstart="onChartTouchStart"
-            catchtouchmove="onChartTouchMove"
-            bindtouchend="onChartTouchEnd"
-          >
-            <view class="chart-gridline" style="top: 25%"></view>
-            <view class="chart-gridline" style="top: 50%"></view>
-            <view class="chart-gridline" style="top: 75%"></view>
-
-            <view wx:for="{{ dayChartPoints }}" wx:key="index"
-              class="chart-point"
-              style="left: {{ item.x }}%; top: {{ item.y }}%;"
-            ></view>
-
-            <view wx:for="{{ dayChartSegments }}" wx:key="index"
-              class="chart-line-seg"
-              style="left: {{ item.x }}%; top: {{ item.y }}%; width: {{ item.w }}%; transform: rotate({{ item.angle }}deg);"
-            ></view>
-
-            <!-- 今天才显示当前时刻游标 -->
-            <view wx:if="{{ selectedDayData.isToday && dayCurrentPointX >= 0 }}" class="chart-cursor" style="left: {{ dayCurrentPointX }}%">
-              <view class="chart-cursor-line"></view>
-              <view class="chart-cursor-dot"></view>
-              <text class="chart-cursor-label">现在</text>
-            </view>
-
-            <!-- 探针 -->
-            <view wx:if="{{ probeVisible }}" class="probe-line" style="left: {{ probeX }}%;">
-              <view class="probe-line-bar"></view>
-              <view class="probe-dot" style="top: {{ probePointY }}%;"></view>
-              <view class="probe-handle"></view>
-            </view>
-
-            <!-- 极值标注 -->
-            <view wx:for="{{ dayExtremePoints }}" wx:key="timeStr"
-              class="chart-extreme {{ item.type === 'high' ? 'chart-extreme-high' : 'chart-extreme-low' }}"
-              style="left: {{ item.x }}%; top: {{ item.y }}%;"
-            >
-              <text class="chart-extreme-icon">{{ item.type === 'high' ? '▲' : '▼' }}</text>
-              <text class="chart-extreme-time">{{ item.timeStr }}</text>
-              <text class="chart-extreme-val">{{ item.level }}m</text>
-            </view>
-          </view>
-
-          <!-- 探针 tooltip -->
-          <view wx:if="{{ probeVisible && probeTooltip }}"
-            class="probe-tooltip {{ probeX > 62 ? 'probe-tooltip-left' : 'probe-tooltip-right' }}"
-            style="left: {{ probeX }}%;"
-          >
-            <view class="probe-tt-header">
-              <text class="probe-tt-time">{{ probeTooltip.timeStr }}</text>
-              <text class="probe-tt-state">{{ probeTooltip.tideState }}</text>
-            </view>
-            <view class="probe-tt-body">
-              <text class="probe-tt-label">潮高</text>
-              <text class="probe-tt-val">{{ probeTooltip.level }} m</text>
-            </view>
-            <view wx:if="{{ probeTooltip.score != null }}" class="probe-tt-body">
-              <text class="probe-tt-label">鱼口</text>
-              <text class="probe-tt-val" style="color: {{ probeTooltip.scoreColor }};">{{ probeTooltip.score }}<text class="probe-tt-unit"> {{ probeTooltip.scoreLabel }}</text></text>
-            </view>
-          </view>
-
-          <view class="chart-xaxis">
-            <text class="xaxis-label">00:00</text>
-            <text class="xaxis-label">06:00</text>
-            <text class="xaxis-label">12:00</text>
-            <text class="xaxis-label">18:00</text>
-            <text class="xaxis-label">24:00</text>
-          </view>
-        </view>
-
-        <!-- ── 高低潮时刻表 ── -->
-        <view wx:if="{{ selectedDayData.extremes.length > 0 }}" class="day-extremes-wrap">
-          <text class="day-section-label">高低潮时刻</text>
-          <view class="extreme-table">
-            <view wx:for="{{ selectedDayData.extremes }}" wx:key="timeStr" class="extreme-table-row">
-              <view class="et-col-time">
-                <text class="et-time {{ selectedDayData.isPast ? 'et-time-dim' : '' }}">{{ item.timeStr }}</text>
-              </view>
-              <view class="et-col-type">
-                <view class="tide-type-badge {{ item.type === 'high' ? 'badge-high' : 'badge-low' }} {{ selectedDayData.isPast ? 'badge-dim' : '' }}">
-                  <text>{{ item.icon }} {{ item.label }}</text>
-                </view>
-              </view>
-              <view class="et-col-height">
-                <text class="et-height {{ item.type === 'high' ? 'height-high' : 'height-low' }} {{ selectedDayData.isPast ? 'et-height-dim' : '' }}">{{ item.level }}m</text>
-              </view>
-              <view class="et-col-bar">
-                <view class="et-bar-bg">
-                  <view
-                    class="et-bar-fill {{ item.type === 'high' ? 'bar-high' : 'bar-low' }} {{ selectedDayData.isPast ? 'bar-dim' : '' }}"
-                    style="width: {{ item.type === 'high' ? 85 : 25 }}%"
-                  ></view>
-                </view>
-              </view>
-            </view>
-          </view>
-        </view>
-
-        <!-- ── 逐小时浪况（横向滚动）── -->
-        <view wx:if="{{ selectedDayData.hourly.length > 0 }}" class="day-wave-wrap">
-          <text class="day-section-label">逐小时浪况</text>
-          <scroll-view scroll-x class="wave-scroll">
-            <view class="wave-scroll-inner">
-              <view
-                wx:for="{{ selectedDayData.hourly }}"
-                wx:key="index"
-                class="wave-col {{ index % 6 === 0 ? 'wave-col-mark' : '' }}"
-              >
-                <text class="wave-col-time {{ index % 6 === 0 ? '' : 'invisible' }}">{{ item.timeStr }}</text>
-                <view class="wave-bar-group">
-                  <view class="wave-bar wave-bar-swell"
-                    style="height: {{ item.swellHeight != null ? (item.swellHeight / 3 * 120 + 4) : 4 }}rpx;"
-                  ></view>
-                  <view class="wave-bar wave-bar-wind"
-                    style="height: {{ item.waveHeight != null ? (item.waveHeight / 3 * 120 + 4) : 4 }}rpx;"
-                  ></view>
-                </view>
-                <text class="wave-col-val">{{ item.waveHeight != null ? item.waveHeight : '—' }}</text>
-                <text class="wave-col-sst {{ index % 6 === 0 ? '' : 'invisible' }}">{{ item.sst != null ? item.sst + '°' : '' }}</text>
-              </view>
-            </view>
-          </scroll-view>
-        </view>
-
-        <!-- ── 日统计四格 ── -->
-        <view class="day-stat-grid">
-          <view class="day-stat-item">
-            <text class="day-stat-label">最大浪高</text>
-            <text class="day-stat-val">{{ selectedDayData.waveHeightMax != null ? selectedDayData.waveHeightMax + 'm' : '—' }}</text>
-          </view>
-          <view class="day-stat-item">
-            <text class="day-stat-label">涌浪</text>
-            <text class="day-stat-val">{{ selectedDayData.swellHeightMax != null ? selectedDayData.swellHeightMax + 'm' : '—' }}</text>
-          </view>
-          <view class="day-stat-item">
-            <text class="day-stat-label">主浪向</text>
-            <text class="day-stat-val">{{ selectedDayData.waveDirStr }}</text>
-          </view>
-          <view class="day-stat-item">
-            <text class="day-stat-label">浪周期</text>
-            <text class="day-stat-val">{{ selectedDayData.wavePeriodMax != null ? selectedDayData.wavePeriodMax + 's' : '—' }}</text>
-          </view>
-        </view>
-
       </view>
     </view>
 
@@ -937,7 +739,7 @@
        地点选择面板（底部弹出）
   ════════════════════════════════════════════════════════════ -->
   <view wx:if="{{ placePanel }}" class="place-mask" bindtap="onMaskTap"></view>
-  <view class="place-panel {{ placePanel ? 'place-panel-open' : '' }}" catchtap="onPanelTap">
+  <view class="place-panel {{ placePanel ? 'place-panel-open' : '' }}" style="{{ panelKeyboardStyle }}" catchtap="onPanelTap">
 
     <!-- 面板顶部把手 + 标题 -->
     <view class="panel-header">
@@ -957,7 +759,10 @@
         value="{{ searchKeyword }}"
         bindinput="onSearchInput"
         bindconfirm="onSearchConfirm"
+        bindkeyboardheightchange="onKeyboardHeightChange"
         confirm-type="search"
+        adjust-position="{{ false }}"
+        cursor-spacing="16"
         focus="{{ placePanel }}"
       />
       <view wx:if="{{ searchLoading }}" class="search-spin"></view>
@@ -1053,7 +858,7 @@
   </view>
 
   <view class="data-disclaimer">
-    <text>数据来源：{{ tideMeta && tideMeta.source === 'qweather' ? '和风天气（潮汐验潮站）、' : '' }}Open-Meteo、高德天气。{{ tideMeta && tideMeta.source === 'qweather' ? '今天及未来潮汐为验潮站预报，历史日期优先使用验潮站存档（保留30天），无存档时与海况一样为模型推算；' : '潮汐与海况为模型推算值，' }}仅供参考，请以官方预报和现场情况为准。</text>
+    <text>数据来源：和风天气、Open-Meteo、高德天气。历史日期无验潮站存档时，潮汐与海况为模型推算值；仅供参考，请以官方预报和现场情况为准。</text>
   </view>
 
 </view>

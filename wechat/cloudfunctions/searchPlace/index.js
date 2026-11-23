@@ -5,6 +5,7 @@
 
 const cloud = require('wx-server-sdk');
 const fetch  = require('node-fetch');
+const { logApiUsage } = require('./logApiUsage');
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 const AMAP_KEY   = process.env.AMAP_KEY || 'b5fddea474402d2c2e263595eee40006';
@@ -141,16 +142,50 @@ function parseLocation(locationStr) {
   return { lat: parseFloat(lat.toFixed(5)), lon: parseFloat(lon.toFixed(5)) };
 }
 
+// 请求高德接口并埋点（仅统计，不改变业务返回值）
+async function amapGet(url, apiName, ctx) {
+  const t0 = Date.now();
+  const endpoint = url.replace(/key=[^&]+/, 'key=***');
+  try {
+    const resp = await fetch(url);
+    const json = await resp.json();
+    const ok = !!(json && json.status === '1');
+    logApiUsage(ctx.db, {
+      openid: ctx.openid,
+      apiGroup: 'amap',
+      apiName,
+      endpoint,
+      success: ok,
+      latencyMs: Date.now() - t0,
+      error: ok ? null : ((json && (json.info || json.infocode)) || 'status != 1'),
+    });
+    return { ok, json };
+  } catch (e) {
+    logApiUsage(ctx.db, {
+      openid: ctx.openid,
+      apiGroup: 'amap',
+      apiName,
+      endpoint,
+      success: false,
+      latencyMs: Date.now() - t0,
+      error: String(e && e.message || e),
+    });
+    return { ok: false, json: null };
+  }
+}
+
 exports.main = async (event, context) => {
   const { keyword, city } = event;  // city 可选，限制搜索城市
   if (!keyword || !keyword.trim()) {
     return { success: false, error: '关键词不能为空' };
   }
 
+  const { OPENID } = cloud.getWXContext();
   const kw        = keyword.trim().slice(0, 50);  // 防止过长
   const cityParam = city ? `&city=${encodeURIComponent(city)}&citylimit=false` : '';
   const cacheKey  = `place_${kw}_${city || 'all'}`;
   const db        = cloud.database();
+  const ctx       = { db, openid: OPENID || 'anonymous' };
 
   try {
     const out = await withCache(db, cacheKey, CACHE_TTL, SOFT_TTL, async () => {
@@ -158,16 +193,16 @@ exports.main = async (event, context) => {
       const poiUrl  = `https://restapi.amap.com/v3/place/text?keywords=${encodeURIComponent(kw)}&types=&output=json&offset=10&page=1${cityParam}&key=${AMAP_KEY}`;
       const distUrl = `https://restapi.amap.com/v3/config/district?keywords=${encodeURIComponent(kw)}&subdistrict=0&extensions=base&key=${AMAP_KEY}`;
 
-      const [poiRes, distRes] = await Promise.allSettled([
-        fetch(poiUrl).then(r => r.json()),
-        fetch(distUrl).then(r => r.json()),
+      const [poiRes, distRes] = await Promise.all([
+        amapGet(poiUrl, 'place_text', ctx),
+        amapGet(distUrl, 'district', ctx),
       ]);
 
       const results = [];
 
       // 处理行政区划（优先：城市/区县直接命中）
-      if (distRes.status === 'fulfilled' && distRes.value?.districts) {
-        distRes.value.districts.slice(0, 3).forEach(d => {
+      if (distRes.ok && distRes.json?.districts) {
+        distRes.json.districts.slice(0, 3).forEach(d => {
           if (!d.center) return;
           const coords = parseLocation(d.center);
           if (!coords) return;
@@ -185,8 +220,8 @@ exports.main = async (event, context) => {
       }
 
       // 处理 POI 结果
-      if (poiRes.status === 'fulfilled' && poiRes.value?.pois) {
-        poiRes.value.pois.slice(0, 8).forEach(p => {
+      if (poiRes.ok && poiRes.json?.pois) {
+        poiRes.json.pois.slice(0, 8).forEach(p => {
           if (!p.location) return;
           const coords = parseLocation(p.location);
           if (!coords) return;

@@ -376,3 +376,19 @@
   text-align: center;
 }
 
+
+/* ===== 今日出钓指数入口 ===== */
+.score-entry-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 24rpx 24rpx 0;
+  padding: 22rpx 24rpx;
+}
+.se-left { display: flex; flex-direction: column; gap: 4rpx; }
+.se-label { font-size: 28rpx; font-weight: 600; color: #1a2a1a; }
+.se-sub   { font-size: 20rpx; color: #999; }
+.se-right { display: flex; align-items: baseline; gap: 4rpx; }
+.se-score { font-size: 44rpx; font-weight: 800; line-height: 1; }
+.se-max   { font-size: 20rpx; color: #999; }
+.score-entry-card .menu-arrow { margin-left: 8rpx; }

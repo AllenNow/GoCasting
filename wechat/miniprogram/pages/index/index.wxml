@@ -45,8 +45,9 @@
   <!-- 快捷工具行 -->
   <view class="quick-tools-row">
     <view class="quick-tool" bindtap="goGoScore">
-      <text class="qt-icon">🎯</text>
-      <text class="qt-label">Go-Score</text>
+      <text wx:if="{{ scoreReady }}" class="qt-score" style="color:{{ scoreColor }}">{{ todayScore }}</text>
+      <text wx:else class="qt-icon">🎯</text>
+      <text class="qt-label">出钓指数</text>
     </view>
     <view class="quick-tool" bindtap="goSpecies">
       <text class="qt-icon">🐟</text>

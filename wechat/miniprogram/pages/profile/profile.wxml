@@ -100,17 +100,25 @@
     </scroll-view>
   </view>
 
+  <!-- 今日出钓指数（与首页/评分页同源） -->
+  <view class="card score-entry-card" bindtap="goGoScore">
+    <view class="se-left">
+      <text class="se-label">今日出钓指数</text>
+      <text class="se-sub">{{ scoreSub }}</text>
+    </view>
+    <view class="se-right">
+      <text class="se-score" style="color:{{ scoreColor }}">{{ scoreReady ? todayScore : '--' }}</text>
+      <text class="se-max">/10</text>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+
   <!-- 功能入口 -->
   <view class="menu-section">
     <view class="card">
       <view class="menu-item" bindtap="goAllCatches">
         <text class="menu-icon">🎣</text>
         <text class="menu-label">我的渔获记录</text>
-        <text class="menu-arrow">›</text>
-      </view>
-      <view class="menu-item" bindtap="goGoScore">
-        <text class="menu-icon">📊</text>
-        <text class="menu-label">今日出钓评分</text>
         <text class="menu-arrow">›</text>
       </view>
       <view class="menu-item" bindtap="goSpecies">
@@ -129,6 +137,13 @@
         <text class="menu-icon">⚙️</text>
         <text class="menu-label">权限管理</text>
         <view wx:if="{{ pendingCount > 0 }}" class="badge">{{ pendingCount }}</view>
+        <text class="menu-arrow">›</text>
+      </view>
+
+      <!-- 超级管理员：API 用量与费用入口 -->
+      <view wx:if="{{ role === 'super_admin' }}" class="menu-item" bindtap="goApiUsage">
+        <text class="menu-icon">📈</text>
+        <text class="menu-label">API 用量与费用</text>
         <text class="menu-arrow">›</text>
       </view>
 

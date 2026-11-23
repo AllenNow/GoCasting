@@ -6,7 +6,7 @@
 const cloud = require('wx-server-sdk');
 const fetch  = require('node-fetch');
 const { logApiUsage } = require('./logApiUsage');
-const { enhanceTide } = require('./qweather-tide');
+const { enhanceTide, setUsageReporter } = require('./qweather-tide');
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 const CACHE_TTL_MS  = 60 * 60 * 1000;   // 1小时
@@ -198,12 +198,29 @@ const TIDE_STATE_MAP = {
   unknown: { label: '未知',   icon: '—',  value: 'unknown' },
 };
 
-// 将 Date 格式化为 YYYY-MM-DD（本地时区）
+// 云函数运行时区为 UTC：显式换算北京时间（UTC+8），避免潮汐按小时索引时错 8 小时
+const BJ_OFFSET_MS = 8 * 60 * 60 * 1000;
+function bjDate(date) {
+  return new Date((date ? date.getTime() : Date.now()) + BJ_OFFSET_MS);
+}
+
+// 将 Date 格式化为北京时间的 YYYY-MM-DD
 function toDateKey(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
+  const d = bjDate(date);
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(d.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${dd}`;
+}
+
+// 北京时间的整点（0-23）
+function bjHour(date) {
+  return bjDate(date).getUTCHours();
+}
+
+// 相对北京时间今天的偏移天数（-1 昨天 / +1 明天）
+function bjDateKeyOffset(date, days) {
+  return toDateKey(new Date((date || new Date()).getTime() + days * 24 * 60 * 60 * 1000));
 }
 
 // 星期标签
@@ -215,13 +232,32 @@ function weekLabel(dateStr) {
 
 exports.main = async (event, context) => {
   const { lat, lon } = event;
+  // 按需潮汐：默认只增强未来 7 天；客户端滑到日历远端可请求 14 天；
+  // 钓点地图等只需要浪高的场景传 needTide:false，完全不触发计费的潮汐接口
+  const needTide = event.needTide !== false;
+  // 和风潮汐最多未来 10 天，超过的日期只能保留模型值
+  const tideDays = Math.min(10, Math.max(1, parseInt(event.tideDays, 10) || 7));
   const { OPENID } = cloud.getWXContext();
   const db = cloud.database();
 
-  // 缓存 key（0.5° 精度）
+  // 和风潮汐/GeoAPI 用量埋点（仅统计，不影响业务逻辑）
+  setUsageReporter(function (opts) {
+    logApiUsage(db, {
+      openid: OPENID || 'anonymous',
+      apiGroup: 'qweather',
+      apiName: opts.apiName,
+      endpoint: opts.endpoint,
+      success: opts.success,
+      latencyMs: opts.latencyMs,
+      error: opts.error,
+    });
+  });
+
+  // 缓存 key（0.5° 精度 + 北京日期）：todayIdx/“今天”标签在生成时固化，
+  // 跨天后旧缓存会整体错一天，必须按日隔离
   const sLat = (Math.round(lat / 0.5) * 0.5).toFixed(1);
   const sLon = (Math.round(lon / 0.5) * 0.5).toFixed(1);
-  const cacheKey = `marine14_${sLat}_${sLon}`;
+  const cacheKey = `marine14_${sLat}_${sLon}_${toDateKey(new Date())}_${needTide ? 't' + tideDays : 'nt'}`;
 
   try {
     // ── 缓存优先 + 软过期单飞刷新 ──────────────────────────────
@@ -280,7 +316,7 @@ exports.main = async (event, context) => {
     // ── 当前时刻索引 ──────────────────────────────────────────
     const now     = new Date();
     const todayStr = toDateKey(now);
-    const nowHour  = `${todayStr}T${String(now.getHours()).padStart(2,'0')}:00`;
+    const nowHour  = `${todayStr}T${String(bjHour(now)).padStart(2,'0')}:00`;
     const curIdx   = Math.max(0, times.findIndex(t => t === nowHour));
 
     // ── 当前实况 ──────────────────────────────────────────────
@@ -289,6 +325,8 @@ exports.main = async (event, context) => {
     const currentData  = {
       tideState:           TIDE_STATE_MAP[tideStateKey],
       seaLevelMSL:         C.sea_level_height_msl    != null ? parseFloat(C.sea_level_height_msl.toFixed(2))    : null,
+      // 当前潮高实际使用的基准面；和风验潮站覆盖后改为 station
+      seaLevelDatum:       'msl',
       waveHeight:          C.wave_height              != null ? parseFloat(C.wave_height.toFixed(2))             : null,
       waveDirection:       C.wave_direction           != null ? Math.round(C.wave_direction)                     : null,
       waveDirectionStr:    degToDirection(C.wave_direction),
@@ -362,12 +400,11 @@ exports.main = async (event, context) => {
       const validWaves  = dayData.waves.filter(v => v != null);
 
       // 日期标签
-      const d = new Date(dateStr + 'T12:00:00');
-      const monthDay = `${d.getMonth()+1}/${d.getDate()}`;
+      const monthDay = `${Number(dateStr.slice(5, 7))}/${Number(dateStr.slice(8, 10))}`;
       let dateLabel;
       if (isToday)        dateLabel = '今天';
-      else if (dateStr === new Date(new Date().setDate(now.getDate()-1)).toISOString().slice(0,10)) dateLabel = '昨天';
-      else if (dateStr === new Date(new Date().setDate(now.getDate()+1)).toISOString().slice(0,10)) dateLabel = '明天';
+      else if (dateStr === bjDateKeyOffset(now, -1)) dateLabel = '昨天';
+      else if (dateStr === bjDateKeyOffset(now, 1))  dateLabel = '明天';
       else                dateLabel = monthDay;
 
       return {
@@ -396,15 +433,39 @@ exports.main = async (event, context) => {
     const todayIdx = allDays.findIndex(d => d.isToday);
 
     // ── 和风天气潮汐覆盖（未配置凭据或失败时保留模型数据）────
-    let tideMeta = { source: 'model' };
+    let tideMeta = { source: 'model', label: '模型推算' };
     try {
-      const qw = await enhanceTide({ db, lat, lon, allDays, todayIdx, now });
-      if (qw && qw.meta) {
-        tideMeta = qw.meta;
-        if (qw.current && qw.current.level != null) {
-          currentData.seaLevelMSL = qw.current.level;
-          const stateKey = getTideState(qw.current.levels, qw.current.idx);
-          currentData.tideState = TIDE_STATE_MAP[stateKey];
+      if (needTide) {
+        const qw = await enhanceTide({ db, lat, lon, allDays, todayIdx, now, days: tideDays });
+        if (qw && qw.meta) {
+          tideMeta = qw.meta;
+          if (qw.current && qw.current.level != null) {
+            currentData.seaLevelMSL = qw.current.level;
+            currentData.seaLevelDatum = 'station';
+            const stateKey = getTideState(qw.current.levels, qw.current.idx);
+            currentData.tideState = TIDE_STATE_MAP[stateKey];
+          } else if (qw.meta.source === 'qweather' &&
+            String((allDays[todayIdx] && allDays[todayIdx].tideSource) || '').indexOf('qweather') === 0) {
+            // 和风已生效但今天缺当前整点：仅当今天也是验潮站口径时才从当日曲线取值，
+            // 否则会把模型 MSL 值误标成当地基准面
+            const chart = allDays[todayIdx]?.tideChart || [];
+            const h = bjHour(now);
+            const levels = chart.map(p => p.level);
+            let idx = chart.findIndex(p => p.timeStr === `${String(h).padStart(2, '0')}:00`);
+            if (idx < 0 || levels[idx] == null) {
+              let bestDist = 99;
+              chart.forEach((p, i) => {
+                if (p.level == null) return;
+                const dist = Math.abs(parseInt(p.timeStr, 10) - h);
+                if (dist < bestDist) { bestDist = dist; idx = i; }
+              });
+            }
+            if (idx >= 0 && levels[idx] != null) {
+              currentData.seaLevelMSL = levels[idx];
+              currentData.seaLevelDatum = 'station';
+              currentData.tideState = TIDE_STATE_MAP[getTideState(levels, idx)];
+            }
+          }
         }
       }
     } catch (e) {

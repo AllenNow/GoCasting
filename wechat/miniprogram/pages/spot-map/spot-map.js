@@ -118,11 +118,15 @@ Page({
       // 无参数时用当前 data 坐标
       const useLat = lat ?? this.data.latitude;
       const useLon = lon ?? this.data.longitude;
-      const cacheKey = apiCache.geoKey('marine', useLat, useLon);
+      // 地图只需要浪高/水温做着色，不触发计费的验潮站潮汐增强
+      const cacheKey = apiCache.geoKey('marine_wave', useLat, useLon);
       let marine = apiCache.get(cacheKey);
 
       if (!marine) {
-        const res = await wx.cloud.callFunction({ name: 'getMarineData', data: { lat: useLat, lon: useLon } });
+        const res = await wx.cloud.callFunction({
+          name: 'getMarineData',
+          data: { lat: useLat, lon: useLon, needTide: false },
+        });
         if (res.result?.success) {
           marine = res.result.data;
           apiCache.set(cacheKey, marine, apiCache.TTL.marine);

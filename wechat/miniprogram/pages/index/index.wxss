@@ -396,3 +396,11 @@
   color: #aaa;
   text-align: center;
 }
+
+/* 出钓指数快捷入口 */
+.qt-score {
+  font-size: 30rpx;
+  font-weight: 800;
+  line-height: 40rpx;
+  height: 40rpx;
+}

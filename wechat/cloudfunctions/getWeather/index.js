@@ -6,6 +6,7 @@
 const cloud = require('wx-server-sdk');
 const fetch  = require('node-fetch');
 const { logApiUsage } = require('./logApiUsage');
+const { readConfig, apiGet } = require('./qweather');
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 const AMAP_KEY = process.env.AMAP_KEY || 'b5fddea474402d2c2e263595eee40006';
@@ -162,6 +163,15 @@ function weatherIcon(desc) {
   return '🌤️';
 }
 
+// 和风时间字段：'2026-11-21T06:23+08:00' 或 '06:23' → '06:23'
+function hhmmOf(t) {
+  if (typeof t !== 'string') return '';
+  const m = t.match(/T(\d{2}):(\d{2})/);
+  if (m) return `${m[1]}:${m[2]}`;
+  const m2 = t.match(/^(\d{1,2}):(\d{2})$/);
+  return m2 ? `${m2[1].padStart(2, '0')}:${m2[2]}` : '';
+}
+
 async function timedFetch(url) {
   const t0 = Date.now();
   const json = await fetch(url).then(r => r.json());
@@ -232,61 +242,135 @@ exports.main = async (event, context) => {
       let liveSuccess = true, liveLatency = 0, liveError = null;
       let castSuccess = true, castLatency = 0, castError = null;
       let current = null, forecast = [];
+      let qwUsed = false;
+      const weekDays = ['周日','周一','周二','周三','周四','周五','周六'];
 
-      // 并行请求实况 + 预报
-      const [liveResult, castResult] = await Promise.allSettled([
-        timedFetch(`https://restapi.amap.com/v3/weather/weatherInfo?city=${adcode}&key=${AMAP_KEY}&extensions=base&output=json`),
-        timedFetch(`https://restapi.amap.com/v3/weather/weatherInfo?city=${adcode}&key=${AMAP_KEY}&extensions=all&output=json`),
-      ]);
-
-      // 处理实况
-      if (liveResult.status === 'fulfilled') {
-        const { json: liveRes, latencyMs } = liveResult.value;
-        liveLatency = latencyMs;
-        const live = liveRes?.lives?.[0];
-        current = live ? {
-          temp: live.temperature, desc: live.weather,
-          humidity: live.humidity, wind_speed: live.windpower,
-          visibility: live.visibility || '—',
-        } : null;
-        if (!live) { liveSuccess = false; liveError = 'lives 数组为空'; }
-      } else {
-        liveSuccess = false; liveError = String(liveResult.reason);
+      // ── 1) 和风优先：实时天气 + 逐天预报（7天）──────────────
+      const qwCfg = readConfig();
+      if (qwCfg) {
+        const loc = `${lon.toFixed(2)},${lat.toFixed(2)}`;
+        const t0 = Date.now();
+        const [nowR, dayR] = await Promise.allSettled([
+          apiGet(qwCfg, `/v7/weather/now?location=${encodeURIComponent(loc)}&lang=zh`),
+          apiGet(qwCfg, `/v7/weather/7d?location=${encodeURIComponent(loc)}&lang=zh`),
+        ]);
+        let qwOk = false;
+        if (nowR.status === 'fulfilled' && nowR.value.now) {
+          const n = nowR.value.now;
+          current = {
+            temp: n.temp,
+            desc: n.text,
+            icon: n.icon || '',
+            humidity: n.humidity,
+            wind_speed: n.windScale != null ? String(n.windScale) : '—',
+            visibility: n.vis || '—',
+            // 详情页扩展字段（和风实况原生口径，旧字段保持不变）
+            feelsLike: n.feelsLike != null ? n.feelsLike : null,
+            windDir: n.windDir || '',
+            windScale: n.windScale != null ? n.windScale : null,
+            windSpeed: n.windSpeed != null ? n.windSpeed : null,
+            pressure: n.pressure != null ? n.pressure : null,
+            cloud: n.cloud != null ? n.cloud : null,
+            precip: n.precip != null ? n.precip : null,
+            dew: n.dew != null ? n.dew : null,
+            obsTime: hhmmOf(n.obsTime),
+          };
+          qwOk = true;
+        }
+        if (dayR.status === 'fulfilled' && Array.isArray(dayR.value.daily) && dayR.value.daily.length) {
+          forecast = dayR.value.daily.slice(0, 7).map((c, i) => ({
+            date:     i === 0 ? '今天' : weekDays[new Date(c.fxDate + 'T12:00:00').getDay()],
+            dateStr:  c.fxDate || '',
+            desc:     c.textDay,
+            icon:     weatherIcon(c.textDay),
+            tempHigh: c.tempMax,
+            tempLow:  c.tempMin,
+            // 详情页扩展字段（和风 7 天原生口径）
+            descNight:     c.textNight || '',
+            iconNight:     weatherIcon(c.textNight || c.textDay),
+            sunrise:       hhmmOf(c.sunrise),
+            sunset:        hhmmOf(c.sunset),
+            moonrise:      hhmmOf(c.moonrise),
+            moonset:       hhmmOf(c.moonset),
+            moonPhase:     c.moonPhase || '',
+            moonPhaseIcon: c.moonPhaseIcon || '',
+            uvIndex:       c.uvIndex != null ? c.uvIndex : null,
+            precip:        c.precip != null ? c.precip : null,
+            humidity:      c.humidity != null ? c.humidity : null,
+            pressure:      c.pressure != null ? c.pressure : null,
+            vis:           c.vis != null ? c.vis : null,
+            cloud:         c.cloud != null ? c.cloud : null,
+            windDirDay:    c.windDirDay || '',
+            windScaleDay:  c.windScaleDay || '',
+            windSpeedDay:  c.windSpeedDay != null ? c.windSpeedDay : null,
+          }));
+          qwOk = true;
+        }
+        qwUsed = qwOk;
+        logApiUsage(db, {
+          openid: OPENID, apiGroup: 'qweather', apiName: 'weather_now_7d',
+          endpoint: `https://${qwCfg.host}/v7/weather/7d`,
+          success: qwOk, latencyMs: Date.now() - t0,
+          error: qwOk ? null : [nowR, dayR]
+            .map(r => (r.status === 'rejected' ? String(r.reason && r.reason.message) : ''))
+            .filter(Boolean).join(' / '),
+        });
       }
 
-      // 处理预报
-      if (castResult.status === 'fulfilled') {
-        const { json: castRes, latencyMs } = castResult.value;
-        castLatency = latencyMs;
-        const casts = castRes?.forecasts?.[0]?.casts || [];
-        const weekDays = ['周日','周一','周二','周三','周四','周五','周六'];
-        forecast = casts.slice(0, 3).map((c, i) => ({
-          date:     i === 0 ? '今天' : weekDays[new Date(c.date).getDay()],
-          desc:     c.dayweather,
-          icon:     weatherIcon(c.dayweather),
-          tempHigh: c.daytemp,
-          tempLow:  c.nighttemp,
-        }));
-        if (!casts.length) { castSuccess = false; castError = '预报数组为空'; }
-      } else {
-        castSuccess = false; castError = String(castResult.reason);
+      // ── 2) 和风缺失的部分才回源高德，避免重复计费 ───────────
+      if (!current) {
+        const liveResult = (await Promise.allSettled([
+          timedFetch(`https://restapi.amap.com/v3/weather/weatherInfo?city=${adcode}&key=${AMAP_KEY}&extensions=base&output=json`),
+        ]))[0];
+        if (liveResult.status === 'fulfilled') {
+          const { json: liveRes, latencyMs } = liveResult.value;
+          liveLatency = latencyMs;
+          const live = liveRes?.lives?.[0];
+          current = live ? {
+            temp: live.temperature, desc: live.weather,
+            humidity: live.humidity, wind_speed: live.windpower,
+            visibility: live.visibility || '—',
+          } : null;
+          if (!live) { liveSuccess = false; liveError = 'lives 数组为空'; }
+        } else {
+          liveSuccess = false; liveError = String(liveResult.reason);
+        }
+        logApiUsage(db, {
+          openid: OPENID, apiGroup: 'amap', apiName: 'weather_live',
+          endpoint: 'https://restapi.amap.com/v3/weather/weatherInfo?extensions=base',
+          success: liveSuccess, latencyMs: liveLatency, error: liveError,
+        });
       }
 
-      // 埋点（两个接口分别记录）
-      logApiUsage(db, {
-        openid: OPENID, apiGroup: 'amap', apiName: 'weather_live',
-        endpoint: 'https://restapi.amap.com/v3/weather/weatherInfo?extensions=base',
-        success: liveSuccess, latencyMs: liveLatency, error: liveError,
-      });
-      logApiUsage(db, {
-        openid: OPENID, apiGroup: 'amap', apiName: 'weather_forecast',
-        endpoint: 'https://restapi.amap.com/v3/weather/weatherInfo?extensions=all',
-        success: castSuccess, latencyMs: castLatency, error: castError,
-      });
+      if (!forecast.length) {
+        const castResult = (await Promise.allSettled([
+          timedFetch(`https://restapi.amap.com/v3/weather/weatherInfo?city=${adcode}&key=${AMAP_KEY}&extensions=all&output=json`),
+        ]))[0];
+        if (castResult.status === 'fulfilled') {
+          const { json: castRes, latencyMs } = castResult.value;
+          castLatency = latencyMs;
+          const casts = castRes?.forecasts?.[0]?.casts || [];
+          forecast = casts.slice(0, 3).map((c, i) => ({
+            date:     i === 0 ? '今天' : weekDays[new Date(c.date).getDay()],
+            desc:     c.dayweather,
+            icon:     weatherIcon(c.dayweather),
+            tempHigh: c.daytemp,
+            tempLow:  c.nighttemp,
+          }));
+          if (!casts.length) { castSuccess = false; castError = '预报数组为空'; }
+        } else {
+          castSuccess = false; castError = String(castResult.reason);
+        }
+        logApiUsage(db, {
+          openid: OPENID, apiGroup: 'amap', apiName: 'weather_forecast',
+          endpoint: 'https://restapi.amap.com/v3/weather/weatherInfo?extensions=all',
+          success: castSuccess, latencyMs: castLatency, error: castError,
+        });
+      }
 
-      // 两个接口都失败时不写缓存，避免把空结果固化
+      // 两个来源都没有数据时不写缓存，避免把空结果固化
       if (!current && !forecast.length) return null;
-      return { city, current, forecast };
+      return { city, current, forecast, source: qwUsed ? 'qweather' : 'amap' };
     });
 
     const weatherData = wRes.data;
@@ -296,7 +380,7 @@ exports.main = async (event, context) => {
 
     return {
       success: true,
-      data: { city, current, forecast },
+      data: { city, current, forecast, source: weatherData?.source || 'amap' },
       // 透传缓存命中情况（供客户端展示更新时间）
       _fromCache: wRes.fromCache,
       _cachedAt: wRes.cachedAt,
