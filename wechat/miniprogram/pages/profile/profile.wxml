@@ -48,16 +48,6 @@
   <!-- 功能入口 -->
   <view class="menu-section">
     <view class="card">
-      <view class="menu-item" bindtap="goTools">
-        <text class="menu-icon">🧭</text>
-        <text class="menu-label">工具首页</text>
-        <text class="menu-arrow">›</text>
-      </view>
-      <view class="menu-item" bindtap="goSpecies">
-        <text class="menu-icon">🐟</text>
-        <text class="menu-label">鱼种图鉴</text>
-        <text class="menu-arrow">›</text>
-      </view>
       <view class="menu-item" bindtap="goPrivacyPolicy">
         <text class="menu-icon">🔒</text>
         <text class="menu-label">隐私政策</text>

@@ -2,10 +2,8 @@
   "pages": [
     "pages/weather/weather",
     "pages/weather-detail/weather-detail",
-    "pages/index/index",
     "pages/profile/profile",
     "pages/go-score/go-score",
-    "pages/species/species",
     "pages/competition/competition",
     "pages/competition/competition-detail",
     "pages/admin/competition-edit",

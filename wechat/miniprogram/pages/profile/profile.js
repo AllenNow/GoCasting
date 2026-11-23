@@ -121,19 +121,9 @@ Page({
     };
   },
 
-  // 工具首页
-  goTools: function() {
-    wx.navigateTo({ url: '/pages/index/index' });
-  },
-
   // 今天适不适合出钓
   goGoScore: function() {
     wx.navigateTo({ url: '/pages/go-score/go-score' });
-  },
-
-  // 鱼种图鉴
-  goSpecies: function() {
-    wx.navigateTo({ url: '/pages/species/species' });
   },
 
   // 隐私政策
