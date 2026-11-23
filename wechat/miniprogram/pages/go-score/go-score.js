@@ -87,8 +87,4 @@ Page({
       path: '/pages/go-score/go-score',
     };
   },
-
-  goRecord() {
-    wx.navigateTo({ url: '/pages/catch-log/catch-log' });
-  },
 });

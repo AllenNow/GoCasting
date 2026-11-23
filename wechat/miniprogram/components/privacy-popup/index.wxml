@@ -5,17 +5,13 @@
     <text class="pp-title">隐私保护提示</text>
 
     <text class="pp-desc">
-      感谢使用 GoCasting。为提供潮汐天气、钓点地图和渔获记录等功能，我们仅在你主动使用对应功能时申请以下权限，并按照隐私政策处理相应信息：
+      感谢使用 GoCasting。为提供潮汐天气、钓点地图与出钓评分等功能，我们仅在你主动使用对应功能时申请以下权限，并按照隐私政策处理相应信息：
     </text>
 
     <view class="pp-scope">
       <view class="pp-scope-item">
         <text class="pp-dot"></text>
         <text class="pp-scope-text">位置：当地潮汐、海况、天气与附近钓点</text>
-      </view>
-      <view class="pp-scope-item">
-        <text class="pp-dot"></text>
-        <text class="pp-scope-text">相册 / 相机：上传渔获与赛事照片</text>
       </view>
       <view class="pp-scope-item">
         <text class="pp-dot"></text>
@@ -46,6 +42,6 @@
       >同意并继续</button>
     </view>
 
-    <text class="pp-footnote">不同意也可先浏览装备、鱼种与榜单；位置、照片等功能将在你同意后可用。</text>
+    <text class="pp-footnote">不同意也可先浏览潮汐、鱼种与榜单；位置等功能将在你同意后可用。</text>
   </view>
 </view>

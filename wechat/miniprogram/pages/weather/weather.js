@@ -1611,5 +1611,4 @@ Page({
   },
 
   goMap()    { wx.switchTab({ url: '/pages/spot-map/spot-map' }); },
-  goRecord() { wx.navigateTo({ url: '/pages/catch-log/catch-log' }); },
 });

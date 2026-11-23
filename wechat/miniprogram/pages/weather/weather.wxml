@@ -720,10 +720,6 @@
         <text class="btn-action-icon">🗺️</text>
         <text class="btn-action-text">查看钓点</text>
       </view>
-      <view class="btn-action btn-record" bindtap="goRecord">
-        <text class="btn-action-icon">📝</text>
-        <text class="btn-action-text">记录渔获</text>
-      </view>
     </view>
 
     <view class="safe-bottom"></view>

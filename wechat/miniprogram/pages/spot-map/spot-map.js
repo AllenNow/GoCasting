@@ -69,6 +69,7 @@ Page({
     showAddPanel: false,
     showDetailPanel: false,
     loading: false,
+    canAddSpot: false,   // 仅管理员可添加钓点
     // 当前海况适合度（用于 marker 着色）
     marineData: null,
     fitnessLabel: '',   // 顶部提示文字
@@ -79,9 +80,28 @@ Page({
   },
 
   onLoad() {
+    this._checkAdmin();
     this.loadSpots();
     this._tryLocate();
     this._loadMarineForFitness();
+  },
+
+  // 仅管理员可新建钓点
+  _checkAdmin() {
+    const g = app.globalData;
+    if (g.permissionLoaded) {
+      this.setData({ canAddSpot: !!g.isAdmin });
+      return;
+    }
+    wx.cloud.callFunction({ name: 'checkPermission' })
+      .then((res) => {
+        const r = (res && res.result) || {};
+        g.role = r.role || 'viewer';
+        g.isAdmin = !!r.isAdmin;
+        g.permissionLoaded = true;
+        this.setData({ canAddSpot: !!r.isAdmin });
+      })
+      .catch(() => {});
   },
 
   // 已定位标记：用户未同意隐私政策前不主动调用定位接口
@@ -292,47 +312,14 @@ Page({
         latStr: spot.lat.toFixed(4),
         lonStr: spot.lon.toFixed(4),
       },
-      spotCatches: [],
-      spotCatchesLoading: true,
       showDetailPanel: true,
       showAddPanel: false,
     });
-    // 加载该钓点关联的渔获记录
-    this.loadSpotCatches(spot.name);
   },
 
-  // 加载钓点关联渔获
-  async loadSpotCatches(spotName) {
-    try {
-      const db = app.globalData.db;
-      const res = await db.collection('catch_logs')
-        .where({ location: spotName })
-        .orderBy('date', 'desc')
-        .limit(10)
-        .get();
-
-      const catches = res.data.map(c => ({
-        ...c,
-        weightDisplay: c.weight_g
-          ? (c.weight_g >= 1000 ? (c.weight_g / 1000).toFixed(1) + 'kg' : c.weight_g + 'g')
-          : '',
-      }));
-
-      this.setData({ spotCatches: catches, spotCatchesLoading: false });
-    } catch (err) {
-      console.error('加载钓点渔获失败', err);
-      this.setData({ spotCatchesLoading: false });
-    }
-  },
-
-  // 点击钓点渔获条目 → 跳转详情
-  onSpotCatchTap(e) {
-    const id = e.currentTarget.dataset.id;
-    wx.navigateTo({ url: `/pages/catch-detail/catch-detail?id=${id}` });
-  },
-
-  // 长按地图 → 选取坐标准备添加钓点
+  // 长按地图 → 选取坐标准备添加钓点（管理员）
   onMapLongPress(e) {
+    if (!this.data.canAddSpot) return;
     const { latitude, longitude } = e.detail;
     this.setData({
       tapLat: latitude,
@@ -343,6 +330,31 @@ Page({
       'newSpot.lon': longitude,
       showAddPanel: true,
       showDetailPanel: false,
+    });
+  },
+
+  // 顶部工具栏「＋」→ 打开地图选点
+  startAddSpot() {
+    if (!this.data.canAddSpot) return;
+    wx.chooseLocation({
+      success: (res) => {
+        this.setData({
+          tapLat: res.latitude,
+          tapLon: res.longitude,
+          tapLatStr: res.latitude.toFixed(5),
+          tapLonStr: res.longitude.toFixed(5),
+          'newSpot.lat': res.latitude,
+          'newSpot.lon': res.longitude,
+          showAddPanel: true,
+          showDetailPanel: false,
+        });
+      },
+      fail: (err) => {
+        const msg = (err && err.errMsg) || '';
+        if (!/cancel/i.test(msg)) {
+          wx.showToast({ title: '选点失败，请长按地图选择位置', icon: 'none' });
+        }
+      },
     });
   },
 
@@ -362,6 +374,9 @@ Page({
   },
 
   async saveSpot() {
+    if (!this.data.canAddSpot) {
+      wx.showToast({ title: '仅管理员可添加钓点', icon: 'none' }); return;
+    }
     const { newSpot } = this.data;
     if (!newSpot.name.trim()) {
       wx.showToast({ title: '请输入钓点名称', icon: 'none' }); return;

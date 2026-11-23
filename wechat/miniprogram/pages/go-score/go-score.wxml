@@ -84,7 +84,6 @@
   <!-- 操作按钮 -->
   <view wx:if="{{ !loading }}" class="action-row">
     <button class="btn-secondary action-btn" open-type="share">分享今日评分</button>
-    <view class="btn-primary action-btn" bindtap="goRecord">记录渔获</view>
   </view>
 
   <view class="safe-bottom"></view>

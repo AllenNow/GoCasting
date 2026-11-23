@@ -1,34 +1,5 @@
-<!-- pages/index/index.wxml — 渔获首页 -->
+<!-- pages/index/index.wxml — 工具首页 -->
 <view class="page-container">
-
-  <!-- 顶部统计卡片 -->
-  <view class="stats-banner">
-    <view class="stats-date">{{ today }}</view>
-    <view class="stats-row">
-      <view class="stat-item">
-        <text class="stat-num">{{ stats.total }}</text>
-        <text class="stat-label">总渔获</text>
-      </view>
-      <view class="stat-divider"></view>
-      <view class="stat-item">
-        <text class="stat-num">{{ stats.thisMonth }}</text>
-        <text class="stat-label">本月</text>
-      </view>
-      <view class="stat-divider"></view>
-      <view class="stat-item">
-        <text class="stat-num species-text">{{ stats.topSpecies }}</text>
-        <text class="stat-label">最多鱼种</text>
-      </view>
-    </view>
-  </view>
-
-  <!-- 快速记录按钮 -->
-  <view class="record-btn-wrap">
-    <view class="btn-primary record-btn" bindtap="goRecord">
-      <text class="record-icon">🎣</text>
-      <text>记录一次渔获</text>
-    </view>
-  </view>
 
   <!-- 天气+潮汐快览卡片 -->
   <view class="weather-quick-card" bindtap="goWeather">
@@ -42,7 +13,7 @@
     </view>
   </view>
 
-  <!-- 快捷工具行 -->
+  <!-- 快捷工具 -->
   <view class="quick-tools-row">
     <view class="quick-tool" bindtap="goGoScore">
       <text wx:if="{{ scoreReady }}" class="qt-score" style="color:{{ scoreColor }}">{{ todayScore }}</text>
@@ -53,134 +24,18 @@
       <text class="qt-icon">🐟</text>
       <text class="qt-label">鱼种图鉴</text>
     </view>
-    <view class="quick-tool" bindtap="goGear">
-      <text class="qt-icon">🎣</text>
-      <text class="qt-label">装备库</text>
-    </view>
     <view class="quick-tool" bindtap="goMap">
       <text class="qt-icon">📍</text>
       <text class="qt-label">钓点地图</text>
     </view>
-  </view>
-
-  <!-- 渔获列表 -->
-  <view class="section-header">
-    <text class="section-title">最近渔获</text>
-  </view>
-
-  <!-- 加载中：骨架屏 -->
-  <view wx:if="{{ loading }}" class="skeleton-wrap">
-    <!-- 骨架卡片 × 3 -->
-    <view wx:for="{{ [1,2,3] }}" wx:key="*this" class="skeleton-card">
-      <view class="skeleton-info">
-        <view class="sk sk-title"></view>
-        <view class="sk sk-meta"></view>
-        <view class="sk sk-date"></view>
-      </view>
-      <view class="sk sk-photo"></view>
+    <view class="quick-tool" bindtap="goCompetition">
+      <text class="qt-icon">🏆</text>
+      <text class="qt-label">钓鱼榜单</text>
     </view>
   </view>
 
-  <!-- 空状态：新用户引导 -->
-  <view wx:elif="{{ catches.length === 0 }}" class="empty-guide">
-    <!-- 主图标动画 -->
-    <view class="empty-fish-wrap">
-      <text class="empty-fish-icon">🎣</text>
-    </view>
-    <text class="empty-guide-title">开始你的钓鱼之旅</text>
-    <text class="empty-guide-sub">记录每一次渔获，追踪你的钓鱼足迹</text>
-
-    <!-- 三步引导卡 -->
-    <view class="guide-steps">
-      <view class="guide-step">
-        <view class="step-badge">1</view>
-        <view class="step-info">
-          <text class="step-title">记录渔获</text>
-          <text class="step-desc">拍照、记录鱼种、重量、钓法</text>
-        </view>
-        <text class="step-icon">📷</text>
-      </view>
-      <view class="guide-step-divider"></view>
-      <view class="guide-step">
-        <view class="step-badge">2</view>
-        <view class="step-info">
-          <text class="step-title">查看潮汐</text>
-          <text class="step-desc">选最佳时段，出钓不踩坑</text>
-        </view>
-        <text class="step-icon">🌊</text>
-      </view>
-      <view class="guide-step-divider"></view>
-      <view class="guide-step">
-        <view class="step-badge">3</view>
-        <view class="step-info">
-          <text class="step-title">发现钓点</text>
-          <text class="step-desc">地图上找到附近优质钓点</text>
-        </view>
-        <text class="step-icon">📍</text>
-      </view>
-    </view>
-
-    <!-- 立即开始按钮 -->
-    <view class="btn-primary guide-start-btn" bindtap="goRecord">
-      <text class="guide-start-icon">🎣</text>
-      <text>记录第一条渔获</text>
-    </view>
-
-    <!-- 次级入口 -->
-    <view class="guide-secondary-row">
-      <view class="guide-secondary-btn" bindtap="goWeather">
-        <text>查看今日潮汐 →</text>
-      </view>
-      <view class="guide-secondary-btn" bindtap="goMap">
-        <text>浏览钓点地图 →</text>
-      </view>
-    </view>
-  </view>
-
-  <!-- 渔获列表 -->
-  <view wx:else class="catches-list">
-    <view
-      wx:for="{{ catches }}"
-      wx:key="_id"
-      class="catch-card"
-      bindtap="onCatchTap"
-      data-id="{{ item._id }}"
-    >
-      <!-- 左侧信息 -->
-      <view class="catch-info">
-        <view class="catch-top">
-          <text class="catch-species">{{ item.species || '未知鱼种' }}</text>
-          <text wx:if="{{ item.released }}" class="tag tag-green release-tag">放流</text>
-        </view>
-        <view class="catch-meta">
-          <text wx:if="{{ item.weight_g }}" class="catch-weight">
-            {{ item.weight_g >= 1000 ? item.weightKg + 'kg' : item.weight_g + 'g' }}
-          </text>
-          <text wx:if="{{ item.location }}" class="catch-location">📍{{ item.location }}</text>
-        </view>
-        <view class="catch-bottom">
-          <text class="catch-date">{{ item.date }}</text>
-          <text wx:if="{{ item.bait }}" class="catch-bait">饵：{{ item.bait }}</text>
-        </view>
-      </view>
-
-      <!-- 右侧照片 -->
-      <image
-        wx:if="{{ item.photo_url }}"
-        class="catch-photo"
-        src="{{ item.photo_url }}"
-        mode="aspectFill"
-        lazy-load
-      />
-      <view wx:else class="catch-photo-placeholder">
-        <text>🐟</text>
-      </view>
-    </view>
-  </view>
-
-  <view class="safe-bottom"></view>
-
+  <!-- 说明 -->
   <view class="data-disclaimer">
-    <text>渔获记录仅本人可见。请遵守禁渔期、最小可捕尺寸与保护物种规定。</text>
+    <text>数据来自公开气象与潮汐服务，仅供参考；请遵守当地禁渔期与保护物种规定。</text>
   </view>
 </view>

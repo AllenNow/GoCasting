@@ -19,7 +19,8 @@
 
   <!-- 顶部提示 -->
   <view class="map-tip">
-    <text>长按地图标记我的钓点  |  点击标记查看详情</text>
+    <text wx:if="{{ canAddSpot }}">点击 ＋ 或长按地图添加钓点  |  点击标记查看详情</text>
+    <text wx:else>点击标记查看详情</text>
     <text class="map-tip-legal">请遵守禁渔期、保护区与钓场管理规定</text>
   </view>
 
@@ -31,6 +32,9 @@
 
   <!-- 右侧工具栏 -->
   <view class="map-toolbar">
+    <view wx:if="{{ canAddSpot }}" class="tool-btn tool-btn-add" bindtap="startAddSpot">
+      <text>＋</text>
+    </view>
     <view class="tool-btn" bindtap="goToMyLocation">
       <text>📍</text>
     </view>
@@ -90,36 +94,6 @@
         <text class="spot-coord">
           {{ selectedSpot.latStr }}, {{ selectedSpot.lonStr }}
         </text>
-      </view>
-
-      <!-- 钓点关联渔获 -->
-      <view class="spot-catches-section">
-        <view class="spot-catches-header">
-          <text class="spot-catches-title">📋 历史渔获</text>
-          <text wx:if="{{spotCatches.length > 0}}" class="spot-catches-count">{{spotCatches.length}}条</text>
-        </view>
-
-        <view wx:if="{{spotCatchesLoading}}" class="spot-catches-loading">
-          <text>加载中…</text>
-        </view>
-
-        <view wx:elif="{{spotCatches.length === 0}}" class="spot-catches-empty">
-          <text>该钓点暂无渔获记录</text>
-        </view>
-
-        <view wx:else class="spot-catches-list">
-          <view wx:for="{{spotCatches}}" wx:key="_id" class="spot-catch-item"
-                bindtap="onSpotCatchTap" data-id="{{item._id}}">
-            <view class="sc-left">
-              <text class="sc-species">{{item.species}}</text>
-              <text class="sc-date">{{item.date}}</text>
-            </view>
-            <view class="sc-right">
-              <text wx:if="{{item.weightDisplay}}" class="sc-weight">{{item.weightDisplay}}</text>
-              <text class="sc-arrow">›</text>
-            </view>
-          </view>
-        </view>
       </view>
 
       <view class="spot-actions">

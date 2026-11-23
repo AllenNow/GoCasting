@@ -442,9 +442,5 @@ Page({
   closeDetail() {
     this.setData({ selectedId: null, selectedItem: null });
   },
-
-  goRecord() {
-    wx.navigateTo({ url: '/pages/catch-log/catch-log' });
-  },
 });
 

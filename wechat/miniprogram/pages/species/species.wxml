@@ -88,10 +88,6 @@
           <text class="tips-label">💡 钓手心得</text>
           <text class="tips-text">{{ selectedItem.tips }}</text>
         </view>
-
-        <view class="detail-action" bindtap="goRecord">
-          <view class="btn-primary" style="text-align:center;padding:22rpx">记录一次渔获</view>
-        </view>
       </scroll-view>
     </view>
   </view>

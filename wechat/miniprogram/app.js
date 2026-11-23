@@ -26,6 +26,7 @@ App({
         this.globalData.role = res.result.role;
         this.globalData.permissions = res.result.permissions;
         this.globalData.isAdmin = res.result.isAdmin === true;
+        this.globalData.permissionLoaded = true;
 
         // 检查用户是否被封禁（使用 openid 精确查询）
         if (res.result.openid) {
@@ -46,7 +47,10 @@ App({
             .catch(() => {});
         }
       })
-      .catch(err => { console.warn('checkPermission 失败', err); });
+      .catch(err => {
+        this.globalData.permissionLoaded = true;
+        console.warn('checkPermission 失败', err);
+      });
   },
 
   globalData: {
@@ -56,6 +60,7 @@ App({
     role: 'viewer',
     permissions: {},
     isAdmin: false,
+    permissionLoaded: false,
     weatherCache: null,
     catchesNeedRefresh: false,
   },

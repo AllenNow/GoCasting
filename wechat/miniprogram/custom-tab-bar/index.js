@@ -16,12 +16,6 @@ Component({
         iconActive: '🗺️',
       },
       {
-        pagePath: 'pages/gear/gear',
-        text: '装备',
-        icon:       '🎣',
-        iconActive: '🎣',
-      },
-      {
         pagePath: 'pages/competition/competition',
         text: '榜单',
         icon:       '🏆',

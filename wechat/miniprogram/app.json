@@ -3,12 +3,8 @@
     "pages/weather/weather",
     "pages/weather-detail/weather-detail",
     "pages/index/index",
-    "pages/catch-log/catch-log",
-    "pages/catch-detail/catch-detail",
     "pages/spot-map/spot-map",
     "pages/profile/profile",
-    "pages/gear/gear",
-    "pages/gear/gear-detail",
     "pages/go-score/go-score",
     "pages/species/species",
     "pages/competition/competition",
@@ -34,10 +30,6 @@
         "text": "钓点"
       },
       {
-        "pagePath": "pages/gear/gear",
-        "text": "装备"
-      },
-      {
         "pagePath": "pages/competition/competition",
         "text": "榜单"
       },
@@ -56,7 +48,7 @@
   },
   "permission": {
     "scope.userLocation": {
-      "desc": "用于潮汐海况、钓点地图和渔获记录定位"
+      "desc": "用于查询当地潮汐海况、天气与钓点地图"
     }
   },
   "requiredPrivateInfos": ["getLocation", "chooseLocation"],
