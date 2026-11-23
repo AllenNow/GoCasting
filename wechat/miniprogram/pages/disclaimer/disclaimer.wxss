@@ -1,0 +1,3 @@
+/* pages/disclaimer/disclaimer.wxss — 复用隐私政策的排版样式 */
+
+@import "../privacy/privacy.wxss";

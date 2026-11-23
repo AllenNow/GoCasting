@@ -1,0 +1,24 @@
+<!-- pages/disclaimer/disclaimer.wxml — 免责声明 -->
+<view class="page-container policy-page">
+
+  <view class="policy-head">
+    <text class="policy-title">GoCasting 免责声明</text>
+    <text class="policy-date">更新日期：{{ updateDate }} · 生效日期：{{ updateDate }}</text>
+    <text class="policy-intro">
+      使用本小程序的钓点地图与相关数据前，请仔细阅读并充分理解本声明。你继续使用即表示已知悉并接受。
+    </text>
+  </view>
+
+  <view class="policy-card">
+    <view wx:for="{{ sections }}" wx:key="title" class="policy-section">
+      <text class="policy-h2">{{ item.title }}</text>
+      <text wx:for="{{ item.paragraphs }}" wx:for-item="p" wx:key="*this" class="policy-p">{{ p }}</text>
+    </view>
+  </view>
+
+  <view class="policy-foot">
+    如对本声明有疑问，可通过微信右上角「···」→「反馈与投诉」联系我们。
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

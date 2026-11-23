@@ -374,25 +374,6 @@
         </view>
       </view>
 
-      <!-- 地图定位（始终显示，支持缩放浏览）-->
-      <view class="detail-map-section">
-        <view class="detail-map-header">
-          <text class="detail-map-title">📍 {{ detailEntry.hasLocation ? '钓点位置' : '地图浏览' }}</text>
-          <text wx:if="{{ !detailEntry.hasLocation }}" class="detail-map-tip">该记录未标注位置，可缩放查看</text>
-        </view>
-        <map
-          class="detail-map"
-          latitude="{{ detailEntry.mapLat }}"
-          longitude="{{ detailEntry.mapLon }}"
-          markers="{{ detailEntry.mapMarkers }}"
-          scale="{{ detailEntry.mapScale }}"
-          enable-zoom
-          enable-scroll
-          bindtap="openSpotLocation"
-        ></map>
-        <view wx:if="{{ detailEntry.hasLocation }}" class="detail-map-coords">{{ detailEntry.spot_lat }}, {{ detailEntry.spot_lon }}（点击地图查看钓点）</view>
-      </view>
-
       <!-- 钓点环境图 -->
       <view wx:if="{{ detailEntry.spot_photo1_url || detailEntry.spot_photo2_url }}" class="detail-env-section">
         <text class="detail-env-title">🏖️ 钓点环境</text>

@@ -141,6 +141,11 @@ Page({
     wx.navigateTo({ url: '/pages/privacy/privacy' });
   },
 
+  // 免责声明
+  goDisclaimer: function() {
+    wx.navigateTo({ url: '/pages/disclaimer/disclaimer' });
+  },
+
   // 权限管理（超管专用）
   goPermissionManage: function() {
     wx.navigateTo({ url: '/pages/permission/manage' });

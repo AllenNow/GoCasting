@@ -12,51 +12,179 @@
   height: 100%;
 }
 
-/* 顶部提示条 */
-.map-tip {
+/* ===== 顶部搜索 / 筛选卡片 ===== */
+.map-topcard {
   position: absolute;
-  top: 20rpx;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.55);
-  color: #fff;
-  font-size: 22rpx;
-  padding: 10rpx 24rpx;
+  top: 16rpx;
+  left: 16rpx;
+  right: 16rpx;
+  background: rgba(255, 255, 255, 0.96);
   border-radius: 20rpx;
-  max-width: 88%;
-  text-align: center;
-  pointer-events: none;
+  padding: 16rpx 20rpx;
+  box-shadow: 0 6rpx 24rpx rgba(0, 0, 0, 0.12);
   display: flex;
   flex-direction: column;
-  gap: 4rpx;
+  gap: 12rpx;
 }
 
-.map-tip-legal {
-  font-size: 18rpx;
-  opacity: 0.82;
-}
-
-/* 海况适合度状态条 */
-.fitness-bar {
-  position: absolute;
-  top: 116rpx;
-  left: 50%;
-  transform: translateX(-50%);
+.search-row {
   display: flex;
   align-items: center;
-  gap: 8rpx;
-  padding: 10rpx 24rpx;
+  gap: 10rpx;
+  background: #f4f6f4;
   border-radius: 100rpx;
-  pointer-events: none;
+  padding: 10rpx 20rpx;
+}
+
+.search-icon {
+  font-size: 24rpx;
+}
+
+.search-input {
+  flex: 1;
+  font-size: 26rpx;
+  color: var(--color-text-primary);
+}
+
+.search-placeholder {
+  color: var(--color-text-hint);
+}
+
+.search-clear {
+  font-size: 24rpx;
+  color: var(--color-text-hint);
+  padding: 4rpx 8rpx;
+}
+
+.type-scroll {
+  width: 100%;
   white-space: nowrap;
 }
-.fitness-bar-good { background: rgba(26,127,90,0.88); }
-.fitness-bar-ok   { background: rgba(230,168,23,0.88); }
-.fitness-bar-poor { background: rgba(232,85,85,0.88); }
-.fitness-dot { font-size: 20rpx; }
-.fitness-text { font-size: 22rpx; color: #fff; font-weight: 600; }
 
-/* 右侧工具栏 */
+.type-chips {
+  display: inline-flex;
+  gap: 12rpx;
+  padding: 2rpx 0;
+}
+
+.type-chip {
+  display: inline-block;
+  padding: 8rpx 22rpx;
+  border-radius: 100rpx;
+  font-size: 22rpx;
+  color: var(--color-text-secondary);
+  background: #f0f2f0;
+  border: 2rpx solid transparent;
+}
+
+.type-chip.active {
+  color: #1a7f5a;
+  background: #e8f4ee;
+  border-color: #1a7f5a;
+  font-weight: 600;
+}
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+}
+
+.spot-count {
+  font-size: 22rpx;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.sort-btn {
+  font-size: 20rpx;
+  color: var(--color-text-secondary);
+  background: #f0f2f0;
+  border-radius: 100rpx;
+  padding: 6rpx 18rpx;
+}
+
+.sort-btn.active {
+  color: #fff;
+  background: #1a7f5a;
+}
+
+.legal-inline {
+  margin-left: auto;
+  font-size: 18rpx;
+  color: var(--color-text-hint);
+}
+
+/* 海况参考行 */
+.fitness-row {
+  border-radius: 100rpx;
+  padding: 6rpx 18rpx;
+  align-self: flex-start;
+}
+.fitness-row-good { background: rgba(26, 127, 90, 0.12); }
+.fitness-row-ok   { background: rgba(230, 168, 23, 0.14); }
+.fitness-row-poor { background: rgba(232, 85, 85, 0.12); }
+.fitness-row-unknown { background: #f5f5f5; }
+.fitness-text {
+  font-size: 20rpx;
+  color: var(--color-text-secondary);
+}
+
+/* 伏季休渔提示 */
+.closed-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 10rpx;
+  background: #fff6e6;
+  border: 1rpx solid #f0d39a;
+  border-radius: 12rpx;
+  padding: 10rpx 14rpx;
+}
+
+.closed-text {
+  flex: 1;
+  font-size: 19rpx;
+  line-height: 1.5;
+  color: #9a6a12;
+}
+
+.closed-close {
+  font-size: 22rpx;
+  color: #9a6a12;
+  padding: 0 4rpx;
+}
+
+/* ===== 空态 ===== */
+.empty-card {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 72%;
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 20rpx;
+  padding: 36rpx 28rpx;
+  box-shadow: 0 6rpx 24rpx rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.empty-icon { font-size: 48rpx; }
+.empty-title { font-size: 28rpx; font-weight: 600; color: var(--color-text-primary); }
+.empty-sub { font-size: 22rpx; color: var(--color-text-hint); text-align: center; line-height: 1.5; }
+
+.empty-btn {
+  margin-top: 8rpx;
+  padding: 12rpx 32rpx;
+  border-radius: 100rpx;
+  font-size: 24rpx;
+  color: #1a7f5a;
+  background: #e8f4ee;
+}
+
+/* ===== 右侧工具栏 ===== */
 .map-toolbar {
   position: absolute;
   right: 24rpx;
@@ -78,7 +206,7 @@
   box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.15);
 }
 
-/* 底部浮层面板 */
+/* ===== 底部浮层面板 ===== */
 .bottom-panel {
   position: absolute;
   bottom: 0;
@@ -119,11 +247,39 @@
   padding: 8rpx 12rpx;
 }
 
+.panel-scroll {
+  max-height: 66vh;
+}
+
 .panel-body {
   padding: 24rpx 32rpx;
   display: flex;
   flex-direction: column;
   gap: 16rpx;
+}
+
+/* 归属切换 */
+.target-switch {
+  display: flex;
+  background: #f0f2f0;
+  border-radius: 100rpx;
+  padding: 6rpx;
+}
+
+.target-opt {
+  flex: 1;
+  text-align: center;
+  font-size: 24rpx;
+  color: var(--color-text-secondary);
+  padding: 12rpx 0;
+  border-radius: 100rpx;
+}
+
+.target-opt.active {
+  background: #ffffff;
+  color: #1a7f5a;
+  font-weight: 600;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
 }
 
 .coord-hint {
@@ -141,22 +297,49 @@
   color: var(--color-text-primary);
   width: 100%;
   box-sizing: border-box;
-  margin-bottom: 12rpx;
 }
 
-.public-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.public-label {
+.picker-box {
+  background: var(--color-bg);
+  border: 2rpx solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 16rpx 24rpx;
   font-size: 28rpx;
   color: var(--color-text-primary);
 }
 
-.public-sub {
-  font-size: 22rpx;
+.picker-box.placeholder {
+  color: var(--color-text-hint);
+}
+
+.switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  padding: 8rpx 0;
+}
+
+.switch-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2rpx;
+}
+
+.switch-label {
+  font-size: 26rpx;
+  color: var(--color-text-primary);
+}
+
+.switch-sub {
+  font-size: 20rpx;
+  color: var(--color-text-hint);
+}
+
+.form-legal {
+  font-size: 20rpx;
+  line-height: 1.6;
   color: var(--color-text-hint);
 }
 
@@ -167,114 +350,208 @@
   border-radius: var(--radius-md);
 }
 
-/* 钓点详情 */
+/* ===== 钓点详情 ===== */
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+}
+
+.tag {
+  font-size: 20rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 100rpx;
+}
+
+.tag-gold  { background: #fdf3dc; color: #9a6a12; }
+.tag-gray  { background: #eef0ee; color: var(--color-text-secondary); }
+.tag-type  { background: #e8f4ee; color: #1a7f5a; }
+.tag-danger { background: #fdecec; color: #c43d3d; }
+.tag-fav   { background: #fff6e6; color: #b8860b; }
+
 .spot-desc {
-  font-size: 28rpx;
+  font-size: 27rpx;
+  line-height: 1.6;
   color: var(--color-text-secondary);
 }
 
-.spot-meta {
+.info-line {
   display: flex;
-  align-items: center;
   gap: 16rpx;
+  font-size: 25rpx;
 }
 
-.spot-coord {
+.info-label {
+  color: var(--color-text-hint);
+  min-width: 120rpx;
+}
+
+.info-value {
+  flex: 1;
+  color: var(--color-text-primary);
+}
+
+.warn-line {
+  font-size: 23rpx;
+  line-height: 1.55;
+  color: #b4540f;
+  background: #fff6e6;
+  border-radius: 12rpx;
+  padding: 12rpx 18rpx;
+}
+
+.warn-safe {
+  color: #1a7f5a;
+  background: #eef7f2;
+}
+
+.tide-box {
+  background: #f5f7f6;
+  border-radius: 14rpx;
+  padding: 16rpx 20rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.tide-title {
   font-size: 22rpx;
   color: var(--color-text-hint);
 }
 
-.spot-actions {
-  margin-top: 8rpx;
+.tide-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx 24rpx;
+}
+
+.tide-item {
+  display: flex;
+  gap: 8rpx;
+  font-size: 24rpx;
+  color: var(--color-text-primary);
+}
+
+.tide-level {
+  color: var(--color-text-secondary);
+}
+
+.source-line {
+  font-size: 20rpx;
+  color: var(--color-text-hint);
+  line-height: 1.5;
+}
+
+.panel-actions {
+  display: flex;
+  gap: 14rpx;
+  margin-top: 4rpx;
 }
 
 .nav-btn {
-  width: 100%;
-  padding: 26rpx;
-  font-size: 30rpx;
+  flex: 1;
+  padding: 22rpx;
+  font-size: 27rpx;
   border-radius: var(--radius-md);
-  gap: 8rpx;
+  text-align: center;
 }
 
-/* ===== 钓点关联渔获 ===== */
-.spot-catches-section {
-  margin-top: 8rpx;
-  padding-top: 16rpx;
-  border-top: 2rpx solid var(--color-border);
+.btn-ghost {
+  padding: 22rpx 26rpx;
+  font-size: 25rpx;
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  background: #f2f4f2;
+  text-align: center;
+  white-space: nowrap;
 }
 
-.spot-catches-header {
+.act-btn {
+  flex: 0 0 auto;
+}
+
+.sub-actions {
+  display: flex;
+  gap: 28rpx;
+  padding: 4rpx 0;
+}
+
+.link-btn {
+  font-size: 23rpx;
+  color: #1a7f5a;
+}
+
+.link-danger {
+  color: #c43d3d;
+}
+
+.disclaimer-line {
+  font-size: 20rpx;
+  line-height: 1.6;
+  color: var(--color-text-hint);
+  background: #fafafa;
+  border-radius: 12rpx;
+  padding: 12rpx 16rpx;
+}
+
+/* ===== 首次提示弹层 ===== */
+.dlg-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12rpx;
+  justify-content: center;
+  padding: 0 56rpx;
 }
 
-.spot-catches-title {
-  font-size: 26rpx;
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
-
-.spot-catches-count {
-  font-size: 22rpx;
-  color: var(--color-text-hint);
-}
-
-.spot-catches-loading,
-.spot-catches-empty {
-  font-size: 24rpx;
-  color: var(--color-text-hint);
-  padding: 16rpx 0;
-}
-
-.spot-catches-list {
-  max-height: 320rpx;
-  overflow-y: auto;
-}
-
-.spot-catch-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14rpx 0;
-  border-bottom: 1rpx solid var(--color-border);
-}
-
-.spot-catch-item:last-child {
-  border-bottom: none;
-}
-
-.sc-left {
+.dlg-card {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 36rpx 32rpx 28rpx;
   display: flex;
   flex-direction: column;
-  gap: 4rpx;
+  gap: 16rpx;
 }
 
-.sc-species {
-  font-size: 26rpx;
-  font-weight: 500;
+.dlg-title {
+  font-size: 32rpx;
+  font-weight: 700;
   color: var(--color-text-primary);
 }
 
-.sc-date {
-  font-size: 22rpx;
-  color: var(--color-text-hint);
-}
-
-.sc-right {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-}
-
-.sc-weight {
+.dlg-text {
   font-size: 24rpx;
-  color: var(--color-primary);
-  font-weight: 500;
+  line-height: 1.65;
+  color: var(--color-text-secondary);
 }
 
-.sc-arrow {
-  font-size: 28rpx;
-  color: var(--color-text-hint);
+.dlg-actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 12rpx;
+}
+
+.dlg-btn {
+  flex: 1;
+  text-align: center;
+  padding: 20rpx 0;
+  border-radius: 100rpx;
+  font-size: 26rpx;
+}
+
+.dlg-btn.ghost {
+  background: #f2f4f2;
+  color: var(--color-text-secondary);
+}
+
+.dlg-btn.primary {
+  background: #1a7f5a;
+  color: #ffffff;
+  font-weight: 600;
 }

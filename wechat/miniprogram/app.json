@@ -12,7 +12,8 @@
     "pages/admin/competition-edit",
     "pages/admin/api-usage",
     "pages/permission/manage",
-    "pages/privacy/privacy"
+    "pages/privacy/privacy",
+    "pages/disclaimer/disclaimer"
   ],
   "tabBar": {
     "custom": true,
