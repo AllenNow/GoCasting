@@ -324,12 +324,22 @@ Page({
           'form.lat': pos.latitude,
           'form.lon': pos.longitude,
         });
+        try { wx.setStorageSync('lastGeo', { lat: pos.latitude, lon: pos.longitude, ts: Date.now() }); } catch (e) {}
         wx.showToast({ title: '位置已获取', icon: 'success' });
       },
       fail: (err) => {
         const msg = (err && err.errMsg) || '';
-        if (/privacy agreement|api scope is not declared/i.test(msg)) {
+        if (/privacy|隐私|api scope is not declared/i.test(msg)) {
           wx.showToast({ title: '定位暂不可用，请手动填写钓点', icon: 'none' });
+          return;
+        }
+        if (/system|permission|location service/i.test(msg)) {
+          wx.showModal({
+            title: '系统定位未开启',
+            content: '请在手机系统设置中允许微信使用定位，或手动填写钓点坐标。',
+            showCancel: false,
+            confirmText: '知道了',
+          });
           return;
         }
         wx.showModal({

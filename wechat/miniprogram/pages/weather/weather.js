@@ -363,7 +363,6 @@ Page({
     marineLoaded: false,
     weatherLoaded: false,
     errorMsg: '',
-    cacheHint: '',
     // ── 各模块更新时间（展示“更新于”与局部刷新）──────────
     weatherUpdatedAt: null,
     marineUpdatedAt: null,
@@ -556,11 +555,17 @@ Page({
   // 下拉刷新：客户端忽略本地缓存，但尊重云端 TTL（软刷新）
   // 不清理其他城市的缓存，也不强制刷新海况（计费接口）
   onPullDownRefresh() {
+    // 定位失败提示只在下拉刷新时展示，避免首屏常驻横幅
+    this._locateHintManual = true;
     this.loadAll(true).finally(() => {
+      this._locateHintManual = false;
       wx.stopPullDownRefresh();
-      if (this._refreshWasCached) {
-        wx.showToast({ title: `已是最新 · ${this.data.weatherAgeText}更新`, icon: 'none' });
-      }
+      wx.showToast({
+        title: this._refreshWasCached
+          ? `已是最新 · ${this.data.weatherAgeText}更新`
+          : '已更新',
+        icon: 'none',
+      });
     });
   },
 
@@ -570,9 +575,10 @@ Page({
   async loadAll(forceRefresh = false) {
     // 只有首屏才全屏 loading；刷新时保留旧内容，避免白屏和跳回顶部
     const firstLoad = !this.data.marineLoaded && !this.data.weatherLoaded;
+    const showLocateHint = !!this._locateHintManual;
     this.setData({
       loading: firstLoad,
-      errorMsg: '', cacheHint: '', locateDenied: false,
+      errorMsg: '', locateDenied: false,
     });
 
     // 确定坐标来源：收藏地点 or 定位
@@ -593,7 +599,9 @@ Page({
         city: DEFAULT_PLACE.name,
         isLocating: false,
         locateDenied: false,
-        errorMsg: `未同意隐私政策，已显示${DEFAULT_PLACE.name}；可点击上方地点搜索其他城市`,
+        errorMsg: showLocateHint
+          ? `未同意隐私政策，已显示${DEFAULT_PLACE.name}；可点击上方地点搜索其他城市`
+          : '',
       });
     } else {
       // GPS 定位
@@ -603,13 +611,15 @@ Page({
         lat = pos.latitude;
         lon = pos.longitude;
         displayCity = null;  // 由 getWeather 返回城市名
+        // 记录真实定位，供首页/我的出钓指数复用，避免两地数据不一致
+        try { wx.setStorageSync('lastGeo', { lat, lon, ts: Date.now() }); } catch (e) {}
       } catch (err) {
         console.error('[weather] 定位失败:', err && (err.errMsg || err.message), err);
         // 定位不可用时兜底默认城市，保证页面有数据
         lat = DEFAULT_PLACE.lat;
         lon = DEFAULT_PLACE.lon;
         displayCity = DEFAULT_PLACE.name;
-        this._handleLocateFail(err);
+        this._handleLocateFail(err, showLocateHint);
       }
       this.setData({ isLocating: false });
     }
@@ -743,7 +753,6 @@ Page({
     if (nowEntry?.cachedAt)   this._times.now = nowEntry.cachedAt;
 
     const needExtra = !astroEntry || !idxEntry || !nowEntry;
-    let extraFromCloudCache = false;
     if (needExtra) {
       // 分钟级降水按需请求：未来 6 小时有降水才花这次调用
       const needRain = needRainSoon(atmosData, weatherData);
@@ -755,7 +764,6 @@ Page({
         const r = res.result;
         if (r?.success && r.data && r.data.source !== 'none') {
           const d = r.data;
-          extraFromCloudCache = !!r._fromCache;
           extraData = {
             sun:      d.sun || extraData.sun,
             moon:     d.moon || extraData.moon,
@@ -789,17 +797,7 @@ Page({
     // 和风扩展（失败时用本地日出日落兜底，不阻塞主流程）
     this._applyExtra(extraData);
 
-    // ── 缓存提示：取最旧的一个模块 ───────────────────────
-    const extraFromCache = !!(astroEntry || idxEntry || nowEntry) || extraFromCloudCache;
-    const cachedModules = [];
-    if (marineFromCache && this._times.marine)  cachedModules.push({ label: '海况', ts: this._times.marine });
-    if (weatherFromCache && this._times.weather) cachedModules.push({ label: '实况', ts: this._times.weather });
-    if (extraFromCache && this._times.astro)     cachedModules.push({ label: '天光', ts: this._times.astro });
-    cachedModules.sort((a, b) => a.ts - b.ts);
-    const cacheHint = cachedModules.length
-      ? `缓存数据 · ${cachedModules[0].label} ${ageText(cachedModules[0].ts)}更新`
-      : '';
-
+    // ── 缓存状态仅在下拉刷新时以 toast 提示 ───────────────
     this._refreshWasCached = weatherFromCache;
     this._lastLoadAt = Date.now();
 
@@ -807,7 +805,6 @@ Page({
       loading: false,
       marineFromCache,
       weatherFromCache,
-      cacheHint,
       marineUpdatedAt:  this._times.marine  || null,
       weatherUpdatedAt: this._times.weather || null,
       marineAgeText:  ageText(this._times.marine),
@@ -1221,7 +1218,7 @@ Page({
     } catch (e) {
       const msg = (e && e.errMsg) || 'getLocation:fail';
       let code = 'LOCATE_FAIL';
-      if (/privacy agreement|api scope is not declared/i.test(msg)) code = 'PRIVACY';
+      if (/privacy|隐私|api scope is not declared/i.test(msg)) code = 'PRIVACY';
       else if (/deny|denied|auth/i.test(msg)) code = 'DENIED';
       else if (/system|permission|location service|定位/i.test(msg)) code = 'SYSTEM';
       throw this._locateError(code, msg);
@@ -1235,9 +1232,11 @@ Page({
   },
 
   // 定位失败统一处理：切换到兜底地点，并区分是否需要引导开启权限
-  _handleLocateFail(err) {
+  _handleLocateFail(err, showHint) {
     const code = err && err.code;
-    const denied = code === 'DENIED' || code === 'AUTH_FAIL' || code === 'SYSTEM';
+    // 只有小程序侧拒绝授权才能用 openSetting 修复；系统级关闭需去手机设置
+    const denied = code === 'DENIED' || code === 'AUTH_FAIL';
+    const systemOff = code === 'SYSTEM';
     // 隐私保护指引未声明位置信息：openSetting 也无法解决，给出明确提示
     if (code === 'PRIVACY') {
       console.warn('[weather] 定位接口未在《用户隐私保护指引》中声明，请到小程序后台「设置 → 服务内容声明 → 用户隐私保护指引」补充「位置信息」并提交审核');
@@ -1246,12 +1245,14 @@ Page({
       activePlace: DEFAULT_PLACE,
       city: DEFAULT_PLACE.name,
       isLocating: false,
-      locateDenied: denied,
-      errorMsg: code === 'PRIVACY'
+      locateDenied: showHint && denied,
+      errorMsg: !showHint ? '' : code === 'PRIVACY'
         ? `定位服务暂不可用，已显示${DEFAULT_PLACE.name}；可点击上方地点搜索其他城市`
-        : denied
-          ? `未开启定位权限，已显示${DEFAULT_PLACE.name}；可点“去开启”授权，或搜索其他城市`
-          : `无法获取位置，已显示${DEFAULT_PLACE.name}；可点击上方地点搜索其他城市`,
+        : systemOff
+          ? `系统定位服务未开启，已显示${DEFAULT_PLACE.name}；请在手机设置中允许微信使用定位`
+          : denied
+            ? `未开启定位权限，已显示${DEFAULT_PLACE.name}；可点“去开启”授权，或搜索其他城市`
+            : `无法获取位置，已显示${DEFAULT_PLACE.name}；可点击上方地点搜索其他城市`,
     });
   },
 
@@ -1268,12 +1269,33 @@ Page({
           }
           that.loadAll();
         } else {
-          wx.showToast({ title: '未开启定位权限，可手动选择城市', icon: 'none' });
+          // 设置页为空：通常是隐私指引未生效、从未成功请求过定位，或系统级定位关闭
+          wx.showModal({
+            title: '设置中暂无定位项',
+            content: '可到系统设置检查微信的定位权限，或直接手动选择城市。开发者工具内的设置页为空属正常，请用真机验证。',
+            confirmText: '系统设置',
+            cancelText: '手动选城市',
+            success(r) {
+              if (r.confirm) that.openAppAuthSetting();
+              else that.openPlacePanel();
+            },
+          });
         }
       },
       fail() {
         wx.showToast({ title: '打开设置失败，请到系统设置中开启', icon: 'none' });
       },
+    });
+  },
+
+  // 系统级权限页（定位总开关、精确位置等）
+  openAppAuthSetting() {
+    if (!wx.openAppAuthorizeSetting) {
+      wx.showToast({ title: '请到手机设置中允许微信使用定位', icon: 'none' });
+      return;
+    }
+    wx.openAppAuthorizeSetting({
+      fail: () => wx.showToast({ title: '请到手机设置中允许微信使用定位', icon: 'none' }),
     });
   },
 
@@ -1390,7 +1412,9 @@ Page({
       keyboardHeight: 0,
       panelKeyboardStyle: '',
     });
-    this.loadAll();
+    // 用户主动点“使用当前定位”，失败时展示提示
+    this._locateHintManual = true;
+    this.loadAll().finally(() => { this._locateHintManual = false; });
   },
 
   // ── 收藏/取消收藏 ────────────────────────────────────────

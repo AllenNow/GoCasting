@@ -24,11 +24,15 @@ function resolveLocation(options) {
     return Promise.resolve({ lat: options.lat, lon: options.lon, source: 'given' });
   }
   const last = wx.getStorageSync('lastGeo');
-  if (last && last.lat != null && Date.now() - (last.ts || 0) < 7 * 86400000) {
+  if (last && last.lat != null && Date.now() - (last.ts || 0) < 30 * 86400000) {
     return Promise.resolve({ lat: last.lat, lon: last.lon, source: 'cached' });
   }
   return new Promise(resolve => {
-    const fallback = () => resolve(DEFAULT_GEO);
+    const fallback = () => resolve(
+      last && last.lat != null
+        ? { lat: last.lat, lon: last.lon, source: 'cached' }
+        : DEFAULT_GEO
+    );
     wx.getLocation({
       type: 'gcj02',
       success: res => {

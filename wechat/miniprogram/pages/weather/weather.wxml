@@ -16,12 +16,6 @@
       <view wx:if="{{ locateDenied }}" class="error-action" bindtap="openLocationSetting">去开启</view>
     </view>
 
-    <!-- 缓存状态提示（命中缓存时显示，细小灰条） -->
-    <view wx:if="{{ cacheHint }}" class="cache-hint-bar">
-      <text class="cache-hint-icon">⚡</text>
-      <text class="cache-hint-text">{{ cacheHint }} · 下拉刷新获取最新</text>
-    </view>
-
     <!-- ═══════════════ 天气预警 ═══════════════ -->
     <view
       wx:if="{{ warnings.length }}"

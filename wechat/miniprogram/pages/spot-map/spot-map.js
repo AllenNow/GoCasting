@@ -264,10 +264,19 @@ Page({
       success: (pos) => {
         const { latitude, longitude } = pos;
         this.setData({ latitude, longitude, scale: 14, myLocation: { latitude, longitude } });
+        try { wx.setStorageSync('lastGeo', { lat: latitude, lon: longitude, ts: Date.now() }); } catch (e) {}
         // 用真实定位更新海况
         this._loadMarineForFitness(latitude, longitude);
       },
-      fail: () => { console.log('位置获取失败，使用默认位置'); },
+      fail: (err) => {
+        const msg = (err && err.errMsg) || '';
+        let tip = '定位失败，可手动拖动地图选择位置';
+        if (/privacy|隐私|api scope/i.test(msg)) tip = '定位接口未在隐私指引中声明，请手动选择位置';
+        else if (/deny|denied|auth/i.test(msg)) tip = '未开启定位权限，可在设置中开启';
+        else if (/system|permission|location service/i.test(msg)) tip = '系统定位服务未开启，请检查手机设置';
+        console.warn('[spot-map] 定位失败:', msg);
+        wx.showToast({ title: tip, icon: 'none', duration: 2500 });
+      },
     });
   },
 
