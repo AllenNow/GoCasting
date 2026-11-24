@@ -428,3 +428,50 @@
 }
 .data-note-main { display: block; font-size: 19rpx; color: #aab5af; }
 .data-note-time { display: block; margin-top: 2rpx; font-size: 18rpx; color: #c2cbc6; }
+
+/* 城市切换入口 */
+.hero-place-switch {
+  margin-left: 10rpx;
+  font-size: 20rpx;
+  color: #1a7f5a;
+  background: rgba(26, 127, 90, 0.10);
+  padding: 3rpx 12rpx;
+  border-radius: 100rpx;
+}
+
+/* 当前小时高亮 */
+.hour-time-now {
+  color: #1a7f5a;
+  font-weight: 800;
+}
+.hour-col-now::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 12%;
+  width: 76%;
+  border-radius: 14rpx;
+  background: rgba(26, 127, 90, 0.07);
+  pointer-events: none;
+}
+
+/* 扩展数据重试 */
+.extra-retry-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12rpx;
+  padding: 14rpx 18rpx;
+  background: #f6f9ff;
+  border-radius: 12rpx;
+}
+.extra-retry-text { font-size: 22rpx; color: #6b7c8f; }
+.extra-retry-btn {
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #1a7f5a;
+  background: #e8f5ef;
+  padding: 6rpx 18rpx;
+  border-radius: 100rpx;
+}

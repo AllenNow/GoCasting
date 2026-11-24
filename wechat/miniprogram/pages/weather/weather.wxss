@@ -1053,3 +1053,180 @@
 
 .probe-tt-unit { font-size: 18rpx; font-weight: 400; opacity: 0.8; }
 
+
+/* ═══════════════════════════════════════════════════════════
+   骨架屏（首屏加载）
+════════════════════════════════════════════════════════════ */
+.skeleton-wrap { padding: 24rpx; }
+.skeleton-card {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 28rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 18rpx rgba(20, 60, 45, 0.05);
+}
+.sk-line, .sk-cell, .sk-block, .sk-pill {
+  background: linear-gradient(90deg, #eef2f0 25%, #f7faf8 37%, #eef2f0 63%);
+  background-size: 400% 100%;
+  animation: sk-shimmer 1.4s ease infinite;
+  border-radius: 12rpx;
+}
+.sk-line { height: 24rpx; margin-bottom: 18rpx; }
+.sk-lg { height: 56rpx; }
+.sk-w25 { width: 25%; }
+.sk-w30 { width: 30%; }
+.sk-w35 { width: 35%; }
+.sk-w45 { width: 45%; }
+.sk-w70 { width: 70%; }
+.sk-block { height: 220rpx; border-radius: 18rpx; }
+.sk-grid { display: flex; gap: 14rpx; margin-top: 18rpx; }
+.sk-cell { flex: 1; height: 96rpx; }
+.sk-row { display: flex; gap: 12rpx; margin-top: 8rpx; }
+.sk-pill { flex: 1; height: 120rpx; border-radius: 16rpx; }
+@keyframes sk-shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   扩展数据局部失败提示
+════════════════════════════════════════════════════════════ */
+.extra-tip {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  margin: 0 24rpx 12rpx;
+  padding: 16rpx 20rpx;
+  background: #f6f9ff;
+  border: 1rpx solid #dce8fb;
+  border-radius: 14rpx;
+  font-size: 22rpx;
+  color: #5a6b85;
+}
+.extra-tip-icon { font-size: 24rpx; }
+.extra-tip-text { flex: 1; line-height: 1.4; }
+.extra-tip-retry {
+  color: #1a7f5a;
+  font-weight: 700;
+  padding: 4rpx 14rpx;
+  border-radius: 100rpx;
+  background: #e8f5ef;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   无预警常态提示
+════════════════════════════════════════════════════════════ */
+.warn-empty {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  margin: 0 24rpx 12rpx;
+  padding: 12rpx 20rpx;
+  font-size: 22rpx;
+  color: #8a9a93;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 12rpx;
+}
+.warn-empty-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: #52c41a;
+  box-shadow: 0 0 0 4rpx rgba(82, 196, 26, 0.15);
+}
+
+/* 评级可点击提示 */
+.day-grade-tap:active { opacity: 0.75; }
+.day-grade-more { font-size: 22rpx; opacity: 0.55; margin-left: 2rpx; }
+
+/* 来源可比性说明 */
+.day-source-note {
+  display: block;
+  margin: 4rpx 0 6rpx;
+  font-size: 20rpx;
+  line-height: 1.4;
+  color: #9aa5b1;
+}
+
+/* 日历格潮型标记 */
+.cal-tide-type {
+  font-size: 16rpx;
+  line-height: 1;
+  padding: 2rpx 6rpx;
+  border-radius: 6rpx;
+  font-weight: 700;
+}
+.cal-tide-big   { color: #c2410c; background: #fff1e6; }
+.cal-tide-mid   { color: #b45309; background: #fff8e6; }
+.cal-tide-small { color: #4b7b6a; background: #eef7f2; }
+.calendar-day-active .cal-tide-type {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   评级因子拆解弹层
+════════════════════════════════════════════════════════════ */
+.grade-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.42);
+  z-index: 998;
+}
+.grade-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+  background: #fff;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 32rpx 32rpx calc(32rpx + env(safe-area-inset-bottom));
+  animation: grade-slide-up 0.22s ease-out;
+}
+@keyframes grade-slide-up {
+  from { transform: translateY(40%); opacity: 0.6; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+.grade-sheet-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+.grade-sheet-heading { display: flex; flex-direction: column; gap: 4rpx; }
+.grade-sheet-title { font-size: 28rpx; font-weight: 700; color: #22332c; }
+.grade-sheet-sub { font-size: 22rpx; color: #1a7f5a; font-weight: 600; }
+.grade-sheet-close {
+  font-size: 30rpx;
+  color: #9aa5b1;
+  padding: 4rpx 12rpx;
+}
+.grade-factor-list { display: flex; flex-direction: column; gap: 10rpx; }
+.grade-factor {
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
+  padding: 16rpx 20rpx;
+  background: #f7faf8;
+  border-radius: 14rpx;
+}
+.grade-factor-label {
+  font-size: 22rpx;
+  color: #4b6b5e;
+  font-weight: 700;
+  width: 76rpx;
+  flex-shrink: 0;
+  line-height: 1.5;
+}
+.grade-factor-body { flex: 1; display: flex; flex-direction: column; gap: 4rpx; }
+.grade-factor-value { font-size: 24rpx; font-weight: 700; color: #22332c; }
+.grade-factor-hint { font-size: 20rpx; color: #8a9a93; line-height: 1.4; }
+.grade-sheet-note {
+  display: block;
+  margin-top: 16rpx;
+  font-size: 20rpx;
+  line-height: 1.5;
+  color: #9aa5b1;
+}

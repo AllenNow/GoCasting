@@ -45,3 +45,5 @@
 .week-day { font-size: 25rpx; font-weight: 700; color: #1a2a1a; }
 .week-sub { font-size: 20rpx; color: #8a958f; }
 .week-score { font-size: 32rpx; font-weight: 800; flex-shrink: 0; }
+.week-arrow { font-size: 28rpx; color: #b9c6c0; flex-shrink: 0; margin-left: -4rpx; }
+.week-item:active { background: #eef7f2; }

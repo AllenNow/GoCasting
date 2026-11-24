@@ -104,6 +104,21 @@ function get(key) {
 
 // ── 写缓存 ──────────────────────────────────────────────────
 /**
+ * 云函数返回的 expiresAt（ISO）→ 客户端 TTL
+ * 云端 TTL 优先；缺失或已过期时回退到默认 TTL，避免写入 0 秒缓存
+ * @param {string} expireAtIso
+ * @param {number} fallbackMs
+ * @returns {number}
+ */
+function ttlUntil(expireAtIso, fallbackMs) {
+  if (!expireAtIso) return fallbackMs;
+  const t = new Date(expireAtIso).getTime();
+  if (!Number.isFinite(t)) return fallbackMs;
+  const remain = t - Date.now();
+  return remain > 0 ? remain : fallbackMs;
+}
+
+/**
  * 写入缓存条目
  * @param {string} key
  * @param {any}    data
@@ -220,6 +235,7 @@ module.exports = {
   get,
   getEntry,
   set,
+  ttlUntil,
   remove,
   geoKey,
   adcodeKey,

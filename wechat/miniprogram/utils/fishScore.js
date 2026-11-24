@@ -60,11 +60,11 @@ function scoreHour(h) {
   // ── 2. 气压得分（0~2）──────────────────────────────────────
   // 高气压：气体溶解度高，水中含氧量高，鱼活跃
   // 气压下降（暴风前）：鱼躲底，口差
-  // 气压上升（雨后晴）：极佳时机
+  // 气压上升（雨后晴）：较好时机
   const pressureScore = (() => {
     const p = h.pressure;
     if (p == null) return 1;
-    if (p >= 1020)      return 2.0;   // 高压，极佳
+    if (p >= 1020)      return 2.0;   // 高压，较好
     if (p >= 1013)      return 1.5;   // 标准偏高
     if (p >= 1005)      return 1.0;   // 正常
     if (p >= 998)       return 0.3;   // 偏低，较差
@@ -106,12 +106,13 @@ function scoreHour(h) {
 }
 
 // ── 等级标签 ──────────────────────────────────────────────────
+// 文案保持参考性，避免“极佳/不宜”这类绝对化表述
 function scoreToGrade(score) {
-  if (score >= 8.8) return { grade: 'excellent', label: '极佳',  color: '#1a7f5a', emoji: '🔥' };
+  if (score >= 8.8) return { grade: 'excellent', label: '很好',  color: '#1a7f5a', emoji: '🔥' };
   if (score >= 7.2) return { grade: 'good',      label: '较好',  color: '#2dce89', emoji: '✅' };
   if (score >= 5.8) return { grade: 'ok',        label: '一般',  color: '#e6a817', emoji: '🌤' };
-  if (score >= 4.2) return { grade: 'poor',      label: '较差',  color: '#f5a623', emoji: '⚠️' };
-  return               { grade: 'bad',       label: '不宜',  color: '#e85555', emoji: '❌' };
+  if (score >= 4.2) return { grade: 'poor',      label: '偏弱',  color: '#f5a623', emoji: '⚠️' };
+  return               { grade: 'bad',       label: '较弱',  color: '#e85555', emoji: '❌' };
 }
 
 // ── 计算一天的逐小时评分 + 提取最佳时段 ──────────────────────
@@ -278,4 +279,50 @@ function _buildReason(windowScores) {
   return reasons.length ? reasons.join(' · ') : '综合条件较好';
 }
 
-module.exports = { scoreHour, scoreToGrade, calcDayScores };
+// ── 评级因子拆解：点按评级徽章时展示“为什么是这个分” ─────────
+// 只做描述性汇总，不改变评分口径
+function explainDay(marineHourly, atmosHourly) {
+  const list = Array.isArray(marineHourly) ? marineHourly : [];
+  if (!list.length) return null;
+  const atmos = Array.isArray(atmosHourly) ? atmosHourly : [];
+  const avg = arr => (arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null);
+  const pick = (arr, picker) => arr.map(picker).filter(v => Number.isFinite(v));
+  // 气压在 atmosHourly 里，需要按下标取，不能复用 pick
+  const pressureList = list.map((_, i) => (atmos[i] || {}).pressure).filter(v => Number.isFinite(v));
+  const ssts = pick(list, m => m.sst);
+  const waves = pick(list, m => m.waveHeight);
+  const levels = pick(list, m => m.tideLevel);
+  const tideRange = levels.length ? Math.max(...levels) - Math.min(...levels) : null;
+
+  const p = avg(pressureList);
+  const t = avg(ssts);
+  const w = avg(waves);
+
+  return {
+    items: [
+      {
+        label: '潮汐',
+        value: tideRange != null ? `潮差 ${tideRange.toFixed(1)}m` : '—',
+        hint: tideRange != null && tideRange >= 1 ? '潮差较大，涨退流明显' : '潮差较小，水流偏缓',
+      },
+      {
+        label: '气压',
+        value: p != null ? `${Math.round(p)} hPa` : '—',
+        hint: p == null ? '暂无气压数据' : p >= 1013 ? '偏高，通常利于开口' : p < 1000 ? '偏低，鱼口可能偏弱' : '接近常态',
+      },
+      {
+        label: '水温',
+        value: t != null ? `${t.toFixed(1)}°C` : '—',
+        hint: t == null ? '暂无水温数据' : (t >= 20 && t <= 26) ? '处于较适宜区间' : '偏离常见适宜区间',
+      },
+      {
+        label: '浪高',
+        value: w != null ? `${w.toFixed(1)}m` : '—',
+        hint: w == null ? '暂无浪高数据' : (w >= 0.3 && w <= 0.8) ? '轻浪，较理想' : w > 1.5 ? '浪偏大，注意安全' : '一般',
+      },
+    ],
+    note: '评分为潮汐、气压、水温、浪高、天气的综合参考，实际鱼情还受钓点、饵料与经验影响。',
+  };
+}
+
+module.exports = { scoreHour, scoreToGrade, calcDayScores, explainDay };

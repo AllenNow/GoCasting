@@ -3,6 +3,7 @@
 // 数据优先读客户端缓存，缺失再调云函数；下拉或点刷新可强制更新
 
 const apiCache = require('../../utils/apiCache');
+const tideUtils = require('../../utils/tideUtils');
 
 const DEFAULT_PLACE = { lat: 24.4798, lon: 118.0894, city: '厦门市' };
 const WEEK = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
@@ -105,6 +106,7 @@ function buildHourly(byDay) {
     .slice(0, 24)
     .map(r => ({
       key: `${r._key}-${r.hour}`,
+      isNow: r._key === todayKey && r.hour === nowHour,
       label: r._key === todayKey
         ? (r.hour === nowHour ? '现在' : `${pad2(r.hour)}时`)
         : `明 ${pad2(r.hour)}时`,
@@ -216,30 +218,6 @@ function hourTipOf(curve, idx) {
   };
 }
 
-// 潮型：验潮站按绝对潮差分档，模型数据在同源日内相对比较
-function tideTypeOf(allDays, todayIdx) {
-  const today = allDays[todayIdx];
-  if (!today || today.tideLevelMax == null || today.tideLevelMin == null) return null;
-  const range = parseFloat((today.tideLevelMax - today.tideLevelMin).toFixed(1));
-  const srcOf = d => String(d.tideSource || 'model').indexOf('qweather') === 0 ? 'station' : 'model';
-
-  if (srcOf(today) === 'station') {
-    const label = range > 5 ? '大潮' : range >= 4 ? '中潮' : '小潮';
-    return { label, range };
-  }
-
-  const sameSrc = allDays.filter(d =>
-    srcOf(d) === 'model' && d.tideLevelMax != null && d.tideLevelMin != null
-  );
-  if (sameSrc.length < 5) return { label: '--', range };
-  const ranges = sameSrc.map(d => d.tideLevelMax - d.tideLevelMin);
-  const max = Math.max(...ranges);
-  const min = Math.min(...ranges);
-  const ratio = max > min ? (range - min) / (max - min) : 0.5;
-  const label = ratio >= 0.66 ? '大潮' : ratio <= 0.33 ? '小潮' : '中潮';
-  return { label, range };
-}
-
 // 未来 6 小时是否有降水（决定是否请求和风分钟级降水，避免无谓调用）
 function needRainSoon(atmos, weather) {
   const byDay = (atmos && atmos.byDay) || {};
@@ -264,12 +242,15 @@ Page({
     hourTip: null,        // 跟随滚动的提示气泡
     hourTipIndex: 0,
     daily: [],            // 未来 7 天
+    dailyTitle: '未来 7 天',
+    dailySub: '点击查看详情',
     expandedDay: -1,
     astro: null,          // 日出日落 / 日照
     moonInfo: null,       // 月相 / 月升月落
     fishing: null,        // 钓鱼指数
     warnings: [],
     minutely: null,       // 分钟级降水
+    extraFailed: false,   // 扩展数据（天文/指数/预警）部分失败
     marine: null,         // 潮汐与海况
     sourceBrief: '',      // 数据来源（简短）
 
@@ -303,6 +284,82 @@ Page({
   toggleDay(e) {
     const idx = Number(e.currentTarget.dataset.idx);
     this.setData({ expandedDay: this.data.expandedDay === idx ? -1 : idx });
+  },
+
+  // 切换城市：复用潮汐页的地点面板（返回后自动展开）
+  switchCity() {
+    const app = getApp();
+    if (app && app.globalData) app.globalData.openPlacePanel = true;
+    wx.navigateBack({
+      delta: 1,
+      fail: () => wx.switchTab({ url: '/pages/weather/weather' }),
+    });
+  },
+
+  // 扩展数据部分失败后的手动重试
+  async retryExtra() {
+    if (this._retryingExtra) return;
+    const { lat, lon } = this._coords;
+    this._retryingExtra = true;
+    try {
+      const needRain = needRainSoon(this._raw && this._raw.atmos, this._raw && this._raw.weather);
+      const res = await wx.cloud.callFunction({
+        name: 'getWeatherExtra',
+        data: { lat, lon, needRain },
+      });
+      const r = res.result;
+      if (!r?.success || !r.data || r.data.source === 'none') {
+        this.setData({ extraFailed: true });
+        wx.showToast({ title: '扩展数据暂不可用', icon: 'none' });
+        return;
+      }
+      const d = r.data;
+      const prev = (this._raw && this._raw.extra) || {};
+      const extra = {
+        sun: d.sun || prev.sun,
+        moon: d.moon || prev.moon,
+        fishing: d.fishing || prev.fishing,
+        warnings: Array.isArray(d.warnings) ? d.warnings : prev.warnings,
+        minutely: d.minutely !== undefined ? d.minutely : prev.minutely,
+        minutelyRequested: needRain,
+        modules: d.modules || null,
+      };
+      const keys = this._keys || {};
+      const exAt = d.expiresAt || {};
+      const at = d.cachedAt || {};
+      if (d.sun || d.moon) {
+        apiCache.set(keys.astro, { sun: d.sun, moon: d.moon },
+          apiCache.ttlUntil(exAt.astro, apiCache.TTL.astro));
+        this._times.astro = at.astro ? new Date(at.astro).getTime() : Date.now();
+      }
+      if (d.fishing) {
+        apiCache.set(keys.indices, { fishing: d.fishing },
+          apiCache.ttlUntil(exAt.indices, apiCache.TTL.indices));
+        this._times.indices = at.indices ? new Date(at.indices).getTime() : Date.now();
+      }
+      if (keys.now) {
+        apiCache.set(keys.now, {
+          warnings: extra.warnings,
+          minutely: extra.minutely,
+          minutelyRequested: needRain,
+          modules: d.modules || null,
+        }, apiCache.ttlUntil(exAt.now, apiCache.TTL.extra_now));
+        this._times.now = at.now ? new Date(at.now).getTime() : Date.now();
+      }
+      const mods = d.modules || {};
+      const failed = ['astro', 'indices', 'warning'].some(k => mods[k] === 'fail') ||
+        (needRain && mods.minutely === 'fail');
+      this._raw = { ...(this._raw || {}), extra };
+      this._render();
+      this.setData({ extraFailed: failed });
+      wx.showToast({ title: failed ? '部分数据仍不可用' : '扩展数据已更新', icon: 'none' });
+    } catch (e) {
+      console.warn('[weather-detail] retryExtra 失败:', e && (e.errMsg || e.message));
+      this.setData({ extraFailed: true });
+      wx.showToast({ title: '重试失败，请稍后再试', icon: 'none' });
+    } finally {
+      this._retryingExtra = false;
+    }
   },
 
   // 24 小时曲线横向滚动：气泡跟随视口居中的小时
@@ -370,7 +427,10 @@ Page({
       fishing:  entries.indices ? entries.indices.data.fishing : null,
       warnings: entries.now ? (entries.now.data.warnings || []) : [],
       minutely: entries.now ? (entries.now.data.minutely || null) : null,
+      minutelyRequested: entries.now ? !!entries.now.data.minutelyRequested : false,
+      modules:  entries.now ? (entries.now.data.modules || null) : null,
     };
+    let extraFailed = false;
     if (entries.weather && entries.weather.cachedAt) this._times.weather = entries.weather.cachedAt;
     if (entries.marine && entries.marine.cachedAt)   this._times.marine = entries.marine.cachedAt;
     if (entries.astro && entries.astro.cachedAt)     this._times.astro = entries.astro.cachedAt;
@@ -411,9 +471,15 @@ Page({
       const results = await Promise.allSettled(tasks.map(t => t.fn));
       results.forEach((r, i) => {
         const key = tasks[i].key;
-        if (r.status !== 'fulfilled') return;
+        if (r.status !== 'fulfilled') {
+          if (key === 'extra') extraFailed = true;
+          return;
+        }
         const res = r.value.result || {};
-        if (!res.success || !res.data) return;
+        if (!res.success || !res.data) {
+          if (key === 'extra') extraFailed = true;
+          return;
+        }
         const d = res.data;
         const cachedAt = res._fromCache && res._cachedAt ? new Date(res._cachedAt).getTime() : Date.now();
 
@@ -439,23 +505,32 @@ Page({
             fishing:  d.fishing || extra.fishing,
             warnings: Array.isArray(d.warnings) ? d.warnings : extra.warnings,
             minutely: d.minutely !== undefined ? d.minutely : extra.minutely,
+            minutelyRequested: needRain,
+            modules: d.modules || null,
           };
           const at = d.cachedAt || {};
+          const exAt = d.expiresAt || {};
           const flag = res._cache || {};
           if (d.sun || d.moon) {
-            apiCache.set(keys.astro, { sun: d.sun, moon: d.moon }, apiCache.TTL.astro);
+            apiCache.set(keys.astro, { sun: d.sun, moon: d.moon },
+              apiCache.ttlUntil(exAt.astro, apiCache.TTL.astro));
             this._times.astro = flag.astro === false ? Date.now() : (at.astro ? new Date(at.astro).getTime() : Date.now());
           }
           if (d.fishing) {
-            apiCache.set(keys.indices, { fishing: d.fishing }, apiCache.TTL.indices);
+            apiCache.set(keys.indices, { fishing: d.fishing },
+              apiCache.ttlUntil(exAt.indices, apiCache.TTL.indices));
             this._times.indices = flag.indices === false ? Date.now() : (at.indices ? new Date(at.indices).getTime() : Date.now());
           }
           apiCache.set(keys.now, {
             warnings: extra.warnings,
             minutely: extra.minutely,
             minutelyRequested: needRain,
-          }, apiCache.TTL.extra_now);
+            modules: d.modules || null,
+          }, apiCache.ttlUntil(exAt.now, apiCache.TTL.extra_now));
           this._times.now = flag.now === false ? Date.now() : (at.now ? new Date(at.now).getTime() : Date.now());
+          const mods = d.modules || {};
+          extraFailed = ['astro', 'indices', 'warning'].some(k => mods[k] === 'fail') ||
+            (needRain && mods.minutely === 'fail');
         }
       });
 
@@ -471,6 +546,8 @@ Page({
         this._raw = { weather, atmos, marine, extra };
         this._render();
       }
+      // 扩展接口整体失败时也要提示（_render 只按分模块状态计算）
+      if (extraFailed) this.setData({ extraFailed: true });
     } catch (e) {
       console.warn('[weather-detail] 加载失败:', e && (e.errMsg || e.message));
       if (!this.data.current) this.setData({ errorMsg: '天气数据加载失败，请下拉刷新重试' });
@@ -584,7 +661,7 @@ Page({
       const meta = marine.tideMeta || {};
       const days = marine.allDays || [];
       const today = days[marine.todayIdx] || {};
-      const type = tideTypeOf(days, marine.todayIdx);
+      const type = tideUtils.getTideType(days, marine.todayIdx);
       const isStation = cd.seaLevelDatum
         ? cd.seaLevelDatum === 'station'
         : meta.datum === 'station';
@@ -628,7 +705,26 @@ Page({
       summary: extra.minutely.summary || '',
       hasRain: !!extra.minutely.hasRain,
       nextRainMin: extra.minutely.nextRainMin,
-    } : null;
+    } : (extra && extra.minutelyRequested ? {
+      summary: '分钟级降水暂不可用',
+      hasRain: false,
+      nextRainMin: null,
+    } : null);
+
+    // 预警按颜色从高到低排序，红色/橙色优先
+    const WARN_RANK = { red: 4, orange: 3, yellow: 2, blue: 1 };
+    const warnings = ((extra && extra.warnings) || [])
+      .slice()
+      .sort((a, b) => (WARN_RANK[b.colorClass] || 0) - (WARN_RANK[a.colorClass] || 0));
+
+    // 预报不足 7 天说明使用了备用数据源
+    const dailyTitle = daily.length ? `未来 ${daily.length} 天` : '未来 7 天';
+    const dailySub = daily.length && daily.length < 7 ? '备用数据源，部分日期缺失' : '点击查看详情';
+
+    // 分模块失败状态：来自云端 modules，缓存里也会保留
+    const mods = (extra && extra.modules) || {};
+    const extraFailed = ['astro', 'indices', 'warning'].some(k => mods[k] === 'fail') ||
+      (extra && extra.minutelyRequested && mods.minutely === 'fail');
 
     this.setData({
       current,
@@ -637,11 +733,14 @@ Page({
       hourTip: hourTipOf(hourCurve, 0),
       hourTipIndex: 0,
       daily,
+      dailyTitle,
+      dailySub,
       astro,
       moonInfo,
       fishing: (extra && extra.fishing) || null,
-      warnings: (extra && extra.warnings) || [],
+      warnings,
       minutely,
+      extraFailed,
       marine: marineView,
       sourceBrief,
       weatherAgeText: ageText(this._times.weather || this._times.atmos),

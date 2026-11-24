@@ -17,9 +17,10 @@
     <!-- ═══════════ 实况 ═══════════ -->
     <view class="hero">
       <view class="hero-top">
-        <view class="hero-place">
+        <view class="hero-place" bindtap="switchCity">
           <text class="hero-place-icon">📍</text>
           <text class="hero-place-name">{{ city }}</text>
+          <text class="hero-place-switch">切换</text>
         </view>
         <view class="hero-actions">
           <text class="hero-age">更新 {{ weatherAgeText }}</text>
@@ -95,7 +96,7 @@
           <view class="hour-chart" style="height: {{ hourCurve.height }}rpx;">
             <image class="hour-chart-img" src="{{ hourCurve.src }}" mode="scaleToFill"
                 style="width: {{ hourCurve.width }}rpx; height: {{ hourCurve.height }}rpx;" />
-            <view wx:for="{{ hourCurve.items }}" wx:key="key" class="hour-col"
+            <view wx:for="{{ hourCurve.items }}" wx:key="key" class="hour-col {{ item.isNow ? 'hour-col-now' : '' }}"
                 style="left: {{ item.colX }}rpx; width: {{ hourCurve.cellW }}rpx;">
               <text wx:if="{{ index !== hourTipIndex && item.temp != null }}" class="hour-temp"
                   style="top: {{ item.y - 34 }}rpx;">{{ item.temp }}°</text>
@@ -106,7 +107,7 @@
             </view>
           </view>
           <view class="hour-times" style="padding: 0 {{ hourCurve.padX }}rpx;">
-            <text wx:for="{{ hourCurve.items }}" wx:key="key" class="hour-time"
+            <text wx:for="{{ hourCurve.items }}" wx:key="key" class="hour-time {{ item.isNow ? 'hour-time-now' : '' }}"
                 style="width: {{ hourCurve.cellW }}rpx;">{{ item.label }}</text>
           </view>
         </view>
@@ -117,8 +118,8 @@
     <!-- ═══════════ 未来 7 天 ═══════════ -->
     <view class="section-card">
       <view class="section-header">
-        <text class="section-title">未来 7 天</text>
-        <text class="section-sub">点击查看详情</text>
+        <text class="section-title">{{ dailyTitle }}</text>
+        <text class="section-sub">{{ dailySub }}</text>
       </view>
       <view wx:for="{{ daily }}" wx:key="date" class="day-item {{ expandedDay === index ? 'day-item-open' : '' }}" bindtap="toggleDay" data-idx="{{ index }}">
         <view class="day-main">
@@ -223,9 +224,10 @@
     </view>
 
     <!-- ═══════════ 预警与降水 ═══════════ -->
-    <view class="section-card" wx:if="{{ warnings.length || minutely }}">
+    <view class="section-card" wx:if="{{ warnings.length || minutely || extraFailed }}">
       <view class="section-header">
         <text class="section-title">预警与降水</text>
+        <text wx:if="{{ extraFailed }}" class="section-sub">部分数据暂不可用</text>
       </view>
 
       <view wx:if="{{ minutely }}" class="rain-tip {{ minutely.hasRain ? 'rain-tip-wet' : '' }}">
@@ -244,7 +246,11 @@
         </view>
         <text class="warn-text">{{ item.text }}</text>
       </view>
-      <text wx:if="{{ !warnings.length }}" class="empty-line">当前无生效中的天气预警</text>
+      <text wx:if="{{ !warnings.length && !extraFailed }}" class="empty-line">当前无生效中的天气预警</text>
+      <view wx:if="{{ extraFailed }}" class="extra-retry-row">
+        <text class="extra-retry-text">天文/指数/预警有部分未获取</text>
+        <text class="extra-retry-btn" bindtap="retryExtra">重新获取</text>
+      </view>
     </view>
 
     <!-- ═══════════ 海洋与潮汐 ═══════════ -->

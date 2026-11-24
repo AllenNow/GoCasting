@@ -116,10 +116,11 @@ function timeScore(hour) {
 }
 
 function levelOf(score) {
-  if (score >= 8) return { label: '绝佳出钓！', color: '#1a7f5a', short: '绝佳' };
-  if (score >= 6) return { label: '适合出钓', color: '#52a875', short: '适合' };
-  if (score >= 4) return { label: '一般，可尝试', color: '#f0a500', short: '一般' };
-  return { label: '不建议出钓', color: '#e85555', short: '不宜' };
+  // 参考性表述：不给出“绝佳/不建议”这类绝对结论
+  if (score >= 8) return { label: '条件很好', color: '#1a7f5a', short: '很好' };
+  if (score >= 6) return { label: '条件较好', color: '#52a875', short: '较好' };
+  if (score >= 4) return { label: '一般，可参考', color: '#f0a500', short: '一般' };
+  return { label: '条件偏弱', color: '#e85555', short: '偏弱' };
 }
 
 // ── 单次评分 ─────────────────────────────────────────────

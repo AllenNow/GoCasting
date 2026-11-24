@@ -58,9 +58,9 @@
   </scroll-view>
   <!-- 图例 -->
   <view class="heatmap-legend">
-    <view class="heatmap-legend-item"><view class="heatmap-legend-dot" style="background:#1a7f5a"></view><text>极佳(8+)</text></view>
+    <view class="heatmap-legend-item"><view class="heatmap-legend-dot" style="background:#1a7f5a"></view><text>很好(8+)</text></view>
     <view class="heatmap-legend-item"><view class="heatmap-legend-dot" style="background:#2dce89"></view><text>较好(6.5+)</text></view>
     <view class="heatmap-legend-item"><view class="heatmap-legend-dot" style="background:#e6a817"></view><text>一般(5+)</text></view>
-    <view class="heatmap-legend-item"><view class="heatmap-legend-dot" style="background:#e85555"></view><text>不宜(&lt;3.5)</text></view>
+    <view class="heatmap-legend-item"><view class="heatmap-legend-dot" style="background:#e85555"></view><text>较弱(&lt;3.5)</text></view>
   </view>
 </view>

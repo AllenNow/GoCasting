@@ -10,6 +10,22 @@ const { logApiUsage } = require('./logApiUsage');
 const { readConfig, apiGet } = require('./qweather');
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
+// ── 接口路径集中配置 ─────────────────────────────────────────
+// 和风版本现状（2026-11）：
+//   预警      → 已迁移到 Weather Alert v1（旧 /v7/warning/now 官方已废弃）
+//   天文      → 官方仅提供 /v7/astronomy，无 v1
+//   生活指数  → 官方仅提供 /v7/indices，无 v1
+//   分钟降水  → 官方仅提供 /v7/minutely，无 v1
+// 因此这里只把预警切到 v1；其余三类仍用 v7，但路径统一收口，
+// 后续官方若发布 v1，只需改这里的默认值（或设置同名环境变量）即可切换。
+const API_PATHS = {
+  sun:      process.env.QWEATHER_API_SUN      || '/v7/astronomy/sun',
+  moon:     process.env.QWEATHER_API_MOON     || '/v7/astronomy/moon',
+  indices:  process.env.QWEATHER_API_INDICES  || '/v7/indices/1d',
+  warning:  process.env.QWEATHER_API_WARNING  || '/weatheralert/v1/current',
+  minutely: process.env.QWEATHER_API_MINUTELY || '/v7/minutely/5m',
+};
+
 // 按数据变化频率分层的 TTL
 const ASTRO_TTL_MS   = 12 * 60 * 60 * 1000;   // 12 小时：日出日落/月相按天变
 const ASTRO_SOFT_MS  = 11 * 60 * 60 * 1000;
@@ -58,7 +74,10 @@ async function cacheSet(db, key, data, ttlMs, softTtlMs) {
         expireAt: new Date(now + ttlMs + jitter).toISOString(),
       },
     });
-    return new Date(now).toISOString();
+    return {
+      cachedAt: new Date(now).toISOString(),
+      expireAt: new Date(now + ttlMs + jitter).toISOString(),
+    };
   } catch (e) {
     console.warn('[cache] extra 写入失败:', e.message);
     return null;
@@ -103,7 +122,7 @@ async function withCache(db, key, ttlMs, softTtlMs, fetcher) {
   if (hit) {
     const softAt = hit.softExpireAt ? new Date(hit.softExpireAt).getTime() : 0;
     if (now < softAt) {
-      return { data: hit.data, fromCache: true, stale: false, cachedAt: hit.cachedAt };
+      return { data: hit.data, fromCache: true, stale: false, cachedAt: hit.cachedAt, expireAt: hit.expireAt };
     }
     const lock = await tryLock(db, key);
     if (lock === 'locked' || lock === 'off') {
@@ -111,17 +130,17 @@ async function withCache(db, key, ttlMs, softTtlMs, fetcher) {
         const fresh = await fetcher();
         if (fresh != null) {
           const at = await cacheSet(db, key, fresh, ttlMs, softTtlMs);
-          return { data: fresh, fromCache: false, stale: false, cachedAt: at };
+          return { data: fresh, fromCache: false, stale: false, cachedAt: at && at.cachedAt, expireAt: at && at.expireAt };
         }
-        return { data: hit.data, fromCache: true, stale: true, cachedAt: hit.cachedAt };
+        return { data: hit.data, fromCache: true, stale: true, cachedAt: hit.cachedAt, expireAt: hit.expireAt };
       } catch (e) {
         console.warn('[cache] 刷新失败，沿用旧数据:', key, e.message);
-        return { data: hit.data, fromCache: true, stale: true, cachedAt: hit.cachedAt };
+        return { data: hit.data, fromCache: true, stale: true, cachedAt: hit.cachedAt, expireAt: hit.expireAt };
       } finally {
         releaseLock(db, key);
       }
     }
-    return { data: hit.data, fromCache: true, stale: true, cachedAt: hit.cachedAt };
+    return { data: hit.data, fromCache: true, stale: true, cachedAt: hit.cachedAt, expireAt: hit.expireAt };
   }
 
   let lock = await tryLock(db, key);
@@ -129,15 +148,15 @@ async function withCache(db, key, ttlMs, softTtlMs, fetcher) {
     for (let i = 0; i < 8; i++) {
       await sleep(150);
       const again = await cacheGet(db, key);
-      if (again) return { data: again.data, fromCache: true, stale: false, cachedAt: again.cachedAt };
+      if (again) return { data: again.data, fromCache: true, stale: false, cachedAt: again.cachedAt, expireAt: again.expireAt };
     }
     lock = await tryLock(db, key);
   }
   try {
     const fresh = await fetcher();
-    if (fresh == null) return { data: null, fromCache: false, stale: false, cachedAt: null };
+    if (fresh == null) return { data: null, fromCache: false, stale: false, cachedAt: null, expireAt: null };
     const at = await cacheSet(db, key, fresh, ttlMs, softTtlMs);
-    return { data: fresh, fromCache: false, stale: false, cachedAt: at };
+    return { data: fresh, fromCache: false, stale: false, cachedAt: at && at.cachedAt, expireAt: at && at.expireAt };
   } finally {
     if (lock === 'locked') releaseLock(db, key);
   }
@@ -157,11 +176,89 @@ function dateKey(d) {
 }
 
 const WARN_COLORS = {
-  Blue:   { colorClass: 'blue',   icon: '🔵' },
-  Yellow: { colorClass: 'yellow', icon: '🟡' },
-  Orange: { colorClass: 'orange', icon: '🟠' },
-  Red:    { colorClass: 'red',    icon: '🔴' },
+  Blue:   { colorClass: 'blue',   icon: '🔵', rank: 1 },
+  Yellow: { colorClass: 'yellow', icon: '🟡', rank: 2 },
+  Orange: { colorClass: 'orange', icon: '🟠', rank: 3 },
+  Red:    { colorClass: 'red',    icon: '🔴', rank: 4 },
 };
+
+function warnColorOf(raw) {
+  const key = String(raw || '').charAt(0).toUpperCase() + String(raw || '').slice(1).toLowerCase();
+  return WARN_COLORS[key] || WARN_COLORS.Yellow;
+}
+
+// 旧版 v7 预警结构（/v7/warning/now），保留以便通过环境变量切回
+function normalizeWarningsV7(json) {
+  if (!json || !Array.isArray(json.warning)) return [];
+  return json.warning
+    .filter(w => !w.status || w.status === 'active' || w.status === 'update')
+    .sort((a, b) => warnColorOf(b.severityColor).rank - warnColorOf(a.severityColor).rank)
+    .slice(0, 3)
+    .map(w => {
+      const c = warnColorOf(w.severityColor);
+      return {
+        id:        w.id || '',
+        title:     w.title || `${w.typeName || ''}预警`,
+        typeName:  w.typeName || '',
+        level:     w.level || '',
+        severity:  w.severity || '',
+        colorClass: c.colorClass,
+        icon:      c.icon,
+        text:      w.text || '',
+        pubTime:   fxTimeToHHMM(w.pubTime),
+        expireTime: '',
+      };
+    });
+}
+
+// v1 预警结构（GET /weatheralert/v1/current/{lat}/{lon}）
+// alerts: [{ id, senderName, issuedTime, eventType:{name,code}, severity,
+//            color:{code}, expireTime, headline, description, instruction }]
+function normalizeWarningsV1(json) {
+  if (!json) return [];
+  if (json.metadata && json.metadata.zeroResult) return [];
+  const list = Array.isArray(json.alerts) ? json.alerts : [];
+  const now = Date.now();
+  return list
+    .filter(a => {
+      if (!a) return false;
+      // 已过期的预警不再展示
+      if (a.expireTime) {
+        const t = new Date(a.expireTime).getTime();
+        if (Number.isFinite(t) && t < now) return false;
+      }
+      return true;
+    })
+    .sort((a, b) => warnColorOf(b.color && b.color.code).rank - warnColorOf(a.color && a.color.code).rank)
+    .slice(0, 3)
+    .map(a => {
+      const evName = (a.eventType && a.eventType.name) || '';
+      const c = warnColorOf(a.color && a.color.code);
+      const text = [a.description, a.instruction]
+        .filter(Boolean)
+        .join('\n');
+      return {
+        id:         a.id || '',
+        title:      a.headline || (evName ? `${evName}预警` : '天气预警'),
+        typeName:   evName,
+        level:      a.severity || '',
+        severity:   a.severity || '',
+        colorClass: c.colorClass,
+        icon:       c.icon,
+        text,
+        pubTime:    fxTimeToHHMM(a.issuedTime),
+        expireTime: a.expireTime || '',
+        senderName: a.senderName || '',
+      };
+    });
+}
+
+// 按配置的路径选择解析器，便于日后切换版本
+function normalizeWarnings(json) {
+  return String(API_PATHS.warning).indexOf('/weatheralert/v1') >= 0
+    ? normalizeWarningsV1(json)
+    : normalizeWarningsV7(json);
+}
 
 function normalizeSun(json) {
   if (!json) return null;
@@ -198,29 +295,6 @@ function normalizeFishing(json) {
     category: d.category || null,
     text:     d.text || null,
   };
-}
-
-function normalizeWarnings(json) {
-  if (!json || !Array.isArray(json.warning)) return [];
-  return json.warning
-    .filter(w => !w.status || w.status === 'active' || w.status === 'update')
-    .slice(0, 3)
-    .map(w => {
-      const rawColor = w.severityColor || '';
-      const colorKey = rawColor.charAt(0).toUpperCase() + rawColor.slice(1).toLowerCase();
-      const c = WARN_COLORS[colorKey] || WARN_COLORS.Yellow;
-      return {
-        id:        w.id || '',
-        title:     w.title || `${w.typeName || ''}预警`,
-        typeName:  w.typeName || '',
-        level:     w.level || '',
-        severity:  w.severity || '',
-        colorClass: c.colorClass,
-        icon:      c.icon,
-        text:      w.text || '',
-        pubTime:   fxTimeToHHMM(w.pubTime),
-      };
-    });
 }
 
 function normalizeMinutely(json) {
@@ -270,8 +344,8 @@ exports.main = async (event, context) => {
     const astro = await withCache(db, astroKey, ASTRO_TTL_MS, ASTRO_SOFT_MS, async () => {
       const t0 = Date.now();
       const [sunRes, moonRes] = await Promise.allSettled([
-        apiGet(cfg, `/v7/astronomy/sun?location=${loc}&date=${today}`),
-        apiGet(cfg, `/v7/astronomy/moon?location=${loc}&date=${today}`),
+        apiGet(cfg, `${API_PATHS.sun}?location=${loc}&date=${today}`),
+        apiGet(cfg, `${API_PATHS.moon}?location=${loc}&date=${today}`),
       ]);
       const latencyMs = Date.now() - t0;
       const sun  = sunRes.status === 'fulfilled' ? normalizeSun(sunRes.value) : null;
@@ -279,7 +353,7 @@ exports.main = async (event, context) => {
 
       logApiUsage(db, {
         openid: OPENID, apiGroup: 'qweather', apiName: 'extra_astro',
-        endpoint: `${cfg.host}/v7/astronomy`,
+        endpoint: `${cfg.host}${API_PATHS.sun}`,
         success: !!(sun || moon), latencyMs,
         error: (sun || moon) ? null : '天文接口失败',
       });
@@ -292,11 +366,11 @@ exports.main = async (event, context) => {
     const index = await withCache(db, indexKey, INDEX_TTL_MS, INDEX_SOFT_MS, async () => {
       const t0 = Date.now();
       try {
-        const json = await apiGet(cfg, `/v7/indices/1d?type=4&location=${loc}`);
+        const json = await apiGet(cfg, `${API_PATHS.indices}?type=4&location=${loc}`);
         const fishing = normalizeFishing(json);
         logApiUsage(db, {
           openid: OPENID, apiGroup: 'qweather', apiName: 'extra_indices',
-          endpoint: `${cfg.host}/v7/indices/1d?type=4`,
+          endpoint: `${cfg.host}${API_PATHS.indices}?type=4`,
           success: !!fishing, latencyMs: Date.now() - t0,
           error: fishing ? null : '指数返回为空',
         });
@@ -305,7 +379,7 @@ exports.main = async (event, context) => {
       } catch (e) {
         logApiUsage(db, {
           openid: OPENID, apiGroup: 'qweather', apiName: 'extra_indices',
-          endpoint: `${cfg.host}/v7/indices/1d?type=4`,
+          endpoint: `${cfg.host}${API_PATHS.indices}?type=4`,
           success: false, latencyMs: Date.now() - t0, error: String(e),
         });
         return null;
@@ -313,39 +387,47 @@ exports.main = async (event, context) => {
     });
 
     // ── 预警 + 分钟降水：10 分钟缓存 ─────────────────────────
+    // 预警：v1 使用路径参数 lat/lon（不是 location 查询参数）
+    const warnPath = String(API_PATHS.warning).indexOf('/weatheralert/v1') >= 0
+      ? `${API_PATHS.warning}/${lat.toFixed(2)}/${lon.toFixed(2)}?localTime=true&lang=zh`
+      : `${API_PATHS.warning}?location=${loc}&lang=zh`;
     const now = await withCache(db, nowKey, NOW_TTL_MS, NOW_SOFT_MS, async () => {
       const t0 = Date.now();
-      const reqs = [apiGet(cfg, `/v7/warning/now?location=${loc}&lang=zh`)];
-      if (needRain) reqs.push(apiGet(cfg, `/v7/minutely/5m?location=${loc}`));
+      const reqs = [apiGet(cfg, warnPath)];
+      if (needRain) reqs.push(apiGet(cfg, `${API_PATHS.minutely}?location=${loc}`));
 
       const settled = await Promise.allSettled(reqs);
       const warnRes = settled[0];
-      const warnings = warnRes.status === 'fulfilled' ? normalizeWarnings(warnRes.value) : [];
-      const minutely = needRain && settled[1] && settled[1].status === 'fulfilled'
-        ? normalizeMinutely(settled[1].value) : null;
+      const warnOk = warnRes.status === 'fulfilled';
+      const warnings = warnOk ? normalizeWarnings(warnRes.value) : [];
+      const rainRes = settled[1];
+      const rainOk = !needRain || !!(rainRes && rainRes.status === 'fulfilled');
+      const minutely = needRain && rainOk ? normalizeMinutely(rainRes.value) : null;
 
       logApiUsage(db, {
         openid: OPENID, apiGroup: 'qweather', apiName: 'extra_warning',
-        endpoint: `${cfg.host}/v7/warning/now`,
-        success: warnRes.status === 'fulfilled', latencyMs: Date.now() - t0,
-        error: warnRes.status === 'fulfilled' ? null : '预警接口失败',
+        endpoint: `${cfg.host}${API_PATHS.warning}`,
+        success: warnOk, latencyMs: Date.now() - t0,
+        error: warnOk ? null : '预警接口失败',
       });
       if (needRain) {
         logApiUsage(db, {
           openid: OPENID, apiGroup: 'qweather', apiName: 'extra_minutely',
-          endpoint: `${cfg.host}/v7/minutely/5m`,
-          success: settled[1] && settled[1].status === 'fulfilled',
+          endpoint: `${cfg.host}${API_PATHS.minutely}`,
+          success: rainOk,
           latencyMs: Date.now() - t0,
-          error: settled[1] && settled[1].status === 'fulfilled' ? null : '分钟降水接口失败',
+          error: rainOk ? null : '分钟降水接口失败',
         });
       }
 
-      // 预警接口失败时不写缓存，避免把“无预警”错误固化 10 分钟
-      if (warnRes.status !== 'fulfilled') return null;
+      // 预警失败时不写缓存，避免把“无预警”错误固化 10 分钟
+      if (!warnOk) return null;
       return {
         warnings,
         minutely,
         minutelyRequested: needRain,
+        warnOk: true,
+        rainOk,
         fetchedAt: new Date().toISOString(),
       };
     });
@@ -357,7 +439,8 @@ exports.main = async (event, context) => {
     const minutely = now.data ? now.data.minutely : null;
 
     const result = {
-      source: (sun || moon || fishing) ? 'qweather' : 'none',
+      // 任一模块成功即视为有和风数据；分模块状态见 modules
+      source: (sun || moon || fishing || (now.data && now.data.warnOk)) ? 'qweather' : 'none',
       sun,
       moon,
       fishing,
@@ -365,11 +448,24 @@ exports.main = async (event, context) => {
       minutely,
       minutelyRequested: needRain,
       fetchedAt: new Date().toISOString(),
-      // 各模块的缓存时间，客户端用于展示“更新于”
+      // 分模块状态：ok 成功 / fail 失败 / skipped 未请求
+      // 前端据此只对失败的模块展示空态与重试，不掩盖其它模块
+      modules: {
+        astro:    (sun || moon) ? 'ok' : 'fail',
+        indices:  fishing ? 'ok' : 'fail',
+        warning:  (now.data && now.data.warnOk) ? 'ok' : 'fail',
+        minutely: !needRain ? 'skipped' : ((now.data && now.data.rainOk) ? 'ok' : 'fail'),
+      },
+      // 各模块的缓存时间与过期时间，客户端用于展示“更新于”并对齐 TTL
       cachedAt: {
         astro:   astro.cachedAt,
         indices: index.cachedAt,
         now:     now.cachedAt,
+      },
+      expiresAt: {
+        astro:   astro.expireAt || null,
+        indices: index.expireAt || null,
+        now:     now.expireAt || null,
       },
     };
 
