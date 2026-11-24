@@ -1,0 +1,13 @@
+.qty-input {
+  width: 150rpx;
+  text-align: right;
+  font-weight: 600;
+}
+
+.diff-up {
+  color: #0f766e;
+}
+
+.diff-down {
+  color: #dc2626;
+}

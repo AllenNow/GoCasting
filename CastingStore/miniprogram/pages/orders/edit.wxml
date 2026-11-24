@@ -1,0 +1,169 @@
+<view class="page">
+  <view wx:if="{{loading}}" class="empty">加载中…</view>
+
+  <block wx:else>
+    <view class="card">
+      <view class="row-between">
+        <view class="card-title">订单信息</view>
+        <text class="tag tag-primary">{{platforms[platformIndex]}}</text>
+      </view>
+      <view class="divider"></view>
+      <view class="field">
+        <view class="field-label">渠道</view>
+        <picker class="field-picker" mode="selector" range="{{platforms}}" value="{{platformIndex}}" bindchange="onPlatformChange">
+          <view>{{platforms[platformIndex]}} ▾</view>
+        </picker>
+      </view>
+      <view class="field">
+        <view class="field-label">履约方式</view>
+        <picker class="field-picker" mode="selector" range="{{fulfillLabels}}" value="{{fulfillIndex}}" bindchange="onFulfillChange">
+          <view>{{fulfillLabels[fulfillIndex]}} ▾</view>
+        </picker>
+      </view>
+      <block wx:if="{{isDropship}}">
+        <view class="field">
+          <view class="field-label">代发供应商</view>
+          <picker class="field-picker" mode="selector" range="{{supplierNames}}" value="{{supplierIndex}}" bindchange="onSupplier">
+            <view>{{supplierNames[supplierIndex] || '请先在供应商管理新增'}} ▾</view>
+          </picker>
+        </view>
+        <view class="field">
+          <view class="field-label">代发运费</view>
+          <input class="field-input" type="digit" placeholder="供应商收取的运费" value="{{dropship_freight}}" data-field="dropship_freight" bindinput="onField" />
+        </view>
+        <view class="card-sub">代发不占用自仓库存，发货时由供应商直发；代发进价与代发运费共同计入成本。</view>
+      </block>
+      <view class="field">
+        <view class="field-label">订单状态</view>
+        <picker class="field-picker" mode="selector" range="{{statusList}}" value="{{statusIndex}}" bindchange="onStatusChange">
+          <view>{{statusList[statusIndex]}} ▾</view>
+        </picker>
+      </view>
+      <view class="field">
+        <view class="field-label">平台单号</view>
+        <input class="field-input" placeholder="选填，用于去重对账" value="{{platform_order_no}}" data-field="platform_order_no" bindinput="onField" />
+      </view>
+      <view class="field">
+        <view class="field-label">买家</view>
+        <input class="field-input" placeholder="昵称或姓名" value="{{buyer_name}}" data-field="buyer_name" bindinput="onField" />
+      </view>
+      <view class="field">
+        <view class="field-label">手机号</view>
+        <input class="field-input" type="number" placeholder="选填" value="{{buyer_phone}}" data-field="buyer_phone" bindinput="onField" />
+      </view>
+      <view class="field">
+        <view class="field-label">地址</view>
+        <input class="field-input" placeholder="选填" value="{{address}}" data-field="address" bindinput="onField" />
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">商品明细</view>
+      <view class="card-sub">{{isDropship ? '代发商品以填写的代发进价为成本快照。' : '成本按当前移动加权平均价自动快照，事后进货不会影响本单毛利。'}}</view>
+      <view class="divider"></view>
+
+      <view class="field">
+        <view class="field-label">选择商品</view>
+        <picker class="field-picker" mode="selector" range="{{productNames}}" value="{{pickerIndex}}" bindchange="onPickProduct">
+          <view>{{productNames[pickerIndex] || '请选择'}} ▾</view>
+        </picker>
+      </view>
+      <view class="row" style="gap: 12rpx; margin-top: 16rpx;">
+        <input class="grow" type="number" placeholder="数量" value="{{itemQty}}" data-field="itemQty" bindinput="onField" />
+        <input class="grow" type="digit" placeholder="售价" value="{{itemPrice}}" data-field="itemPrice" bindinput="onField" />
+        <input wx:if="{{isDropship}}" class="grow" type="digit" placeholder="代发进价" value="{{itemCost}}" data-field="itemCost" bindinput="onField" />
+        <button class="btn btn-primary btn-sm" bindtap="onAddItem">添加</button>
+      </view>
+
+      <view class="divider"></view>
+      <view wx:if="{{items.length === 0}}" class="empty" style="padding: 30rpx 0;">还没有商品明细</view>
+      <view wx:for="{{items}}" wx:key="index" class="list-item">
+        <view class="grow">
+          <view class="bold">{{item.product_name}}</view>
+          <view class="small muted">{{item.sku_code}} · ¥{{item.price_text}} × {{item.qty}}{{isDropship ? ' · 代发价 ¥' + item.cost_text : ''}}</view>
+        </view>
+        <view class="row" style="gap: 16rpx;">
+          <text class="bold">¥{{item.amount_text}}</text>
+          <text class="link small" data-index="{{index}}" bindtap="onRemoveItem">删除</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">费用与实收</view>
+      <view class="card-sub">实收金额为唯一收入口径；费用能归因到订单的都填在这里。</view>
+      <view class="divider"></view>
+      <view class="field">
+        <view class="field-label">实收金额</view>
+        <input class="field-input" type="digit" placeholder="{{goodsAmount}}" value="{{paid_amount}}" data-field="paid_amount" bindinput="onField" />
+      </view>
+      <view class="field">
+        <view class="field-label">快递费</view>
+        <input class="field-input" type="digit" placeholder="0.00" value="{{shipping_fee}}" data-field="shipping_fee" bindinput="onField" />
+      </view>
+      <view class="field">
+        <view class="field-label">包装费</view>
+        <input class="field-input" type="digit" placeholder="0.00" value="{{packaging_fee}}" data-field="packaging_fee" bindinput="onField" />
+      </view>
+      <view class="field">
+        <view class="field-label">赠品成本</view>
+        <input class="field-input" type="digit" placeholder="外购礼品成本" value="{{gift_cost}}" data-field="gift_cost" bindinput="onField" />
+      </view>
+      <view class="field">
+        <view class="field-label">介绍费</view>
+        <input class="field-input" type="digit" placeholder="0.00" value="{{referral_fee}}" data-field="referral_fee" bindinput="onField" />
+      </view>
+      <view class="field">
+        <view class="field-label">介绍人</view>
+        <input class="field-input" placeholder="介绍费收款人" value="{{referral_payee}}" data-field="referral_payee" bindinput="onField" />
+      </view>
+      <view class="field">
+        <view class="field-label">平台佣金</view>
+        <input class="field-input" type="digit" placeholder="0.00" value="{{commission}}" data-field="commission" bindinput="onField" />
+      </view>
+      <view class="field">
+        <view class="field-label">支付手续费</view>
+        <input class="field-input" type="digit" placeholder="0.00" value="{{payment_fee}}" data-field="payment_fee" bindinput="onField" />
+      </view>
+      <view class="field">
+        <view class="field-label">其他费用</view>
+        <input class="field-input" type="digit" placeholder="0.00" value="{{other_fee}}" data-field="other_fee" bindinput="onField" />
+      </view>
+      <view class="field">
+        <view class="field-label">备注</view>
+        <input class="field-input" placeholder="选填" value="{{note}}" data-field="note" bindinput="onField" />
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="row-between">
+        <view>
+          <view class="kpi-label">商品金额</view>
+          <view class="bold">¥{{goodsAmount}}</view>
+        </view>
+        <view>
+          <view class="kpi-label">费用合计</view>
+          <view class="bold">¥{{feeTotal}}</view>
+        </view>
+        <view wx:if="{{showCost}}">
+          <view class="kpi-label">毛利</view>
+          <view class="bold">¥{{profitText}}</view>
+        </view>
+        <view wx:if="{{showCost}}">
+          <view class="kpi-label">毛利率</view>
+          <view class="bold">{{profitRate}}</view>
+        </view>
+      </view>
+      <view class="divider"></view>
+      <view class="row-between small muted">
+        <text>实收预估 ¥{{paidPreview}}</text>
+        <text wx:if="{{showCost}}">商品成本 ¥{{costTotal}}{{isDropship ? ' · 代发运费 ¥' + dropshipFreightText : ''}}</text>
+      </view>
+    </view>
+
+    <view class="footer-placeholder"></view>
+    <view class="footer-bar">
+      <button class="btn btn-primary btn-block" bindtap="onSave" loading="{{saving}}">保存订单</button>
+    </view>
+  </block>
+</view>

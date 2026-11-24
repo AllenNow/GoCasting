@@ -1,0 +1,328 @@
+/**app.wxss**/
+page {
+  background: #f4f6f8;
+  color: #1f2329;
+  font-size: 28rpx;
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', sans-serif;
+  overflow-x: hidden;
+}
+
+/* 覆盖小程序 button 默认 100% 宽度，避免在 flex / grid 中把容器撑出屏幕 */
+button {
+  margin: 0;
+  box-sizing: border-box;
+}
+
+/* 小程序内置 button:not([size=mini]) 的 width:184px 优先级高于普通 class，必须用同等优先级 + !important 覆盖 */
+button.btn {
+  display: inline-flex;
+  width: auto !important;
+  min-width: 0;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+button.btn.btn-block {
+  display: flex;
+  width: 100% !important;
+}
+
+button::after {
+  border: none;
+}
+
+input {
+  width: auto;
+  min-width: 0;
+  min-height: 64rpx;
+  box-sizing: border-box;
+}
+
+.page {
+  padding: 24rpx 24rpx 40rpx;
+  box-sizing: border-box;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 20rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 12rpx rgba(15, 23, 42, 0.04);
+}
+
+.card-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #111827;
+}
+
+.card-sub {
+  font-size: 24rpx;
+  color: #8a9099;
+  margin-top: 6rpx;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+}
+
+.row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.row-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.muted {
+  color: #8a9099;
+}
+
+.small {
+  font-size: 24rpx;
+}
+
+.tiny {
+  font-size: 22rpx;
+}
+
+.bold {
+  font-weight: 600;
+}
+
+.value-lg {
+  font-size: 44rpx;
+  font-weight: 700;
+  letter-spacing: 0.5rpx;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16rpx;
+}
+
+.kpi {
+  background: #ffffff;
+  border-radius: 16rpx;
+  padding: 20rpx;
+}
+
+.kpi-label {
+  font-size: 22rpx;
+  color: #8a9099;
+}
+
+.kpi-value {
+  font-size: 36rpx;
+  font-weight: 700;
+  margin-top: 8rpx;
+}
+
+.divider {
+  height: 1rpx;
+  background: #eef0f3;
+  margin: 18rpx 0;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 28rpx;
+  height: 72rpx;
+  border-radius: 14rpx;
+  font-size: 27rpx;
+  background: #eef0f3;
+  color: #1f2329;
+  line-height: 1;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.btn-block {
+  display: flex;
+  width: 100%;
+}
+
+.btn-primary {
+  background: #0f766e;
+  color: #ffffff;
+}
+
+.btn-ghost {
+  background: #ffffff;
+  color: #0f766e;
+  border: 1rpx solid #0f766e;
+}
+
+.btn-danger {
+  background: #fff1f0;
+  color: #d93026;
+}
+
+.btn-sm {
+  height: 56rpx;
+  padding: 0 20rpx;
+  font-size: 24rpx;
+  border-radius: 10rpx;
+}
+
+.tag {
+  display: inline-block;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  font-size: 21rpx;
+  background: #eef0f3;
+  color: #5b6470;
+}
+
+.tag-primary {
+  background: #e6f4f1;
+  color: #0f766e;
+}
+
+.tag-warn {
+  background: #fff4e5;
+  color: #b45309;
+}
+
+.tag-danger {
+  background: #fff1f0;
+  color: #d93026;
+}
+
+.empty {
+  padding: 80rpx 0;
+  text-align: center;
+  color: #9aa1ab;
+  font-size: 26rpx;
+}
+
+.list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22rpx 0;
+  border-bottom: 1rpx solid #f0f2f5;
+}
+
+.list-item:last-child {
+  border-bottom: none;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  min-height: 88rpx;
+  border-bottom: 1rpx solid #f0f2f5;
+}
+
+.field:last-child {
+  border-bottom: none;
+}
+
+.field-label {
+  width: 200rpx;
+  flex-shrink: 0;
+  color: #5b6470;
+  font-size: 27rpx;
+}
+
+.field-input {
+  flex: 1;
+  font-size: 28rpx;
+  text-align: right;
+}
+
+.field-picker {
+  flex: 1;
+  text-align: right;
+  color: #1f2329;
+}
+
+.footer-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  gap: 16rpx;
+  padding: 18rpx 24rpx calc(18rpx + env(safe-area-inset-bottom));
+  background: #ffffff;
+  box-shadow: 0 -2rpx 12rpx rgba(15, 23, 42, 0.06);
+}
+
+.footer-placeholder {
+  height: 140rpx;
+}
+
+.hero {
+  background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+  border-radius: 24rpx;
+  padding: 28rpx;
+  color: #ffffff;
+  margin-bottom: 20rpx;
+}
+
+.hero .kpi-label {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.hero-total {
+  font-size: 56rpx;
+  font-weight: 700;
+  margin: 8rpx 0 18rpx;
+}
+
+.hero-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.hero-sub {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.link {
+  color: #0f766e;
+}
+
+.scroll-x {
+  white-space: nowrap;
+}
+
+.chip {
+  display: inline-block;
+  padding: 10rpx 22rpx;
+  margin-right: 12rpx;
+  border-radius: 999rpx;
+  background: #ffffff;
+  color: #5b6470;
+  font-size: 24rpx;
+  border: 1rpx solid #e6e8eb;
+}
+
+.chip-active {
+  background: #0f766e;
+  color: #ffffff;
+  border-color: #0f766e;
+}

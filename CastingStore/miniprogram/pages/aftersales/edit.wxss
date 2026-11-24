@@ -1,0 +1,5 @@
+.qty-input {
+  width: 120rpx;
+  text-align: right;
+  font-weight: 600;
+}

@@ -1,0 +1,75 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/orders/orders",
+    "pages/orders/edit",
+    "pages/orders/detail",
+    "pages/aftersales/list",
+    "pages/aftersales/edit",
+    "pages/inventory/inventory",
+    "pages/inventory/detail",
+    "pages/inventory/stockin",
+    "pages/inventory/transfer",
+    "pages/stocktake/list",
+    "pages/stocktake/edit",
+    "pages/repairs/list",
+    "pages/repairs/edit",
+    "pages/purchase/purchase",
+    "pages/purchase/edit",
+    "pages/products/edit",
+    "pages/suppliers/suppliers",
+    "pages/suppliers/edit",
+    "pages/reports/reports",
+    "pages/reports/settlement",
+    "pages/cash/cash",
+    "pages/me/me",
+    "pages/users/users"
+  ],
+  "window": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "渔具库存",
+    "navigationBarBackgroundColor": "#ffffff",
+    "backgroundColor": "#f4f6f8"
+  },
+  "tabBar": {
+    "color": "#8a9099",
+    "selectedColor": "#0f766e",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "images/tab/home.png",
+        "selectedIconPath": "images/tab/home-active.png"
+      },
+      {
+        "pagePath": "pages/orders/orders",
+        "text": "订单",
+        "iconPath": "images/tab/orders.png",
+        "selectedIconPath": "images/tab/orders-active.png"
+      },
+      {
+        "pagePath": "pages/inventory/inventory",
+        "text": "库存",
+        "iconPath": "images/tab/inventory.png",
+        "selectedIconPath": "images/tab/inventory-active.png"
+      },
+      {
+        "pagePath": "pages/reports/reports",
+        "text": "报表",
+        "iconPath": "images/tab/reports.png",
+        "selectedIconPath": "images/tab/reports-active.png"
+      },
+      {
+        "pagePath": "pages/me/me",
+        "text": "我的",
+        "iconPath": "images/tab/me.png",
+        "selectedIconPath": "images/tab/me-active.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "componentFramework": "glass-easel",
+  "lazyCodeLoading": "requiredComponents"
+}

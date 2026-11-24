@@ -1,0 +1,64 @@
+<view class="page">
+  <view wx:if="{{loading}}" class="empty">加载中…</view>
+
+  <block wx:else>
+    <view class="card">
+      <view class="card-title">入库信息</view>
+      <view class="card-sub">入库总成本 = 进价 × 数量 + 运费 + 其他费用，自动摊入移动加权平均成本。每件商品入库都必须填写进价。</view>
+      <view class="divider"></view>
+
+      <view class="field">
+        <view class="field-label">商品</view>
+        <picker class="field-picker" mode="selector" range="{{productNames}}" value="{{pickerIndex}}" bindchange="onPickProduct">
+          <view>{{productNames[pickerIndex] || '请选择商品'}} ▾</view>
+        </picker>
+      </view>
+      <view class="field">
+        <view class="field-label">入库仓库</view>
+        <picker class="field-picker" mode="selector" range="{{warehouseNames}}" value="{{warehouseIndex}}" bindchange="onPickWarehouse">
+          <view>{{warehouseNames[warehouseIndex] || '默认仓'}} ▾</view>
+        </picker>
+      </view>
+      <view class="field">
+        <view class="field-label">数量</view>
+        <input class="field-input" type="digit" placeholder="0" value="{{qty}}" data-field="qty" bindinput="onField" />
+      </view>
+      <view class="field">
+        <view class="field-label">进价</view>
+        <input class="field-input" type="digit" placeholder="必填，单位成本 > 0" value="{{unit_price}}" data-field="unit_price" bindinput="onField" />
+      </view>
+      <view class="field" wx:if="{{showCost}}">
+        <view class="field-label">分摊运费</view>
+        <input class="field-input" type="digit" placeholder="本次入库运费" value="{{freight}}" data-field="freight" bindinput="onField" />
+      </view>
+      <view class="field" wx:if="{{showCost}}">
+        <view class="field-label">其他费用</view>
+        <input class="field-input" type="digit" placeholder="装卸、包装等" value="{{other_cost}}" data-field="other_cost" bindinput="onField" />
+      </view>
+      <view class="field">
+        <view class="field-label">备注</view>
+        <input class="field-input" placeholder="选填" value="{{note}}" data-field="note" bindinput="onField" />
+      </view>
+    </view>
+
+    <view class="card" wx:if="{{showCost}}">
+      <view class="row-between">
+        <view>
+          <view class="kpi-label">入库总成本</view>
+          <view class="bold">¥{{previewTotal}}</view>
+        </view>
+        <view style="text-align: right;">
+          <view class="kpi-label">单位入库成本</view>
+          <view class="bold">¥{{previewUnit}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="row" style="gap: 12rpx;">
+        <button class="btn btn-ghost grow" bindtap="onScan">扫码选品</button>
+        <button class="btn btn-primary grow" bindtap="onSave" loading="{{saving}}">确认入库</button>
+      </view>
+    </view>
+  </block>
+</view>

@@ -1,0 +1,99 @@
+<view class="page">
+  <view wx:if="{{loading}}" class="empty">加载中…</view>
+
+  <block wx:elif="{{isView && repair}}">
+    <view class="card">
+      <view class="row-between">
+        <view class="grow">
+          <view class="card-title">{{repair.product_name}}</view>
+          <view class="card-sub">{{repair.no}} · {{repair.sku_code || '无编码'}}</view>
+        </view>
+        <text class="tag {{repair.status === '维修中' ? 'tag-warn' : repair.status === '已完成' ? 'tag-primary' : 'tag'}}">{{repair.status}}</text>
+      </view>
+      <view class="divider"></view>
+      <view class="list-item">
+        <view>商品状况</view>
+        <view class="bold">{{repair.condition || '-'}}</view>
+      </view>
+      <view class="list-item">
+        <view>维修数量</view>
+        <view class="bold">{{qtyText}} 件</view>
+      </view>
+      <view class="list-item">
+        <view>仓库</view>
+        <view class="bold">{{repair.warehouse_name}}</view>
+      </view>
+      <view class="list-item">
+        <view>修复渠道</view>
+        <view class="bold">{{repair.repair_channel}}</view>
+      </view>
+      <view class="list-item">
+        <view>修复方式</view>
+        <view class="bold">{{repair.repair_method}}</view>
+      </view>
+      <view class="list-item">
+        <view>修复费用</view>
+        <view class="bold">¥{{costText}}</view>
+      </view>
+      <view class="list-item" wx:if="{{repair.note}}">
+        <view>备注</view>
+        <view class="bold">{{repair.note}}</view>
+      </view>
+      <view class="list-item">
+        <view>发起时间</view>
+        <view class="small muted">{{dateText}}</view>
+      </view>
+      <view class="list-item" wx:if="{{completedText}}">
+        <view>完成时间</view>
+        <view class="small muted">{{completedText}}</view>
+      </view>
+    </view>
+
+    <view class="card" wx:if="{{repair.status === '维修中' && canUpdate}}">
+      <view class="row" style="gap: 12rpx;">
+        <button class="btn btn-primary grow" bindtap="onComplete">完成维修</button>
+        <button class="btn btn-ghost grow" bindtap="onCancel">取消维修</button>
+      </view>
+      <view class="small muted" style="margin-top: 12rpx;">完成维修后数量会退回可用库存，修复费用计入库存成本。</view>
+    </view>
+  </block>
+
+  <block wx:elif="{{product}}">
+    <view class="card">
+      <view class="card-title">{{product.name}}</view>
+      <view class="card-sub">{{product.sku_code || '无编码'}} · 状况 {{product.condition || '-'}}</view>
+      <view class="divider"></view>
+      <view class="field">
+        <view class="field-label">仓库</view>
+        <picker class="field-picker" mode="selector" range="{{warehouseNames}}" value="{{warehouseIndex}}" bindchange="onWarehouse">
+          <view>{{warehouseNames[warehouseIndex] || '请选择仓库'}} ▾</view>
+        </picker>
+      </view>
+      <view class="small muted">该仓库可用库存 {{maxQtyText}} 件</view>
+      <view class="field">
+        <view class="field-label">维修数量</view>
+        <input class="field-input" type="digit" placeholder="不能超过可用库存" value="{{qty}}" data-field="qty" bindinput="onField" />
+      </view>
+      <view class="field">
+        <view class="field-label">修复渠道</view>
+        <input class="field-input" placeholder="如：官方售后 / 第三方维修店" value="{{repairChannel}}" data-field="repairChannel" bindinput="onField" />
+      </view>
+      <view class="field">
+        <view class="field-label">修复方式</view>
+        <input class="field-input" placeholder="如：更换导环、打磨补漆" value="{{repairMethod}}" data-field="repairMethod" bindinput="onField" />
+      </view>
+      <view class="field">
+        <view class="field-label">修复费用</view>
+        <input class="field-input" type="digit" placeholder="必填，完成维修时计入成本" value="{{repairCost}}" data-field="repairCost" bindinput="onField" />
+      </view>
+      <view class="field">
+        <view class="field-label">备注</view>
+        <input class="field-input" placeholder="选填" value="{{note}}" data-field="note" bindinput="onField" />
+      </view>
+      <button class="btn btn-primary btn-block" loading="{{saving}}" disabled="{{saving}}" bindtap="onSubmit">提交维修</button>
+    </view>
+    <view class="card">
+      <view class="small muted">发起维修后，该数量会从可用库存转入「维修中」；盘点进行中不能发起维修。</view>
+    </view>
+  </block>
+</view>

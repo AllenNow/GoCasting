@@ -1,0 +1,109 @@
+<view class="page">
+  <view wx:if="{{loading}}" class="empty">加载中…</view>
+
+  <block wx:elif="{{product}}">
+    <view class="card">
+      <view class="row-between">
+        <view class="grow">
+          <view class="card-title">{{product.name}}</view>
+          <view class="card-sub">{{product.sku_code}} · {{product.category || '未分类'}}<text wx:if="{{product.brand}}"> · {{product.brand}}</text><text wx:if="{{product.condition}}"> · {{product.condition}}</text></view>
+        </view>
+        <text class="tag tag-primary">{{product.status}}</text>
+      </view>
+      <view class="divider"></view>
+      <view class="row-between">
+        <view>
+          <view class="kpi-label">总可用库存</view>
+          <view class="value-lg">{{stockTotal}} {{product.unit || '件'}}</view>
+          <view class="small muted" wx:if="{{hasRepairing}}">维修中 {{repairTotal}} {{product.unit || '件'}}</view>
+        </view>
+        <view style="text-align: right;">
+          <view class="kpi-label">安全库存</view>
+          <view class="bold">{{product.safety_stock || 0}}</view>
+        </view>
+      </view>
+      <view class="divider"></view>
+      <view class="row" style="gap: 12rpx; flex-wrap: wrap;">
+        <button wx:if="{{canStockin}}" class="btn btn-primary grow" bindtap="goStockin">入库</button>
+        <button wx:if="{{canTransfer}}" class="btn btn-ghost grow" bindtap="goTransfer">调拨</button>
+        <button wx:if="{{canRepair}}" class="btn btn-ghost grow" bindtap="goRepair">发起维修</button>
+        <button wx:if="{{canManageRepair}}" class="btn btn-ghost grow" bindtap="goRepairs">维修记录</button>
+        <button wx:if="{{canEdit}}" class="btn btn-ghost grow" bindtap="goEdit">编辑商品</button>
+      </view>
+    </view>
+
+    <view class="card" wx:if="{{showCost}}">
+      <view class="card-title">各仓库存与成本</view>
+      <view class="divider"></view>
+      <view wx:for="{{inventory}}" wx:key="warehouse_id" class="list-item">
+        <view>
+          <view>{{item.warehouse_name}}</view>
+          <view class="small muted">最近入库 {{item.last_text}}</view>
+        </view>
+        <view style="text-align: right;">
+          <view class="bold">{{item.qty_text}}</view>
+          <view class="small muted" wx:if="{{item.qty_repairing > 0}}">维修中 {{item.repairing_text}}</view>
+          <view class="small muted">均价 ¥{{item.avg_text}}</view>
+        </view>
+      </view>
+      <view wx:if="{{inventory.length === 0}}" class="empty" style="padding: 24rpx 0;">暂无库存记录</view>
+    </view>
+
+    <view class="card" wx:if="{{canAdjust}}">
+      <view class="row-between">
+        <view class="grow">
+          <view class="card-title">手动调整库存</view>
+          <view class="card-sub">增加 / 减少 / 设为指定数量，必须填写原因并记入库存流水。</view>
+        </view>
+        <text class="link small" bindtap="goStocktakes">月度盘点 ›</text>
+      </view>
+      <view class="divider"></view>
+      <view class="field">
+        <view class="field-label">调整方式</view>
+        <picker class="field-picker" mode="selector" range="{{adjustModes}}" value="{{adjustModeIndex}}" bindchange="onAdjustMode">
+          <view>{{adjustModes[adjustModeIndex]}} ▾</view>
+        </picker>
+      </view>
+      <view class="field">
+        <view class="field-label">仓库</view>
+        <picker class="field-picker" mode="selector" range="{{warehouseNames}}" value="{{adjustWarehouseIndex}}" bindchange="onAdjustWarehouse">
+          <view>{{warehouseNames[adjustWarehouseIndex] || '默认仓库'}} ▾</view>
+        </picker>
+      </view>
+      <view class="small muted">当前库存 {{adjustCurrentText}} {{product.unit || '件'}}</view>
+      <view class="field">
+        <view class="field-label">数量</view>
+        <input class="field-input" type="digit" placeholder="{{adjustModeIndex === 2 ? '目标库存数量' : '调整数量'}}" value="{{adjustQty}}" bindinput="onAdjustInput" />
+      </view>
+      <view class="field" wx:if="{{adjustModeIndex !== 1}}">
+        <view class="field-label">单位成本</view>
+        <input class="field-input" type="digit" placeholder="本次增加库存必填，单位成本 > 0" value="{{adjustUnitCost}}" bindinput="onAdjustUnitCost" />
+      </view>
+      <view class="field">
+        <view class="field-label">调整原因</view>
+        <input class="field-input" placeholder="必填，如：破损报废、样品领用" value="{{adjustReason}}" bindinput="onAdjustReason" />
+      </view>
+      <button class="btn btn-primary btn-block" bindtap="onAdjust">提交调整</button>
+    </view>
+
+    <view class="card">
+      <view class="card-title">库存流水</view>
+      <view class="divider"></view>
+      <view wx:if="{{txns.length === 0}}" class="empty" style="padding: 24rpx 0;">暂无流水</view>
+      <view wx:for="{{txns}}" wx:key="_id" class="list-item">
+        <view>
+          <view>
+            <text class="tag {{item.positive ? 'tag-primary' : 'tag-warn'}}">{{item.type}}</text>
+          </view>
+          <view class="small muted" style="margin-top: 6rpx;">{{item.date_text}} · {{item.operator_name || '系统'}}</view>
+          <view class="small muted" wx:if="{{item.ref_no}}">关联 {{item.ref_no}}</view>
+          <view class="small muted" wx:if="{{item.note}}">{{item.note}}</view>
+        </view>
+        <view style="text-align: right;">
+          <view class="bold">{{item.qty_text}}</view>
+          <view class="small muted" wx:if="{{showCost}}">单位成本 ¥{{item.cost_text}}</view>
+        </view>
+      </view>
+    </view>
+  </block>
+</view>

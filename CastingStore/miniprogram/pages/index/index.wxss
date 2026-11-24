@@ -1,0 +1,4 @@
+/* index.wxss */
+.kpi-value {
+  font-size: 32rpx;
+}

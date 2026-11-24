@@ -1,0 +1,186 @@
+<view class="page">
+  <view wx:if="{{loading}}" class="empty">加载中…</view>
+
+  <block wx:else>
+    <view class="card" wx:if="{{received}}">
+      <view class="row-between">
+        <view class="card-title">已入库</view>
+        <text class="tag tag-primary">完成</text>
+      </view>
+      <view class="card-sub">入库日期：{{receivedText}}。成本已按分摊后的金额写入库存。</view>
+    </view>
+
+    <view class="card" wx:if="{{partial}}">
+      <view class="row-between">
+        <view class="card-title">部分到货</view>
+        <text class="tag tag-warn">待补齐</text>
+      </view>
+      <view class="card-sub">已按本次到货数量入库，剩余数量可继续分批收货。</view>
+    </view>
+
+    <view class="card">
+      <view class="row-between">
+        <view class="card-title">采购信息</view>
+        <text class="link small" bindtap="goSuppliers">管理供应商</text>
+      </view>
+      <view class="divider"></view>
+      <view class="field">
+        <view class="field-label">供应商</view>
+        <picker class="field-picker" mode="selector" range="{{supplierNames}}" value="{{supplierIndex}}" bindchange="onSupplier" disabled="{{locked}}">
+          <view>{{supplierNames[supplierIndex] || '请先新增供应商'}} ▾</view>
+        </picker>
+      </view>
+      <view class="field">
+        <view class="field-label">入库仓库</view>
+        <picker class="field-picker" mode="selector" range="{{warehouseNames}}" value="{{warehouseIndex}}" bindchange="onWarehouse">
+          <view>{{warehouseNames[warehouseIndex] || '默认仓'}} ▾</view>
+        </picker>
+      </view>
+      <view class="field">
+        <view class="field-label">采购渠道</view>
+        <input class="field-input" placeholder="如 1688 / 淘宝 / 线下" value="{{purchase_channel}}" data-field="purchase_channel" bindinput="onField" />
+      </view>
+      <view class="field">
+        <view class="field-label">采购订单号</view>
+        <input class="field-input" placeholder="平台或渠道的采购单号" value="{{channel_order_no}}" data-field="channel_order_no" bindinput="onField" />
+      </view>
+      <view class="field">
+        <view class="field-label">物流/快递单号</view>
+        <input class="field-input" placeholder="运输物流单号" value="{{tracking_no}}" data-field="tracking_no" bindinput="onField" />
+      </view>
+      <view class="field" wx:if="{{showCost}}">
+        <view class="field-label">运费（分摊）</view>
+        <input class="field-input" type="digit" placeholder="0.00" value="{{freight}}" data-field="freight" bindinput="onField" disabled="{{locked}}" />
+      </view>
+      <view class="field" wx:if="{{showCost}}">
+        <view class="field-label">其他费用</view>
+        <input class="field-input" type="digit" placeholder="0.00" value="{{other_cost}}" data-field="other_cost" bindinput="onField" disabled="{{locked}}" />
+      </view>
+      <view class="field">
+        <view class="field-label">备注</view>
+        <input class="field-input" placeholder="选填" value="{{note}}" data-field="note" bindinput="onField" disabled="{{locked}}" />
+      </view>
+      <button wx:if="{{canSave && locked}}" class="btn btn-ghost btn-block" style="margin-top: 16rpx;" bindtap="onSaveMeta" loading="{{saving}}">保存渠道 / 物流信息</button>
+    </view>
+
+    <view class="card" wx:if="{{!locked}}">
+      <view class="card-title">添加采购明细</view>
+      <view class="divider"></view>
+      <view class="field">
+        <view class="field-label">商品</view>
+        <picker class="field-picker" mode="selector" range="{{productNames}}" value="{{pickerIndex}}" bindchange="onPickProduct">
+          <view>{{productNames[pickerIndex] || '请选择商品'}} ▾</view>
+        </picker>
+      </view>
+      <view class="row" style="gap: 12rpx; margin-top: 16rpx;">
+        <input class="grow" type="digit" placeholder="数量" value="{{itemQty}}" data-field="itemQty" bindinput="onField" />
+        <input class="grow" type="digit" placeholder="进价（必填）" value="{{itemPrice}}" data-field="itemPrice" bindinput="onField" />
+        <button class="btn btn-primary btn-sm" bindtap="onAddItem">添加</button>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">明细清单</view>
+      <view class="divider"></view>
+      <view wx:if="{{items.length === 0}}" class="empty" style="padding: 24rpx 0;">暂无明细</view>
+      <view wx:for="{{items}}" wx:key="index" class="list-item">
+        <view class="grow">
+          <view class="bold">{{item.product_name}}</view>
+          <view class="small muted">{{item.qty}} × <text wx:if="{{showCost}}">¥{{item.price_text}}</text><text wx:else>成本隐藏</text></view>
+          <view class="tiny muted" wx:if="{{item.received_text !== '0'}}">已收 {{item.received_text}} / {{item.qty}}</view>
+        </view>
+        <view class="row" style="gap: 16rpx;">
+          <text class="bold" wx:if="{{showCost}}">¥{{item.amount_text}}</text>
+          <text wx:if="{{!locked}}" class="link small" data-index="{{index}}" bindtap="onRemoveItem">删除</text>
+        </view>
+      </view>
+      <view class="divider"></view>
+      <view class="row-between" wx:if="{{showCost}}">
+        <text class="muted">商品金额</text>
+        <text>¥{{goodsAmount}}</text>
+      </view>
+      <view class="row-between" wx:if="{{showCost}}" style="margin-top: 8rpx;">
+        <text class="bold">含运费总成本</text>
+        <text class="bold">¥{{totalAmount}}</text>
+      </view>
+    </view>
+
+    <view class="card" wx:if="{{canReceive && id && !received}}">
+      <view class="card-title">分批收货</view>
+      <view class="card-sub">本次到货数量可小于采购数量，未到部分保留待收</view>
+      <view class="divider"></view>
+      <view wx:for="{{items}}" wx:key="product_id" class="field">
+        <view class="field-label" style="width: auto; flex: 1;">
+          {{item.product_name}}
+          <text class="tiny muted">（未收 {{item.remaining}}）</text>
+        </view>
+        <input
+          wx:if="{{item.remaining > 0}}"
+          class="field-input"
+          type="digit"
+          value="{{item.receiveQty}}"
+          data-index="{{index}}"
+          bindinput="onReceiveQty"
+        />
+        <text wx:else class="small muted">已收齐</text>
+      </view>
+    </view>
+
+    <view class="card" wx:if="{{canPay && id}}">
+      <view class="row-between">
+        <view class="card-title">付款登记</view>
+        <text class="tag {{payStatus === '已付款' ? 'tag-primary' : 'tag-warn'}}">{{payStatus}}</text>
+      </view>
+      <view class="divider"></view>
+      <view class="row-between" wx:if="{{showCost}}">
+        <text class="muted">采购总成本</text>
+        <text>¥{{totalAmount}}</text>
+      </view>
+      <view class="row-between" wx:if="{{showCost}}" style="margin-top: 8rpx;">
+        <text class="muted">已付金额</text>
+        <text>¥{{paidText}}</text>
+      </view>
+      <view class="row-between" wx:if="{{showCost}}" style="margin-top: 8rpx;">
+        <text class="bold">未付金额</text>
+        <text class="bold">¥{{unpaidText}}</text>
+      </view>
+
+      <block wx:if="{{payStatus !== '已付款'}}">
+        <view class="field" style="margin-top: 12rpx;">
+          <view class="field-label">付款金额</view>
+          <input class="field-input" type="digit" placeholder="0.00" value="{{payAmount}}" bindinput="onPayAmount" />
+        </view>
+        <view class="field">
+          <view class="field-label">资金账户</view>
+          <picker class="field-picker" mode="selector" range="{{cashAccountNames}}" value="{{cashIndex}}" bindchange="onCashAccount">
+            <view>{{cashAccountNames[cashIndex]}} ▾</view>
+          </picker>
+        </view>
+        <view class="field">
+          <view class="field-label">备注</view>
+          <input class="field-input" placeholder="选填" value="{{payNote}}" bindinput="onPayNote" />
+        </view>
+        <button class="btn btn-primary btn-block" style="margin-top: 20rpx;" bindtap="onPay">登记付款</button>
+      </block>
+
+      <block wx:if="{{payments.length}}">
+        <view class="divider"></view>
+        <view class="card-sub">付款记录</view>
+        <view wx:for="{{payments}}" wx:key="index" class="list-item">
+          <view>
+            <view class="small">{{item.date_text}} · {{item.account_name}}</view>
+            <view wx:if="{{item.note}}" class="tiny muted">{{item.note}}</view>
+          </view>
+          <text class="bold">¥{{item.amount_text}}</text>
+        </view>
+      </block>
+    </view>
+
+    <view class="footer-placeholder"></view>
+    <view class="footer-bar" wx:if="{{!received}}">
+      <button wx:if="{{canDelete && id}}" class="btn btn-danger" bindtap="onDelete">删除</button>
+      <button wx:if="{{canSave && !locked}}" class="btn btn-ghost grow" bindtap="onSave" loading="{{saving}}">保存</button>
+      <button wx:if="{{canReceive && id}}" class="btn btn-primary grow" bindtap="onReceive">收货入库</button>
+    </view>
+  </block>
+</view>

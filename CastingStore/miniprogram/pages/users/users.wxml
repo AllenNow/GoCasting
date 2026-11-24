@@ -1,0 +1,74 @@
+<view class="page">
+  <view wx:if="{{loading}}" class="empty">加载中…</view>
+
+  <block wx:elif="{{!canManage}}">
+    <view class="empty">当前角色无权管理用户</view>
+  </block>
+
+  <block wx:else>
+    <scroll-view scroll-x class="scroll-x" style="margin-bottom: 16rpx;">
+      <view class="chip {{tab === 'users' ? 'chip-active' : ''}}" data-tab="users" bindtap="onTab">用户与角色</view>
+      <view class="chip {{tab === 'audit' ? 'chip-active' : ''}}" data-tab="audit" bindtap="onTab">审计日志</view>
+    </scroll-view>
+
+    <block wx:if="{{tab === 'users'}}">
+      <view class="card">
+        <view class="card-title">成员</view>
+        <view class="card-sub">让对方先打开一次小程序，在“我的”页复制 openid 发给你。</view>
+        <view class="divider"></view>
+        <view wx:if="{{list.length === 0}}" class="empty" style="padding: 24rpx 0;">暂无成员</view>
+        <view wx:for="{{list}}" wx:key="_id" class="list-item">
+          <view class="grow">
+            <view class="row" style="gap: 10rpx;">
+              <text class="bold">{{item.name}}</text>
+              <text class="tag {{item.status === 'disabled' ? 'tag-danger' : 'tag-primary'}}">{{item.status === 'disabled' ? '停用' : '正常'}}</text>
+            </view>
+            <view class="small muted" style="margin-top: 4rpx;">{{item.openid_short}}</view>
+          </view>
+          <view class="row" style="gap: 12rpx;">
+            <picker mode="selector" range="{{roleLabels}}" value="{{item.roleIndex}}" data-id="{{item._id}}" bindchange="onRoleChange">
+              <view class="tag tag-warn">{{item.role_label}} ▾</view>
+            </picker>
+            <text class="link small" data-id="{{item._id}}" bindtap="onDelete">删除</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="card">
+        <view class="card-title">新增成员</view>
+        <view class="divider"></view>
+        <view class="field">
+          <view class="field-label">姓名</view>
+          <input class="field-input" placeholder="如：小王" value="{{newName}}" data-field="newName" bindinput="onField" />
+        </view>
+        <view class="field">
+          <view class="field-label">openid</view>
+          <input class="field-input" placeholder="对方发来的 openid" value="{{newOpenid}}" data-field="newOpenid" bindinput="onField" />
+        </view>
+        <view class="field">
+          <view class="field-label">角色</view>
+          <picker class="field-picker" mode="selector" range="{{roleLabels}}" value="{{newRoleIndex}}" bindchange="onNewRole">
+            <view>{{roleLabels[newRoleIndex]}} ▾</view>
+          </picker>
+        </view>
+        <view class="divider"></view>
+        <button class="btn btn-primary btn-block" bindtap="onAdd">添加成员</button>
+      </view>
+    </block>
+
+    <block wx:else>
+      <view class="card">
+        <view class="card-title">最近操作</view>
+        <view class="card-sub">所有写操作留痕，成本与价格变更可追溯。</view>
+        <view class="divider"></view>
+        <view wx:if="{{logs.length === 0}}" class="empty" style="padding: 24rpx 0;">暂无日志</view>
+        <view wx:for="{{logs}}" wx:key="_id" class="list-item">
+          <view class="grow">
+            <view>{{item.summary || item.action}}</view>
+            <view class="small muted" style="margin-top: 4rpx;">{{item.operator_name || 'system'}} · {{item.module}} · {{item.date_text}}</view>
+          </view>
+        </view>
+      </view>
+    </block>
+  </block>
+</view>

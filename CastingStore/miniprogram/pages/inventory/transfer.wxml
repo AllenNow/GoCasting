@@ -1,0 +1,37 @@
+<view class="page">
+  <view wx:if="{{loading}}" class="empty">加载中…</view>
+  <view wx:elif="{{!allowed}}" class="empty">当前角色没有调拨权限</view>
+
+  <block wx:else>
+    <view class="card" wx:if="{{product}}">
+      <view class="card-title">{{product.name}}</view>
+      <view class="card-sub">{{product.sku_code}} · 调出仓可用 {{availableText}} {{product.unit || '件'}}</view>
+      <view class="divider"></view>
+
+      <view class="field">
+        <view class="field-label">调出仓库</view>
+        <picker class="field-picker" mode="selector" range="{{options}}" value="{{fromIndex}}" bindchange="onFrom">
+          <view>{{options[fromIndex]}} ▾</view>
+        </picker>
+      </view>
+      <view class="field">
+        <view class="field-label">调入仓库</view>
+        <picker class="field-picker" mode="selector" range="{{options}}" value="{{toIndex}}" bindchange="onTo">
+          <view>{{options[toIndex]}} ▾</view>
+        </picker>
+      </view>
+      <view class="field">
+        <view class="field-label">调拨数量</view>
+        <input class="field-input" type="digit" placeholder="不超过 {{availableText}}" value="{{qty}}" bindinput="onQty" />
+      </view>
+      <view class="field">
+        <view class="field-label">备注</view>
+        <input class="field-input" placeholder="选填" value="{{note}}" bindinput="onNote" />
+      </view>
+
+      <button class="btn btn-primary btn-block" style="margin-top: 20rpx;" bindtap="onSubmit" loading="{{saving}}">确认调拨</button>
+    </view>
+
+    <view wx:if="{{!product}}" class="empty">仓库不足两个，请先在「我的」页新增仓库</view>
+  </block>
+</view>

@@ -1,0 +1,182 @@
+<view class="page">
+  <view class="card row-between" wx:if="{{canSettle}}" bindtap="goSettlement">
+    <view>
+      <view class="card-title">平台对账</view>
+      <view class="card-sub">核对平台账单与系统实收，记录差异原因</view>
+    </view>
+    <text class="link">进入 ›</text>
+  </view>
+
+  <view class="card row-between" wx:if="{{canExport}}">
+    <view>
+      <view class="card-title">数据导出</view>
+      <view class="card-sub">订单、日报、渠道、费用、库存导出为 CSV</view>
+    </view>
+    <button class="btn btn-sm" bindtap="onExport">导出</button>
+  </view>
+
+  <scroll-view scroll-x class="scroll-x" style="margin-bottom: 16rpx;">
+    <view
+      wx:for="{{tabs}}"
+      wx:key="key"
+      class="chip {{tab === item.key ? 'chip-active' : ''}}"
+      data-key="{{item.key}}"
+      bindtap="onTab"
+    >{{item.label}}</view>
+  </scroll-view>
+
+  <view wx:if="{{loading}}" class="empty">加载中…</view>
+
+  <block wx:elif="{{tab === 'profit'}}">
+    <view class="hero">
+      <view class="kpi-label">近 30 天实收</view>
+      <view class="hero-total">¥{{totalSales}}</view>
+      <view class="hero-row">
+        <view>
+          <view class="hero-sub">毛利</view>
+          <view class="hero-sub bold">{{showCost ? '¥' + totalProfit : '--'}}</view>
+        </view>
+        <view>
+          <view class="hero-sub">订单数</view>
+          <view class="hero-sub bold">{{totalOrders}} 单</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">每日实收趋势</view>
+      <view class="card-sub">条形长度代表当天实收占区间最高值的比例</view>
+      <view class="divider"></view>
+      <view wx:for="{{days}}" wx:key="date" style="margin-bottom: 14rpx;">
+        <view class="row-between small">
+          <text class="muted">{{item.date}}</text>
+          <text>¥{{item.sales}}<text wx:if="{{showCost}}" class="muted"> · 利 ¥{{item.profit}}</text></text>
+        </view>
+        <view style="height: 10rpx; background: #eef0f3; border-radius: 6rpx; margin-top: 6rpx; overflow: hidden;">
+          <view style="height: 100%; width: {{item.width}}%; background: #0f766e;"></view>
+        </view>
+      </view>
+      <view wx:if="{{days.length === 0}}" class="empty" style="padding: 24rpx 0;">暂无数据</view>
+    </view>
+  </block>
+
+  <block wx:elif="{{tab === 'products'}}">
+    <view class="grid-3">
+      <view class="kpi">
+        <view class="kpi-label">商品数</view>
+        <view class="kpi-value">{{productSkus}}</view>
+      </view>
+      <view class="kpi">
+        <view class="kpi-label">近 90 天有销量</view>
+        <view class="kpi-value">{{productSold}}</view>
+      </view>
+      <view class="kpi">
+        <view class="kpi-label">动销率</view>
+        <view class="kpi-value">{{sellThrough}}</view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">商品动销排行（近 90 天）</view>
+      <view class="card-sub">按销量排序，库存低于安全库存的标红</view>
+      <view class="divider"></view>
+      <view wx:if="{{products.length === 0}}" class="empty" style="padding: 24rpx 0;">暂无商品</view>
+      <view wx:for="{{products}}" wx:key="product_id" class="list-item">
+        <view style="flex: 1; min-width: 0;">
+          <view class="row" style="gap: 8rpx;">
+            <text class="bold">{{item.name}}</text>
+            <text wx:if="{{item.low}}" class="tag tag-danger">缺货</text>
+          </view>
+          <view class="small muted">{{item.sku_code || '无编码'}} · 库存 {{item.stock_text}}</view>
+          <view class="tiny muted">{{item.idle_text}}</view>
+        </view>
+        <view style="text-align: right;">
+          <view class="bold">销 {{item.qty_text}}</view>
+          <view class="small muted">¥{{item.sales_text}}</view>
+          <view class="tiny muted" wx:if="{{showCost}}">利 ¥{{item.profit_text}} · {{item.rate_text}}</view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <block wx:elif="{{tab === 'inventory'}}">
+    <view class="grid-2">
+      <view class="kpi">
+        <view class="kpi-label">库存总值</view>
+        <view class="kpi-value" wx:if="{{showCost}}">¥{{stockValue}}</view>
+        <view class="kpi-value" wx:else>按角色隐藏</view>
+      </view>
+      <view class="kpi">
+        <view class="kpi-label">周转天数</view>
+        <view class="kpi-value">{{turnoverDays}} 天</view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">库龄分布</view>
+      <view class="divider"></view>
+      <view wx:for="{{aging}}" wx:key="label" style="margin-bottom: 16rpx;">
+        <view class="row-between small">
+          <text>{{item.label}}</text>
+          <text>{{item.skus}} 个 SKU · ¥{{item.value_text}}</text>
+        </view>
+        <view style="height: 12rpx; background: #eef0f3; border-radius: 6rpx; margin-top: 6rpx; overflow: hidden;">
+          <view style="height: 100%; width: {{item.width}}%; background: #b45309;"></view>
+        </view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">90 天以上滞销</view>
+      <view class="divider"></view>
+      <view wx:if="{{slow.length === 0}}" class="empty" style="padding: 24rpx 0;">没有滞销库存</view>
+      <view wx:for="{{slow}}" wx:key="product_id" class="list-item">
+        <view>
+          <view>{{item.name}}</view>
+          <view class="small muted">{{item.qty}} 件 · 库龄 {{item.age_days}} 天</view>
+        </view>
+        <text class="bold" wx:if="{{showCost}}">¥{{item.value_text}}</text>
+      </view>
+    </view>
+  </block>
+
+  <block wx:elif="{{tab === 'channels'}}">
+    <view class="card">
+      <view class="card-title">本月渠道对比</view>
+      <view class="divider"></view>
+      <view wx:if="{{channels.length === 0}}" class="empty" style="padding: 24rpx 0;">暂无数据</view>
+      <view wx:for="{{channels}}" wx:key="platform" class="list-item">
+        <view>
+          <view class="bold">{{item.platform}}</view>
+          <view class="small muted">{{item.orders}} 单 · 费用 ¥{{item.fee_text}}</view>
+        </view>
+        <view style="text-align: right;">
+          <view class="bold">¥{{item.sales_text}}</view>
+          <view class="small muted" wx:if="{{showCost}}">毛利 ¥{{item.profit_text}}</view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <block wx:elif="{{tab === 'expenses'}}">
+    <view class="card">
+      <view class="row-between">
+        <view class="card-title">本月费用结构</view>
+        <view class="bold">¥{{expenseTotal}}</view>
+      </view>
+      <view class="divider"></view>
+      <view wx:if="{{expenses.length === 0}}" class="empty" style="padding: 24rpx 0;">本月暂无费用</view>
+      <view wx:for="{{expenses}}" wx:key="type" style="margin-bottom: 20rpx;">
+        <view class="row-between small">
+          <text>{{item.type}}</text>
+          <text>¥{{item.amount_text}} · {{item.ratio_text}}</text>
+        </view>
+        <view style="height: 12rpx; background: #eef0f3; border-radius: 6rpx; margin-top: 6rpx; overflow: hidden;">
+          <view style="height: 100%; width: {{item.width}}%; background: #0f766e;"></view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <view class="footer-placeholder"></view>
+</view>

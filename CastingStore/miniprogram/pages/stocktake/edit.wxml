@@ -1,0 +1,110 @@
+<view class="page">
+  <view wx:if="{{loading}}" class="empty">加载中…</view>
+
+  <block wx:elif="{{record}}">
+    <view class="card">
+      <view class="row-between">
+        <view class="row" style="gap: 10rpx;">
+          <text class="tag">{{record.no}}</text>
+          <text class="small muted">{{record.period}}</text>
+        </view>
+        <text class="tag {{record.status === '已完成' ? 'tag-primary' : 'tag-warn'}}">{{record.status}}</text>
+      </view>
+      <view class="card-title" style="margin-top: 16rpx;">{{record.warehouse_name}} · 月度盘点</view>
+      <view class="small muted" wx:if="{{record.supplier_name}}" style="margin-top: 4rpx;">供应商 {{record.supplier_name}}</view>
+      <view class="small muted" style="margin-top: 6rpx;">
+        创建 {{record.date_text}}<text wx:if="{{record.completed_text}}"> · 完成 {{record.completed_text}}</text>
+      </view>
+      <view class="small muted" wx:if="{{record.operator_name}}" style="margin-top: 4rpx;">操作人 {{record.operator_name}}</view>
+      <view class="small muted" style="margin-top: 8rpx;">盘点进行中系统会暂停采购入库、销售出库、调拨和手动调整；完成盘点会按实盘数校正当前库存。</view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">盘点汇总</view>
+      <view class="divider"></view>
+      <view class="row-between">
+        <view class="kpi">
+          <view class="kpi-label">商品数</view>
+          <view class="kpi-value">{{itemCount}}</view>
+        </view>
+        <view class="kpi">
+          <view class="kpi-label">差异商品</view>
+          <view class="kpi-value">{{diffCount}}</view>
+        </view>
+        <view class="kpi">
+          <view class="kpi-label">盘盈 / 盘亏</view>
+          <view class="kpi-value">{{gainQtyText}} / {{lossQtyText}}</view>
+        </view>
+      </view>
+      <view wx:if="{{showCost}}" class="row-between" style="margin-top: 12rpx;">
+        <text class="small muted">盘盈金额 ¥{{gainAmountText}}</text>
+        <text class="small muted">盘亏金额 ¥{{lossAmountText}}</text>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="row" style="gap: 12rpx;">
+        <input class="grow" placeholder="搜索商品名 / 编码" value="{{keyword}}" bindinput="onKeyword" />
+        <view class="chip {{onlyDiff ? 'chip-active' : ''}}" bindtap="onToggleDiff">只看差异</view>
+      </view>
+      <view class="field" style="margin-top: 12rpx;">
+        <view class="field-label">供应商</view>
+        <picker class="field-picker" mode="selector" range="{{supplierNames}}" value="{{supplierIndex}}" bindchange="onSupplier">
+          <view>{{supplierNames[supplierIndex] || '全部供应商'}} ▾</view>
+        </picker>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="row-between">
+        <view class="card-title">盘点明细</view>
+        <view class="small muted">显示 {{visibleCount}} / {{itemCount}}</view>
+      </view>
+      <view class="divider"></view>
+
+      <block wx:for="{{items}}" wx:key="product_id">
+        <view class="list-item stocktake-item">
+          <view class="grow">
+            <view class="bold">{{item.product_name}}</view>
+            <view class="small muted">{{item.sku_code || '无编码'}}{{item.supplier_name ? ' · ' + item.supplier_name : ''}} · 系统库存 {{item.system_text}}{{item.unit ? ' ' + item.unit : ''}}</view>
+            <view wx:if="{{item.changed}}" class="small {{item.diff_class}}">差异 {{item.diff_text}}</view>
+          </view>
+          <input
+            wx:if="{{canEdit}}"
+            class="qty-input"
+            type="digit"
+            placeholder="实盘"
+            value="{{item.counted_value}}"
+            data-index="{{index}}"
+            data-product-id="{{item.product_id}}"
+            bindinput="onCounted"
+          />
+          <view wx:else class="bold">{{item.counted_text}}</view>
+        </view>
+      </block>
+
+      <view wx:if="{{hasMore}}" class="empty" style="padding: 16rpx 0;" bindtap="onLoadMore">还有 {{remainingCount}} 个商品，点击加载更多</view>
+      <view wx:if="{{visibleCount === 0}}" class="empty" style="padding: 24rpx 0;">没有匹配的商品</view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">盘点备注</view>
+      <view class="divider"></view>
+      <input
+        wx:if="{{canEdit}}"
+        class="field-input"
+        placeholder="选填，如：月末全仓盘点"
+        value="{{note}}"
+        bindinput="onNote"
+      />
+      <view wx:else class="small muted">{{record.note || '无'}}</view>
+    </view>
+
+    <view class="footer-placeholder"></view>
+    <view class="footer-bar" wx:if="{{canEdit}}">
+      <button class="btn btn-danger grow" bindtap="onDelete">删除</button>
+      <button class="btn btn-ghost grow" bindtap="onSave">保存草稿</button>
+      <button class="btn btn-primary grow" bindtap="onComplete">完成盘点</button>
+    </view>
+  </block>
+</view>
