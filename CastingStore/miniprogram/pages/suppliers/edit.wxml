@@ -1,5 +1,7 @@
 <view class="page">
+  <help-bubble topic="suppliers.edit" />
   <view class="card">
+    <help-bubble inline topic="suppliers.edit" label="字段说明" />
     <view class="field">
       <view class="field-label">名称</view>
       <input class="field-input" placeholder="如：XX渔具厂" value="{{name}}" data-field="name" bindinput="onField" />

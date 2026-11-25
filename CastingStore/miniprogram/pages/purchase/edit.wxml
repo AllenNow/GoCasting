@@ -1,4 +1,5 @@
 <view class="page">
+  <help-bubble topic="purchase.edit" />
   <view wx:if="{{loading}}" class="empty">加载中…</view>
 
   <block wx:else>
@@ -21,6 +22,7 @@
     <view class="card">
       <view class="row-between">
         <view class="card-title">采购信息</view>
+      <help-bubble inline topic="purchase.flow" label="采购流转说明" />
         <text class="link small" bindtap="goSuppliers">管理供应商</text>
       </view>
       <view class="divider"></view>
@@ -108,6 +110,7 @@
     <view class="card" wx:if="{{canReceive && id && !received}}">
       <view class="card-title">分批收货</view>
       <view class="card-sub">本次到货数量可小于采购数量，未到部分保留待收</view>
+      <help-bubble inline topic="purchase.receive" label="收货规则" />
       <view class="divider"></view>
       <view wx:for="{{items}}" wx:key="product_id" class="field">
         <view class="field-label" style="width: auto; flex: 1;">
@@ -129,6 +132,7 @@
     <view class="card" wx:if="{{canPay && id}}">
       <view class="row-between">
         <view class="card-title">付款登记</view>
+        <help-bubble inline topic="purchase.pay" label="付款说明" />
         <text class="tag {{payStatus === '已付款' ? 'tag-primary' : 'tag-warn'}}">{{payStatus}}</text>
       </view>
       <view class="divider"></view>

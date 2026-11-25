@@ -1,4 +1,5 @@
 <view class="page">
+  <help-bubble topic="suppliers.list" />
   <view class="card">
     <view class="row" style="gap: 12rpx;">
       <input class="grow" placeholder="搜索名称 / 联系人 / 电话" value="{{keyword}}" bindinput="onKeyword" confirm-type="search" bindconfirm="doSearch" />

@@ -1,0 +1,87 @@
+<view class="page">
+  <help-bubble topic="tradeins.edit" />
+  <view wx:if="{{loading}}" class="empty">加载中…</view>
+
+  <block wx:elif="{{tradeIn}}">
+    <view class="card">
+      <view class="row-between">
+        <view class="grow">
+          <view class="card-title">{{tradeIn.old_brand || '旧竿'}} {{tradeIn.old_model || ''}}</view>
+          <view class="card-sub">{{tradeIn.no}} · {{dateText}}</view>
+        </view>
+        <text class="tag {{tagClass}}">{{tradeIn.status}}</text>
+      </view>
+      <view class="divider"></view>
+      <view class="list-item" bindtap="goOrder">
+        <view>关联订单</view>
+        <view class="link">{{tradeIn.order_no || '-'}}</view>
+      </view>
+      <view class="list-item">
+        <view>旧竿折价</view>
+        <view class="bold">¥{{creditText}}</view>
+      </view>
+      <view class="list-item">
+        <view>客户</view>
+        <view>{{tradeIn.customer_name || '-'}} {{tradeIn.customer_phone || ''}}</view>
+      </view>
+      <view class="list-item" wx:if="{{tradeIn.old_spec}}">
+        <view>规格</view>
+        <view>{{tradeIn.old_spec}}</view>
+      </view>
+      <view class="list-item" wx:if="{{tradeIn.defect_desc}}">
+        <view>故障描述</view>
+        <view>{{tradeIn.defect_desc}}</view>
+      </view>
+      <view class="list-item" wx:if="{{tradeIn.product_name}}">
+        <view>入库商品</view>
+        <view>{{tradeIn.product_name}}</view>
+      </view>
+      <view class="list-item" wx:if="{{tradeIn.warehouse_name}}">
+        <view>仓库</view>
+        <view>{{tradeIn.warehouse_name}}</view>
+      </view>
+      <view class="list-item" wx:if="{{intakeText}}">
+        <view>入库时间</view>
+        <view class="small muted">{{intakeText}}</view>
+      </view>
+    </view>
+
+    <view class="card" wx:if="{{canIntake}}">
+      <view class="card-title">回收入库</view>
+      <view class="card-sub">入库成本按折价金额入账，随后可配节维修或拆解零件。</view>
+      <help-bubble inline topic="tradein.intake" label="入库成本规则" />
+      <view class="field">
+        <view class="field-label">入库仓库</view>
+        <picker class="field-picker" mode="selector" range="{{warehouseNames}}" value="{{warehouseIndex}}" bindchange="onWarehouse">
+          <view>{{warehouseNames[warehouseIndex] || '请选择仓库'}} ▾</view>
+        </picker>
+      </view>
+      <view class="field">
+        <view class="field-label">回收数量</view>
+        <input class="field-input" type="digit" value="{{qty}}" bindinput="onQty" />
+      </view>
+      <button class="btn btn-primary btn-block" loading="{{saving}}" disabled="{{saving}}" bindtap="onIntake">确认入库</button>
+      <button class="btn btn-ghost btn-block" style="margin-top: 12rpx;" bindtap="onCancel">取消回收单</button>
+    </view>
+
+    <view class="card" wx:if="{{canDispose}}">
+      <view class="card-title">处置方式</view>
+      <view class="card-sub">配节维修后转入二手 SKU，或直接拆解零件售卖。</view>
+      <help-bubble inline topic="tradein.dispose" label="处置方式说明" />
+      <button class="btn btn-primary btn-block" wx:if="{{canRepair}}" bindtap="goRepair">配节维修</button>
+      <button class="btn btn-ghost btn-block" style="margin-top: 12rpx;" wx:if="{{canDismantle}}" bindtap="goDismantle">拆解零件</button>
+    </view>
+
+    <view class="card" wx:if="{{repair || dismantle}}">
+      <view class="card-title">处置结果</view>
+      <view class="list-item" wx:if="{{repair}}" bindtap="goRepairDetail">
+        <view>维修单 {{repair.no}}</view>
+        <view class="link">{{repair.status}} ›</view>
+      </view>
+      <view class="list-item" wx:if="{{dismantle}}" bindtap="goDismantleDetail">
+        <view>拆解单 {{dismantle.no}}</view>
+        <view class="link">损耗 ¥{{dismantle.loss_amount || 0}} ›</view>
+      </view>
+    </view>
+  </block>
+</view>

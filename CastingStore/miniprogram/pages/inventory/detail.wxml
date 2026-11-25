@@ -1,4 +1,5 @@
 <view class="page">
+  <help-bubble topic="inventory.detail" />
   <view wx:if="{{loading}}" class="empty">加载中…</view>
 
   <block wx:elif="{{product}}">
@@ -11,6 +12,7 @@
         <text class="tag tag-primary">{{product.status}}</text>
       </view>
       <view class="divider"></view>
+      <help-bubble inline topic="inventory.fields" label="库存字段说明" />
       <view class="row-between">
         <view>
           <view class="kpi-label">总可用库存</view>
@@ -35,6 +37,7 @@
     <view class="card" wx:if="{{showCost}}">
       <view class="card-title">各仓库存与成本</view>
       <view class="divider"></view>
+      <help-bubble inline topic="inventory.cost" label="成本规则" />
       <view wx:for="{{inventory}}" wx:key="warehouse_id" class="list-item">
         <view>
           <view>{{item.warehouse_name}}</view>
@@ -54,6 +57,7 @@
         <view class="grow">
           <view class="card-title">手动调整库存</view>
           <view class="card-sub">增加 / 减少 / 设为指定数量，必须填写原因并记入库存流水。</view>
+          <help-bubble inline topic="inventory.adjust" label="调整规则" />
         </view>
         <text class="link small" bindtap="goStocktakes">月度盘点 ›</text>
       </view>
@@ -89,6 +93,7 @@
     <view class="card">
       <view class="card-title">库存流水</view>
       <view class="divider"></view>
+      <help-bubble inline topic="inventory.txn" label="流水类型说明" />
       <view wx:if="{{txns.length === 0}}" class="empty" style="padding: 24rpx 0;">暂无流水</view>
       <view wx:for="{{txns}}" wx:key="_id" class="list-item">
         <view>

@@ -1,4 +1,5 @@
 <view class="page">
+  <help-bubble topic="stocktake.edit" />
   <view wx:if="{{loading}}" class="empty">加载中…</view>
 
   <block wx:elif="{{record}}">
@@ -17,6 +18,7 @@
       </view>
       <view class="small muted" wx:if="{{record.operator_name}}" style="margin-top: 4rpx;">操作人 {{record.operator_name}}</view>
       <view class="small muted" style="margin-top: 8rpx;">盘点进行中系统会暂停采购入库、销售出库、调拨和手动调整；完成盘点会按实盘数校正当前库存。</view>
+      <help-bubble inline topic="stocktake.flow" label="冻结与解冻说明" />
     </view>
 
     <view class="card">
@@ -61,6 +63,7 @@
         <view class="small muted">显示 {{visibleCount}} / {{itemCount}}</view>
       </view>
       <view class="divider"></view>
+      <help-bubble inline topic="stocktake.diff" label="差异怎么算" />
 
       <block wx:for="{{items}}" wx:key="product_id">
         <view class="list-item stocktake-item">

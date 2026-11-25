@@ -1,4 +1,5 @@
 <view class="page">
+  <help-bubble topic="index" />
   <view wx:if="{{loading}}" class="empty">加载中…</view>
 
   <block wx:elif="{{needInit}}">

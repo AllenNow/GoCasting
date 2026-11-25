@@ -1,4 +1,5 @@
 <view class="page">
+  <help-bubble topic="cash.list" />
   <view wx:if="{{loading}}" class="empty">加载中…</view>
   <view wx:elif="{{!allowed}}" class="empty">当前角色没有查看现金流的权限</view>
 
@@ -107,6 +108,7 @@
         </picker>
       </view>
       <view class="divider"></view>
+      <help-bubble inline topic="cash.flow" label="资金流转说明" />
       <view wx:if="{{txns.length === 0}}" class="empty" style="padding: 24rpx 0;">本月没有流水</view>
       <view wx:for="{{txns}}" wx:key="_id" class="list-item">
         <view>

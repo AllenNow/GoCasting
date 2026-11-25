@@ -1,7 +1,8 @@
 const { fail, pick, escapeReg, nextNo, getDoc, audit, fetchAll, querySorted } = require('../lib/util')
 
 const STATUS = ['在售', '停售', '清仓']
-const CONDITIONS = ['99新', '95新', '9新', '85新', '8新', '磕碰', '故障', '其他']
+const CONDITIONS = ['99新', '95新', '9新', '85新', '8新', '磕碰', '故障', '拆机良品', '拆机瑕疵', '其他']
+const ITEM_TYPES = ['整竿', '二手竿', '配件']
 
 async function list(ctx, payload) {
   const db = ctx.db
@@ -44,6 +45,7 @@ async function save(ctx, payload) {
     'category',
     'brand',
     'condition',
+    'item_type',
     'spec',
     'unit',
     'barcode',
@@ -57,6 +59,7 @@ async function save(ctx, payload) {
   if (fields.safety_stock !== undefined) fields.safety_stock = Number(fields.safety_stock) || 0
   if (fields.status && STATUS.indexOf(fields.status) < 0) fail(400, '商品状态不合法')
   if (fields.condition && CONDITIONS.indexOf(fields.condition) < 0) fail(400, '商品状况不合法')
+  if (fields.item_type && ITEM_TYPES.indexOf(fields.item_type) < 0) fail(400, '商品类型不合法')
   if (payload.supplier_id !== undefined) {
     const supplierId = String(payload.supplier_id || '')
     if (supplierId) {
@@ -87,6 +90,7 @@ async function save(ctx, payload) {
 
   fields.sku_code = fields.sku_code || (await nextNo(db, 'SKU'))
   fields.status = fields.status || '在售'
+  fields.item_type = fields.item_type || '整竿'
   fields.created_at = new Date()
   const res = await db.collection('products').add({ data: fields })
   await audit(db, ctx.user, {
@@ -131,6 +135,15 @@ async function remove(ctx, payload) {
     repairs = []
   }
   if (repairs.length) fail(400, `该商品有 ${repairs.length} 张维修中的维修单，请先完成后删除`)
+
+  let tradeIns = []
+  try {
+    tradeIns = await fetchAll(db, 'trade_ins', { product_id: payload.id })
+  } catch (err) {
+    tradeIns = []
+  }
+  const openTradeIn = tradeIns.find((row) => ['待处置', '维修中'].indexOf(row.status) >= 0)
+  if (openTradeIn) fail(400, `该商品存在回收单 ${openTradeIn.no} 待处置，请先完成维修或拆解`)
 
   await db.collection('products').doc(payload.id).remove()
   await audit(db, ctx.user, {

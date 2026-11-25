@@ -1,4 +1,5 @@
 <view class="page">
+  <help-bubble topic="repairs.edit" />
   <view wx:if="{{loading}}" class="empty">加载中…</view>
 
   <block wx:elif="{{isView && repair}}">
@@ -7,6 +8,7 @@
         <view class="grow">
           <view class="card-title">{{repair.product_name}}</view>
           <view class="card-sub">{{repair.no}} · {{repair.sku_code || '无编码'}}</view>
+          <help-bubble inline topic="repair.flow" label="维修流转" />
         </view>
         <text class="tag {{repair.status === '维修中' ? 'tag-warn' : repair.status === '已完成' ? 'tag-primary' : 'tag'}}">{{repair.status}}</text>
       </view>
@@ -35,6 +37,20 @@
         <view>修复费用</view>
         <view class="bold">¥{{costText}}</view>
       </view>
+      <view class="list-item" wx:if="{{repair.parts_cost}}">
+        <view>配节成本</view>
+        <view class="bold">¥{{partsCostText}}</view>
+      </view>
+      <view class="list-item" wx:if="{{repair.target_product_name}}">
+        <view>维修后转入</view>
+        <view class="bold">{{repair.target_product_name}}</view>
+      </view>
+      <block wx:if="{{parts.length}}">
+        <view class="list-item" wx:for="{{parts}}" wx:key="product_id">
+          <view>{{item.product_name}} × {{item.qty}}</view>
+          <view class="bold">¥{{item.amount_text}}</view>
+        </view>
+      </block>
       <view class="list-item" wx:if="{{repair.note}}">
         <view>备注</view>
         <view class="bold">{{repair.note}}</view>
@@ -55,6 +71,7 @@
         <button class="btn btn-ghost grow" bindtap="onCancel">取消维修</button>
       </view>
       <view class="small muted" style="margin-top: 12rpx;">完成维修后数量会退回可用库存，修复费用计入库存成本。</view>
+      <help-bubble inline topic="repair.complete" label="完成维修说明" />
     </view>
   </block>
 
@@ -62,6 +79,7 @@
     <view class="card">
       <view class="card-title">{{product.name}}</view>
       <view class="card-sub">{{product.sku_code || '无编码'}} · 状况 {{product.condition || '-'}}</view>
+      <help-bubble inline topic="repair.create" label="发起维修说明" />
       <view class="divider"></view>
       <view class="field">
         <view class="field-label">仓库</view>
@@ -85,6 +103,30 @@
       <view class="field">
         <view class="field-label">修复费用</view>
         <input class="field-input" type="digit" placeholder="必填，完成维修时计入成本" value="{{repairCost}}" data-field="repairCost" bindinput="onField" />
+      </view>
+      <view class="field">
+        <view class="field-label">维修后转入</view>
+        <picker class="field-picker" mode="selector" range="{{targetProductNames}}" value="{{targetIndex}}" bindchange="onTarget">
+          <view>{{targetProductNames[targetIndex]}} ▾</view>
+        </picker>
+        <view class="small muted">选择其他商品时，完成维修后按该二手 SKU 入库；不选则回到原商品。</view>
+        <help-bubble inline topic="repair.target" label="转入规则" />
+      </view>
+      <view class="field">
+        <view class="field-label">维修配节</view>
+        <view class="row" style="gap: 12rpx;">
+          <picker class="field-picker grow" mode="selector" range="{{partNames}}" value="{{partIndex}}" bindchange="onPartProduct">
+            <view>{{partNames[partIndex] || '请选择配节商品'}} ▾</view>
+          </picker>
+          <input class="field-input" style="width: 160rpx;" type="digit" placeholder="数量" value="{{partQty}}" bindinput="onPartQty" />
+          <button class="btn btn-ghost btn-sm" bindtap="onAddPart">添加</button>
+        </view>
+        <view class="small muted">配节在完成维修时扣减库存并计入维修成本。</view>
+        <help-bubble inline topic="repair.parts" label="配节说明" />
+        <view wx:for="{{parts}}" wx:key="product_id" class="row-between" style="margin-top: 10rpx;">
+          <text>{{item.product_name}} × {{item.qty}}</text>
+          <text class="link" data-index="{{index}}" bindtap="onRemovePart">移除</text>
+        </view>
       </view>
       <view class="field">
         <view class="field-label">备注</view>

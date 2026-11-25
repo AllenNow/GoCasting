@@ -1,10 +1,12 @@
 <view class="page">
+  <help-bubble topic="inventory.stockin" />
   <view wx:if="{{loading}}" class="empty">加载中…</view>
 
   <block wx:else>
     <view class="card">
       <view class="card-title">入库信息</view>
       <view class="card-sub">入库总成本 = 进价 × 数量 + 运费 + 其他费用，自动摊入移动加权平均成本。每件商品入库都必须填写进价。</view>
+      <help-bubble inline topic="inventory.stockin" label="入库成本规则" />
       <view class="divider"></view>
 
       <view class="field">

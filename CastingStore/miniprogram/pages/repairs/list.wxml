@@ -1,4 +1,5 @@
 <view class="page">
+  <help-bubble topic="repairs.list" />
   <scroll-view scroll-x class="scroll-x" style="margin-bottom: 16rpx;">
     <view
       wx:for="{{tabs}}"
@@ -8,6 +9,8 @@
       bindtap="onTab"
     >{{item}}</view>
   </scroll-view>
+
+  <help-bubble inline topic="repair.flow" label="维修流转说明" />
 
   <view wx:if="{{loading}}" class="empty">加载中…</view>
   <view wx:elif="{{list.length === 0}}" class="empty">暂无维修记录</view>

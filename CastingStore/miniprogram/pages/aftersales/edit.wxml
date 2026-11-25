@@ -1,4 +1,5 @@
 <view class="page">
+  <help-bubble topic="aftersales.edit" />
   <view wx:if="{{loading}}" class="empty">加载中…</view>
 
   <block wx:elif="{{mode === 'create'}}">
@@ -17,6 +18,7 @@
     <view class="card">
       <view class="card-title">售后商品</view>
       <view class="card-sub">可退数量已扣除历史已完成的售后单。</view>
+      <help-bubble inline topic="aftersale.flow" label="售后流转说明" />
       <view class="divider"></view>
       <view wx:for="{{items}}" wx:key="product_id" class="list-item">
         <view class="grow">
@@ -30,6 +32,7 @@
 
     <view class="card">
       <view class="card-title">售后信息</view>
+      <help-bubble inline topic="aftersale.restock" label="回补库存说明" />
       <view class="card-sub" wx:if="{{isDropship}}">代发订单无自仓库存可回补，已发货部分退款将计入损耗。</view>
       <view class="divider"></view>
       <view class="field">

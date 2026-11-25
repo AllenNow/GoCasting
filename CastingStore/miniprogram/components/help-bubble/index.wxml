@@ -1,0 +1,59 @@
+<!-- 内联帮助点位 -->
+<view wx:if="{{inline}}" class="hb-inline" catchtap="onOpen">
+  <text class="hb-inline-label">{{label || '说明'}}</text>
+  <view class="hb-inline-dot">?</view>
+</view>
+
+<!-- 悬浮帮助按钮 -->
+<view wx:else class="hb-fab" style="bottom: {{bottom}}" catchtap="onOpen" catchtouchmove="noop">?</view>
+
+<!-- 帮助气泡 -->
+<view wx:if="{{open}}" class="hb-mask" bindtap="onClose" catchtouchmove="noop">
+  <view class="hb-panel" catchtap="noop">
+    <view class="hb-head">
+      <view class="hb-head-main">
+        <view class="hb-title">{{content.title}}</view>
+        <view wx:if="{{content.subtitle}}" class="hb-sub">{{content.subtitle}}</view>
+      </view>
+      <view class="hb-close" bindtap="onClose">×</view>
+    </view>
+
+    <view wx:if="{{content.roles}}" class="hb-roles">适用角色：{{content.roles}}</view>
+
+    <scroll-view scroll-y class="hb-body">
+      <view wx:for="{{content.sections}}" wx:key="title" class="hb-sec">
+        <view class="hb-sec-title">{{item.title}}</view>
+
+        <view wx:if="{{item.lines}}" class="hb-lines">
+          <view wx:for="{{item.lines}}" wx:for-item="line" wx:key="*this" class="hb-line">
+            <text class="hb-bullet">·</text>
+            <text class="hb-line-text">{{line}}</text>
+          </view>
+        </view>
+
+        <view wx:if="{{item.flow}}" class="hb-flow">
+          <block wx:for="{{item.flow}}" wx:for-item="step" wx:for-index="si" wx:key="*this">
+            <view class="hb-step">{{step}}</view>
+            <view wx:if="{{si < item.flow.length - 1}}" class="hb-arrow">→</view>
+          </block>
+        </view>
+
+        <view wx:if="{{item.fields}}" class="hb-fields">
+          <view wx:for="{{item.fields}}" wx:for-item="f" wx:key="label" class="hb-field">
+            <view class="hb-field-label">{{f.label}}</view>
+            <view class="hb-field-desc">{{f.desc}}</view>
+          </view>
+        </view>
+
+        <view wx:if="{{item.tip}}" class="hb-tip">
+          <text class="hb-tip-mark">!</text>
+          <text class="hb-tip-text">{{item.tip}}</text>
+        </view>
+      </view>
+    </scroll-view>
+
+    <view class="hb-foot">
+      <view class="hb-btn" bindtap="onClose">知道了</view>
+    </view>
+  </view>
+</view>

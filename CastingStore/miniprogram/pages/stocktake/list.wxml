@@ -1,10 +1,12 @@
 <view class="page">
+  <help-bubble topic="stocktake.list" />
   <view class="card">
     <view class="row-between">
       <view>
         <view class="kpi-label">本月盘点</view>
         <view class="card-title" style="margin-top: 6rpx;">{{currentPeriod || '--'}}</view>
         <view class="small muted">已完成 {{monthCompleted}} 张 · 进行中 {{monthPending}} 张</view>
+        <help-bubble inline topic="stocktake.flow" label="盘点流转说明" />
       </view>
       <text class="tag {{monthCompleted > 0 ? 'tag-primary' : 'tag-warn'}}">{{monthCompleted > 0 ? '已完成' : '待盘点'}}</text>
     </view>

@@ -1,4 +1,5 @@
 <view class="page">
+  <help-bubble topic="purchase.list" />
   <view class="card">
     <view class="row-between">
       <view>
@@ -11,6 +12,8 @@
       </view>
     </view>
   </view>
+
+  <help-bubble inline topic="purchase.flow" label="采购流转说明" />
 
   <scroll-view scroll-x class="scroll-x" style="margin-bottom: 16rpx;">
     <view

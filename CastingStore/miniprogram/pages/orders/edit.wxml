@@ -1,4 +1,5 @@
 <view class="page">
+  <help-bubble topic="order.edit" />
   <view wx:if="{{loading}}" class="empty">加载中…</view>
 
   <block wx:else>
@@ -8,6 +9,7 @@
         <text class="tag tag-primary">{{platforms[platformIndex]}}</text>
       </view>
       <view class="divider"></view>
+      <help-bubble inline topic="order.info" label="订单信息说明" />
       <view class="field">
         <view class="field-label">渠道</view>
         <picker class="field-picker" mode="selector" range="{{platforms}}" value="{{platformIndex}}" bindchange="onPlatformChange">
@@ -20,7 +22,47 @@
           <view>{{fulfillLabels[fulfillIndex]}} ▾</view>
         </picker>
       </view>
+      <view class="field">
+        <view class="field-label">业务类型</view>
+        <picker class="field-picker" mode="selector" range="{{bizTypes}}" value="{{bizTypeIndex}}" bindchange="onBizTypeChange">
+          <view>{{bizTypes[bizTypeIndex]}} ▾</view>
+        </picker>
+      </view>
+      <block wx:if="{{isTradeIn}}">
+        <help-bubble inline topic="order.tradein" label="以旧换新说明" />
+        <view class="field">
+          <view class="field-label">旧竿折价</view>
+          <input class="field-input" type="digit" placeholder="旧竿折价金额，计入旧竿库存成本" value="{{tradeCredit}}" data-field="tradeCredit" bindinput="onField" />
+        </view>
+        <view class="field">
+          <view class="field-label">旧竿品牌</view>
+          <input class="field-input" placeholder="如：达亿瓦" value="{{tradeOldBrand}}" data-field="tradeOldBrand" bindinput="onField" />
+        </view>
+        <view class="field">
+          <view class="field-label">旧竿型号</view>
+          <input class="field-input" placeholder="如：月影 2.1m" value="{{tradeOldModel}}" data-field="tradeOldModel" bindinput="onField" />
+        </view>
+        <view class="field">
+          <view class="field-label">旧竿规格</view>
+          <input class="field-input" placeholder="选填，如：M/ML" value="{{tradeOldSpec}}" data-field="tradeOldSpec" bindinput="onField" />
+        </view>
+        <view class="field">
+          <view class="field-label">故障描述</view>
+          <input class="field-input" placeholder="如：竿梢断裂、导环损坏" value="{{tradeDefect}}" data-field="tradeDefect" bindinput="onField" />
+        </view>
+        <view class="field">
+          <view class="field-label">回收联系人</view>
+          <input class="field-input" placeholder="默认取买家信息" value="{{tradeCustomerName}}" data-field="tradeCustomerName" bindinput="onField" />
+        </view>
+        <view class="field">
+          <view class="field-label">联系电话</view>
+          <input class="field-input" type="number" placeholder="选填" value="{{tradeCustomerPhone}}" data-field="tradeCustomerPhone" bindinput="onField" />
+        </view>
+        <view class="card-sub">保存后生成一张「待回收」回收单，旧竿入库时按折价金额计入库存成本；毛利中同步加回折价。</view>
+        <view class="small muted" wx:if="{{tradeInStatus}}">当前回收单状态：{{tradeInStatus}}</view>
+      </block>
       <block wx:if="{{isDropship}}">
+        <help-bubble inline topic="order.dropship" label="代发说明" />
         <view class="field">
           <view class="field-label">代发供应商</view>
           <picker class="field-picker" mode="selector" range="{{supplierNames}}" value="{{supplierIndex}}" bindchange="onSupplier">
@@ -60,6 +102,7 @@
     <view class="card">
       <view class="card-title">商品明细</view>
       <view class="card-sub">{{isDropship ? '代发商品以填写的代发进价为成本快照。' : '成本按当前移动加权平均价自动快照，事后进货不会影响本单毛利。'}}</view>
+      <help-bubble inline topic="order.items" label="成本快照说明" />
       <view class="divider"></view>
 
       <view class="field">
@@ -92,6 +135,7 @@
     <view class="card">
       <view class="card-title">费用与实收</view>
       <view class="card-sub">实收金额为唯一收入口径；费用能归因到订单的都填在这里。</view>
+      <help-bubble inline topic="order.fees" label="费用说明" />
       <view class="divider"></view>
       <view class="field">
         <view class="field-label">实收金额</view>
@@ -136,6 +180,7 @@
     </view>
 
     <view class="card">
+      <help-bubble inline topic="order.profit" label="毛利计算说明" />
       <view class="row-between">
         <view>
           <view class="kpi-label">商品金额</view>
@@ -156,7 +201,7 @@
       </view>
       <view class="divider"></view>
       <view class="row-between small muted">
-        <text>实收预估 ¥{{paidPreview}}</text>
+        <text>实收预估 ¥{{paidPreview}}<text wx:if="{{isTradeIn}}"> · 旧竿折价 ¥{{tradeCreditText}}</text></text>
         <text wx:if="{{showCost}}">商品成本 ¥{{costTotal}}{{isDropship ? ' · 代发运费 ¥' + dropshipFreightText : ''}}</text>
       </view>
     </view>

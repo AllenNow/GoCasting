@@ -1,4 +1,5 @@
 <view class="page">
+  <help-bubble topic="me" />
   <view wx:if="{{loading}}" class="empty">加载中…</view>
 
   <block wx:else>
@@ -16,6 +17,8 @@
         </view>
       </view>
     </view>
+
+    <help-bubble inline topic="me.roles" label="角色权限说明" />
 
     <view wx:if="{{needInit}}" class="card">
       <view class="card-title">系统尚未初始化</view>
@@ -49,6 +52,9 @@
       <view class="list-item" bindtap="goRepairs">
         <text>维修记录</text><text class="muted">›</text>
       </view>
+      <view class="list-item" bindtap="goTradeIns">
+        <text>旧竿回收</text><text class="muted">›</text>
+      </view>
       <view class="list-item" bindtap="goSuppliers">
         <text>供应商</text><text class="muted">›</text>
       </view>
@@ -72,6 +78,7 @@
         <button class="btn btn-sm" bindtap="onAddWarehouse">新增</button>
       </view>
       <view class="divider"></view>
+      <help-bubble inline topic="me.warehouse" label="仓库规则" />
       <view wx:for="{{warehouses}}" wx:key="_id" class="list-item">
         <view class="row" style="gap: 8rpx;">
           <text>{{item.name}}</text>

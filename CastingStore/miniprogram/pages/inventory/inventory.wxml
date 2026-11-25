@@ -1,4 +1,5 @@
 <view class="page">
+  <help-bubble topic="inventory.list" />
   <view class="card">
     <view class="row-between">
       <view>
@@ -6,6 +7,7 @@
         <view class="card-title" wx:if="{{showCost}}">¥{{totalValue}}</view>
         <view class="card-title" wx:else>{{totalSkus}} 个 SKU</view>
         <view class="small muted">共 {{totalSkus}} 个 SKU，缺货 {{lowStockCount}} 个</view>
+        <help-bubble inline topic="inventory.fields" label="库存口径说明" />
       </view>
       <view class="row" style="gap: 12rpx;">
         <button class="btn btn-sm" bindtap="onScan">扫码</button>
@@ -36,6 +38,8 @@
     <view class="chip {{filter === 'low' ? 'chip-active' : ''}}" data-filter="low" bindtap="onFilter">缺货预警</view>
     <view class="chip {{filter === 'value' ? 'chip-active' : ''}}" data-filter="value" bindtap="onFilter">按库存额</view>
   </scroll-view>
+
+  <help-bubble inline topic="inventory.low" label="缺货判定" />
 
   <view wx:if="{{loading}}" class="empty">加载中…</view>
   <view wx:elif="{{list.length === 0}}" class="empty">暂无商品，先新增一个商品吧</view>

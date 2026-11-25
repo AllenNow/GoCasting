@@ -17,6 +17,9 @@ Page({
         canCancel: false,
         canDelete: false,
         canAfterSale: false,
+        tradeIn: null,
+        isTradeIn: false,
+        tradeCreditText: '0.00',
         isDropship: false,
         canSettle: false,
         accounts: [],
@@ -79,6 +82,9 @@ Page({
 
             this.setData({
                 order,
+                tradeIn: res.tradeIn || null,
+                isTradeIn: order.biz_type === '以旧换新',
+                tradeCreditText: money(order.trade_in_credit),
                 expenses: res.expenses || [],
                 afterSales,
                 showCost,
@@ -94,7 +100,8 @@ Page({
                 canEdit: ['待付款', '待发货'].indexOf(status) >= 0 && can('order', 'update'),
                 canShip: ['待付款', '待发货'].indexOf(status) >= 0 && can('order', 'ship'),
                 canComplete: status === '已发货' && can('order', 'update'),
-                canRefund: ['已退款', '已取消'].indexOf(status) < 0 && Number(order.refund_amount || 0) < Number(order.paid_amount || 0) && can('order', 'refund'),
+                canRefund: ['已退款', '已取消'].indexOf(status) < 0 && Number(order.refund_amount || 0) < Number(order.paid_amount || 0) && can('order', 'refund')
+                    && (order.biz_type !== '以旧换新' || role === 'owner'),
                 canCancel: ['待付款', '待发货'].indexOf(status) >= 0
                     && Number(order.paid_amount || 0) - Number(order.refund_amount || 0) <= 0.01
                     && can('order', 'update'),
@@ -123,6 +130,10 @@ Page({
     },
     goEdit() {
         nav('/pages/orders/edit?id=' + this.data.id);
+    },
+    goTradeIn() {
+        if (this.data.tradeIn)
+            nav('/pages/tradeins/edit?id=' + this.data.tradeIn._id);
     },
     goAfterSale() {
         nav('/pages/aftersales/edit?order_id=' + this.data.id);

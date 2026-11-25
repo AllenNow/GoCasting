@@ -48,14 +48,16 @@ async function completedReturns(db, orderId) {
 }
 
 /**
- * 统一毛利口径：实收（扣除退款）- 净商品成本（扣除退回成本）- 代发运费 - 可归因费用。
+ * 统一毛利口径：实收（现金）+ 旧竿折价 - 退款 - 净商品成本 - 代发运费 - 可归因费用。
+ * 以旧换新的旧竿按折价单独入库存成本，因此毛利必须把折价加回收入，避免重复扣减。
  * 代发订单的商品成本使用代发进价快照，不占用自仓库存。
  */
 function calcProfit(fields) {
   const refunded = round2(fields.refund_amount || 0)
   const refundCost = round2(fields.refund_cost || 0)
   const dropshipFreight = round2(fields.dropship_freight || 0)
-  const netPaid = round2(Number(fields.paid_amount || 0) - refunded)
+  const tradeInCredit = round2(fields.trade_in_credit || 0)
+  const netPaid = round2(Number(fields.paid_amount || 0) + tradeInCredit - refunded)
   const netCost = round2(Number(fields.goods_cost || 0) - refundCost)
   const profit = round2(netPaid - netCost - dropshipFreight - Number(fields.fee_total || 0))
   return {
@@ -90,6 +92,9 @@ async function applyRefund(ctx, params) {
   const db = ctx.db
   const order = params.order || (await getDoc(db, 'orders', params.order_id))
   if (['已退款', '已取消'].indexOf(order.status) >= 0) fail(400, '订单已退款或已取消')
+  if (Number(order.trade_in_credit || 0) > 0 && (!ctx.user || ctx.user.role !== 'owner')) {
+    fail(400, '以旧换新订单涉及旧竿折价冲销，退款仅老板可操作')
+  }
 
   const refundAmount = round2(params.refund_amount)
   if (!(refundAmount > 0)) fail(400, '退款金额必须大于 0')
@@ -139,6 +144,9 @@ async function applyRefund(ctx, params) {
     const freshRes = await transaction.collection('orders').doc(order._id).get()
     const fresh = freshRes.data
     if (['已退款', '已取消'].indexOf(fresh.status) >= 0) fail(400, '订单已退款或已取消')
+    if (Number(fresh.trade_in_credit || 0) > 0 && (!ctx.user || ctx.user.role !== 'owner')) {
+      fail(400, '以旧换新订单涉及旧竿折价冲销，退款仅老板可操作')
+    }
 
     const remainingAmount = round2(Number(fresh.paid_amount || 0) - Number(fresh.refund_amount || 0))
     if (refundAmount > remainingAmount + 0.01) fail(400, `可退金额上限 ${remainingAmount}`)
@@ -294,6 +302,9 @@ async function createRecord(ctx, payload) {
   await ensureCollection(db)
   const order = await getDoc(db, 'orders', payload.order_id)
   if (['已退款', '已取消'].indexOf(order.status) >= 0) fail(400, '订单已退款或已取消')
+  if (Number(order.trade_in_credit || 0) > 0 && (!ctx.user || ctx.user.role !== 'owner')) {
+    fail(400, '以旧换新订单涉及旧竿折价冲销，退款仅老板可操作')
+  }
 
   const type = TYPES.indexOf(payload.type) >= 0 ? payload.type : '退货退款'
   const returned = await completedReturns(db, order._id)

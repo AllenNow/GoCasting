@@ -1,4 +1,5 @@
 <view class="page">
+  <help-bubble topic="aftersales.list" />
   <view class="card">
     <view class="row-between">
       <view>
@@ -18,6 +19,8 @@
       bindtap="onTab"
     >{{item}}</view>
   </scroll-view>
+
+  <help-bubble inline topic="aftersale.flow" label="售后库存方向" />
 
   <view wx:if="{{loading}}" class="empty">加载中…</view>
   <view wx:elif="{{list.length === 0}}" class="empty">暂无售后单，可在订单详情发起售后</view>

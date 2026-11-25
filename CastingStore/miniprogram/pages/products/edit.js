@@ -1,10 +1,10 @@
 import { call, toastError } from '../../utils/api';
 import { can } from '../../utils/auth';
-import { CATEGORIES } from '../../utils/config';
+import { CATEGORIES, ITEM_TYPES } from '../../utils/config';
 import { back, confirm, toast } from '../../utils/ui';
 const STATUS_LIST = ['在售', '停售', '清仓'];
 const BRANDS = ['达亿瓦', '禧玛诺', 'MUYU', '其他'];
-const CONDITIONS = ['99新', '95新', '9新', '85新', '8新', '磕碰', '故障', '其他'];
+const CONDITIONS = ['99新', '95新', '9新', '85新', '8新', '磕碰', '故障', '拆机良品', '拆机瑕疵', '其他'];
 Page({
     data: {
         id: '',
@@ -12,6 +12,8 @@ Page({
         saving: false,
         categories: CATEGORIES,
         categoryIndex: 0,
+        itemTypes: ITEM_TYPES,
+        itemTypeIndex: 0,
         statusList: STATUS_LIST,
         statusIndex: 0,
         name: '',
@@ -69,6 +71,7 @@ Page({
                     brandCustom: brandOther ? brandValue : '',
                     condition: product.condition || '',
                     conditionIndex: Math.max(0, CONDITIONS.indexOf(product.condition)),
+                    itemTypeIndex: Math.max(0, ITEM_TYPES.indexOf(product.item_type || '整竿')),
                     spec: product.spec || '',
                     unit: product.unit || '件',
                     barcode: product.barcode || '',
@@ -125,6 +128,9 @@ Page({
             condition: this.data.conditionOptions[index],
         });
     },
+    onItemType(e) {
+        this.setData({ itemTypeIndex: Number(e.detail.value) });
+    },
     onSupplier(e) {
         this.setData({ supplierIndex: Number(e.detail.value) });
     },
@@ -154,6 +160,7 @@ Page({
                 category: this.data.categories[this.data.categoryIndex],
                 brand: this.data.brand,
                 condition: this.data.condition,
+                item_type: this.data.itemTypes[this.data.itemTypeIndex],
                 spec: this.data.spec,
                 unit: this.data.unit,
                 barcode: this.data.barcode,

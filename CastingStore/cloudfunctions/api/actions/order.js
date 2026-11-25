@@ -16,6 +16,7 @@ const { assertNoStocktake } = require('./inventory')
 const EDITABLE_STATUS = ['待付款', '待发货', '已取消']
 const PLATFORMS = ['淘宝', '抖音', '闲鱼', '私域', '线下', '微店']
 const FULFILL_MODES = ['自仓', '代发']
+const BIZ_TYPES = ['普通', '以旧换新']
 
 const FEE_FIELDS = [
   { key: 'shipping_fee', type: '快递费' },
@@ -81,8 +82,60 @@ async function normalizeItems(db, items, fulfillMode) {
   return result
 }
 
-async function writeExpenses(db, order, orderId) {
-  await db.collection('expenses').where({ order_id: orderId }).remove()
+async function ensureTradeIns(db) {
+  try {
+    await db.createCollection('trade_ins')
+  } catch (err) {
+    // 集合已存在时忽略
+  }
+}
+
+function tradeInFields(src, credit) {
+  const data = src || {}
+  return {
+    customer_name: String(data.customer_name || data.buyer_name || '').trim(),
+    customer_phone: String(data.customer_phone || data.buyer_phone || '').trim(),
+    old_brand: String(data.old_brand || '').trim(),
+    old_model: String(data.old_model || '').trim(),
+    old_spec: String(data.old_spec || '').trim(),
+    defect_desc: String(data.defect_desc || '').trim(),
+    credit_amount: round2(credit),
+  }
+}
+
+async function createTradeIn(db, ctx, order, tradeInSrc, credit) {
+  await ensureTradeIns(db)
+  const no = await nextNo(db, 'RC')
+  const now = new Date()
+  const res = await db.collection('trade_ins').add({
+    data: {
+      no,
+      order_id: order._id,
+      order_no: order.no,
+      ...tradeInFields(tradeInSrc, credit),
+      warehouse_id: order.warehouse_id || '',
+      product_id: '',
+      status: '待回收',
+      disposal: '',
+      repair_id: '',
+      dismantle_id: '',
+      note: '以旧换新回收，待门店入库',
+      operator_openid: ctx.openid || '',
+      operator_name: ctx.user ? ctx.user.name : '',
+      created_at: now,
+      updated_at: now,
+    },
+  })
+  return res._id
+}
+
+async function updateTradeIn(db, id, tradeInSrc, credit) {
+  await db.collection('trade_ins').doc(id).update({
+    data: { ...tradeInFields(tradeInSrc, credit), updated_at: new Date() },
+  })
+}
+
+async function writeExpenses(db, order, orderId) {  await db.collection('expenses').where({ order_id: orderId }).remove()
   const now = new Date()
   const docs = []
   FEE_FIELDS.forEach((field) => {
@@ -142,7 +195,6 @@ async function get(ctx, payload) {
   const db = ctx.db
   const order = await getDoc(db, 'orders', payload.id)
   const expenses = await db.collection('expenses').where({ order_id: payload.id }).limit(50).get()
-
   let afterSales = []
   try {
     const res = await db.collection('after_sales').where({ order_id: payload.id }).limit(50).get()
@@ -170,7 +222,16 @@ async function get(ctx, payload) {
     }
   })
 
-  return { order: { ...order, items }, expenses: expenses.data, afterSales }
+  let tradeIn = null
+  if (order.trade_in_id) {
+    try {
+      tradeIn = await getDoc(db, 'trade_ins', order.trade_in_id)
+    } catch (err) {
+      tradeIn = null
+    }
+  }
+
+  return { order: { ...order, items }, expenses: expenses.data, afterSales, tradeIn }
 }
 
 async function save(ctx, payload) {
@@ -207,11 +268,38 @@ async function save(ctx, payload) {
   const supplierPayable = fulfillMode === '代发' ? round2(goodsCost + dropshipFreight) : 0
 
   const before = payload.id ? await getDoc(db, 'orders', payload.id) : null
+  const requestedBiz =
+    payload.biz_type === undefined || payload.biz_type === null || payload.biz_type === ''
+      ? before
+        ? before.biz_type
+        : ''
+      : payload.biz_type
+  const bizType = requestedBiz === '以旧换新' ? '以旧换新' : '普通'
+  let tradeInCredit = 0
+  if (bizType === '以旧换新') {
+    const rawCredit =
+      payload.trade_in_credit !== undefined && payload.trade_in_credit !== null && payload.trade_in_credit !== ''
+        ? payload.trade_in_credit
+        : payload.trade_in
+          ? payload.trade_in.credit_amount
+          : before
+            ? before.trade_in_credit || 0
+            : 0
+    tradeInCredit = round2(rawCredit)
+    if (!(tradeInCredit >= 0)) fail(400, '旧竿折价金额不能为负数')
+  }
+  const tradeInSrc = {
+    ...(payload.trade_in || {}),
+    buyer_name: payload.buyer_name || '',
+    buyer_phone: payload.buyer_phone || '',
+  }
+
   const profitInfo = calcProfit({
     paid_amount: paidAmount,
     goods_cost: goodsCost,
     fee_total: feeTotal,
     dropship_freight: dropshipFreight,
+    trade_in_credit: tradeInCredit,
     refund_amount: before ? before.refund_amount : 0,
     refund_cost: before ? before.refund_cost : 0,
   })
@@ -230,6 +318,9 @@ async function save(ctx, payload) {
     goods_amount: goodsAmount,
     discount,
     paid_amount: paidAmount,
+    biz_type: bizType,
+    trade_in_credit: tradeInCredit,
+    trade_in_id: '',
     referral_payee: payload.referral_payee || '',
     goods_cost: goodsCost,
     fee_total: feeTotal,
@@ -279,6 +370,45 @@ async function save(ctx, payload) {
       fields.supplier_pay_status = ''
       fields.supplier_payments = []
     }
+
+    const orderRef = { ...fields, _id: payload.id, no: before.no }
+    let tradeInId = before.trade_in_id || ''
+    if (bizType === '以旧换新') {
+      let existing = null
+      if (tradeInId) {
+        try {
+          existing = await getDoc(db, 'trade_ins', tradeInId)
+        } catch (err) {
+          existing = null
+        }
+      }
+      if (!existing) {
+        tradeInId = await createTradeIn(db, ctx, orderRef, tradeInSrc, tradeInCredit)
+      } else if (existing.status === '待回收') {
+        if (payload.trade_in) await updateTradeIn(db, tradeInId, tradeInSrc, tradeInCredit)
+      } else if (round2(existing.credit_amount || 0) !== tradeInCredit) {
+        fail(400, '旧竿已入库处置，不能修改折价金额')
+      }
+    } else if (tradeInId) {
+      let existing = null
+      try {
+        existing = await getDoc(db, 'trade_ins', tradeInId)
+      } catch (err) {
+        existing = null
+      }
+      if (existing && existing.status !== '待回收' && existing.status !== '已取消') {
+        fail(400, '旧竿已入库处置，不能改为普通订单')
+      }
+      if (existing && existing.status === '待回收') {
+        await db.collection('trade_ins').doc(tradeInId).update({
+          data: { status: '已取消', updated_at: new Date() },
+        })
+      }
+      tradeInId = ''
+    }
+    fields.trade_in_id = tradeInId
+    fields.trade_in_credit = bizType === '以旧换新' ? tradeInCredit : 0
+
     await db.collection('orders').doc(payload.id).update({ data: fields })
     await writeExpenses(db, { ...fields, no: before.no, order_date: fields.order_date }, payload.id)
     await syncOrderCash(db, { ...fields, _id: payload.id, no: before.no })
@@ -305,6 +435,11 @@ async function save(ctx, payload) {
   fields.supplier_pay_status = fulfillMode === '代发' ? '未结算' : ''
   fields.supplier_payments = []
   const res = await db.collection('orders').add({ data: fields })
+  if (bizType === '以旧换新') {
+    const tradeInId = await createTradeIn(db, ctx, { ...fields, _id: res._id }, tradeInSrc, tradeInCredit)
+    await db.collection('orders').doc(res._id).update({ data: { trade_in_id: tradeInId } })
+    fields.trade_in_id = tradeInId
+  }
   await writeExpenses(db, fields, res._id)
   await syncOrderCash(db, { ...fields, _id: res._id })
   await audit(db, ctx.user, {
@@ -635,6 +770,18 @@ async function remove(ctx, payload) {
   const order = await getDoc(db, 'orders', payload.id)
   if (['待付款', '已取消'].indexOf(order.status) < 0) {
     fail(400, '只有待付款或已取消的订单可以删除')
+  }
+  if (order.trade_in_id) {
+    let tradeIn = null
+    try {
+      tradeIn = await getDoc(db, 'trade_ins', order.trade_in_id)
+    } catch (err) {
+      tradeIn = null
+    }
+    if (tradeIn && tradeIn.status !== '已取消') {
+      fail(400, `该订单关联回收单 ${tradeIn.no}（${tradeIn.status}），请先处理回收单`)
+    }
+    await db.collection('trade_ins').doc(order.trade_in_id).remove().catch(() => null)
   }
   await db.collection('expenses').where({ order_id: payload.id }).remove()
   await removeOrderCash(db, payload.id)

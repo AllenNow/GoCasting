@@ -1,6 +1,6 @@
 import { call, toastError } from '../../utils/api';
 import { getMe } from '../../utils/auth';
-import { PLATFORMS, FULFILL_MODES, FULFILL_VALUES } from '../../utils/config';
+import { PLATFORMS, FULFILL_MODES, FULFILL_VALUES, BIZ_TYPES } from '../../utils/config';
 import { money, percent } from '../../utils/format';
 import { back, toast } from '../../utils/ui';
 function num(value) {
@@ -15,6 +15,17 @@ Page({
         showCost: false,
         platforms: PLATFORMS,
         platformIndex: 4,
+        bizTypes: BIZ_TYPES,
+        bizTypeIndex: 0,
+        isTradeIn: false,
+        tradeOldBrand: '',
+        tradeOldModel: '',
+        tradeOldSpec: '',
+        tradeDefect: '',
+        tradeCredit: '',
+        tradeCustomerName: '',
+        tradeCustomerPhone: '',
+        tradeInStatus: '',
         fulfillLabels: FULFILL_MODES,
         fulfillValues: FULFILL_VALUES,
         fulfillIndex: 0,
@@ -50,6 +61,7 @@ Page({
         costTotal: '0.00',
         feeTotal: '0.00',
         paidPreview: '0.00',
+        tradeCreditText: '0.00',
         paidText: '',
         profitText: '0.00',
         profitRate: '-',
@@ -96,6 +108,7 @@ Page({
     async loadOrder() {
         const res = await call('order.get', { id: this.data.orderId });
         const order = res.order;
+        const tradeIn = res.tradeIn || null;
         const platformIndex = Math.max(0, PLATFORMS.indexOf(order.platform));
         const isDropship = order.fulfill_mode === '代发';
         const items = (order.items || []).map((item) => ({
@@ -106,6 +119,16 @@ Page({
         }));
         this.setData({
             platformIndex,
+            bizTypeIndex: Math.max(0, BIZ_TYPES.indexOf(order.biz_type || '普通')),
+            isTradeIn: order.biz_type === '以旧换新',
+            tradeOldBrand: tradeIn ? tradeIn.old_brand || '' : '',
+            tradeOldModel: tradeIn ? tradeIn.old_model || '' : '',
+            tradeOldSpec: tradeIn ? tradeIn.old_spec || '' : '',
+            tradeDefect: tradeIn ? tradeIn.defect_desc || '' : '',
+            tradeCredit: order.trade_in_credit ? String(order.trade_in_credit) : '',
+            tradeCustomerName: tradeIn ? tradeIn.customer_name || '' : '',
+            tradeCustomerPhone: tradeIn ? tradeIn.customer_phone || '' : '',
+            tradeInStatus: tradeIn ? tradeIn.status : '',
             fulfillIndex: isDropship ? 1 : 0,
             isDropship,
             supplierIndex: Math.max(0, this.data.suppliers.findIndex((s) => s._id === order.supplier_id)),
@@ -144,12 +167,18 @@ Page({
             'payment_fee',
             'other_fee',
             'dropship_freight',
+            'tradeCredit',
         ].indexOf(field) >= 0) {
             this.compute();
         }
     },
     onPlatformChange(e) {
         this.setData({ platformIndex: Number(e.detail.value) });
+    },
+    onBizTypeChange(e) {
+        const index = Number(e.detail.value);
+        this.setData({ bizTypeIndex: index, isTradeIn: BIZ_TYPES[index] === '以旧换新' });
+        this.compute();
     },
     onFulfillChange(e) {
         const index = Number(e.detail.value);
@@ -212,16 +241,19 @@ Page({
         const paid = this.data.paid_amount === '' ? goods : num(this.data.paid_amount);
         const cost = items.reduce((sum, item) => sum + Number(item.cost_snapshot || 0) * Number(item.qty), 0);
         const dropshipFreight = this.data.isDropship ? num(this.data.dropship_freight) : 0;
-        const profit = paid - fees - cost - dropshipFreight;
+        const tradeCredit = this.data.isTradeIn ? num(this.data.tradeCredit) : 0;
+        const profit = paid + tradeCredit - fees - cost - dropshipFreight;
+        const netPaid = paid + tradeCredit;
         this.setData({
             goodsAmount: money(goods),
             costTotal: money(cost),
             dropshipFreightText: money(dropshipFreight),
             feeTotal: money(fees),
             paidPreview: money(paid),
-            paidText: money(paid),
+            paidText: money(netPaid),
+            tradeCreditText: money(tradeCredit),
             profitText: money(profit),
-            profitRate: paid > 0 ? percent(profit / paid) : '-',
+            profitRate: netPaid > 0 ? percent(profit / netPaid) : '-',
         });
     },
     async onSave() {
@@ -240,6 +272,10 @@ Page({
             toast('代发商品需要填写代发进价');
             return;
         }
+        if (this.data.isTradeIn && !(num(this.data.tradeCredit) > 0)) {
+            toast('请填写旧竿折价金额');
+            return;
+        }
         if (this.data.saving)
             return;
         this.setData({ saving: true });
@@ -247,6 +283,19 @@ Page({
             const payload = {
                 platform: this.data.platforms[this.data.platformIndex],
                 status: this.data.statusList[this.data.statusIndex],
+                biz_type: BIZ_TYPES[this.data.bizTypeIndex],
+                trade_in_credit: this.data.isTradeIn ? num(this.data.tradeCredit) : 0,
+                trade_in: this.data.isTradeIn
+                    ? {
+                        old_brand: this.data.tradeOldBrand,
+                        old_model: this.data.tradeOldModel,
+                        old_spec: this.data.tradeOldSpec,
+                        defect_desc: this.data.tradeDefect,
+                        credit_amount: num(this.data.tradeCredit),
+                        customer_name: this.data.tradeCustomerName,
+                        customer_phone: this.data.tradeCustomerPhone,
+                    }
+                    : null,
                 fulfill_mode: fulfillMode,
                 supplier_id: isDropship ? supplier._id : '',
                 supplier_name: isDropship ? supplier.name : '',

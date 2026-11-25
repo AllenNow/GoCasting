@@ -27,6 +27,11 @@ const COST_KEYS = [
   'return_cost',
   'order_profit',
   'gain_amount',
+  'credit_amount',
+  'trade_in_credit',
+  'parts_cost',
+  'labor_cost',
+  'source_unit_cost',
 ]
 
 const COST_KEY_SET = {}

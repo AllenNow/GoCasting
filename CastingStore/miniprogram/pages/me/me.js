@@ -117,6 +117,9 @@ Page({
     goRepairs() {
         nav('/pages/repairs/list');
     },
+    goTradeIns() {
+        nav('/pages/tradeins/list');
+    },
     goSuppliers() {
         nav('/pages/suppliers/suppliers');
     },

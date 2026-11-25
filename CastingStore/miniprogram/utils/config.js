@@ -12,3 +12,5 @@ export const AFTER_SALE_TYPES = ['退货退款', '仅退款'];
 export const ORDER_STATUS = ['待付款', '待发货', '已发货', '已完成', '退款中', '已退款', '已取消'];
 export const SUPPLIER_TYPES = ['1688', '厂家', '批发市场', '代发', '其他'];
 export const SETTLEMENTS = ['现结', '账期', '平台担保'];
+export const ITEM_TYPES = ['整竿', '二手竿', '配件'];
+export const BIZ_TYPES = ['普通', '以旧换新'];

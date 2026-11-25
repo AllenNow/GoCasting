@@ -1,4 +1,5 @@
 <view class="page">
+  <help-bubble topic="orders.list" />
   <view class="card">
     <view class="row-between">
       <view>
@@ -22,6 +23,8 @@
       bindtap="onTab"
     >{{item}}</view>
   </scroll-view>
+
+  <help-bubble inline topic="order.flow" label="订单流转" />
 
   <view class="card row" style="display: flex; gap: 12rpx;">
     <input

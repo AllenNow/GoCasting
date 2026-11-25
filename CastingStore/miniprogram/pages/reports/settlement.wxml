@@ -1,4 +1,5 @@
 <view class="page">
+  <help-bubble topic="reports.settlement" />
   <view wx:if="{{!allowed}}" class="empty">当前角色没有平台对账权限</view>
   <view wx:elif="{{loading && list.length === 0}}" class="empty">加载中…</view>
 
@@ -9,6 +10,7 @@
         <text wx:if="{{exists}}" class="tag tag-primary">已有记录</text>
       </view>
       <view class="card-sub">差异 = 平台账单金额 - 系统实收（仅统计待发货 / 已发货 / 已完成订单）</view>
+      <help-bubble inline topic="settlement.diff" label="差异说明" />
       <view class="divider"></view>
 
       <view class="field">

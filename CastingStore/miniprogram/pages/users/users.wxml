@@ -1,4 +1,5 @@
 <view class="page">
+  <help-bubble topic="users" />
   <view wx:if="{{loading}}" class="empty">加载中…</view>
 
   <block wx:elif="{{!canManage}}">
@@ -15,6 +16,7 @@
       <view class="card">
         <view class="card-title">成员</view>
         <view class="card-sub">让对方先打开一次小程序，在“我的”页复制 openid 发给你。</view>
+        <help-bubble inline topic="users.roles" label="角色分配建议" />
         <view class="divider"></view>
         <view wx:if="{{list.length === 0}}" class="empty" style="padding: 24rpx 0;">暂无成员</view>
         <view wx:for="{{list}}" wx:key="_id" class="list-item">

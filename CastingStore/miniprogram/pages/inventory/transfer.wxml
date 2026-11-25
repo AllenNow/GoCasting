@@ -1,4 +1,5 @@
 <view class="page">
+  <help-bubble topic="inventory.transfer" />
   <view wx:if="{{loading}}" class="empty">加载中…</view>
   <view wx:elif="{{!allowed}}" class="empty">当前角色没有调拨权限</view>
 
@@ -6,6 +7,7 @@
     <view class="card" wx:if="{{product}}">
       <view class="card-title">{{product.name}}</view>
       <view class="card-sub">{{product.sku_code}} · 调出仓可用 {{availableText}} {{product.unit || '件'}}</view>
+      <help-bubble inline topic="inventory.transfer" label="调拨规则" />
       <view class="divider"></view>
 
       <view class="field">

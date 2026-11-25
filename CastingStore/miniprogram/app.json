@@ -14,6 +14,9 @@
     "pages/stocktake/edit",
     "pages/repairs/list",
     "pages/repairs/edit",
+    "pages/tradeins/list",
+    "pages/tradeins/edit",
+    "pages/dismantles/edit",
     "pages/purchase/purchase",
     "pages/purchase/edit",
     "pages/products/edit",
@@ -68,6 +71,9 @@
         "selectedIconPath": "images/tab/me-active.png"
       }
     ]
+  },
+  "usingComponents": {
+    "help-bubble": "/components/help-bubble/index"
   },
   "style": "v2",
   "componentFramework": "glass-easel",

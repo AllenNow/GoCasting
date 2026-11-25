@@ -55,6 +55,7 @@ async function list(ctx, payload) {
       category: product.category,
       brand: product.brand,
       condition: product.condition || '',
+      item_type: product.item_type || '整竿',
       spec: product.spec,
       unit: product.unit,
       status: product.status,
@@ -868,4 +869,6 @@ module.exports = {
   'inventory.txns': { module: 'inventory', action: 'read', handler: txns },
   'warehouse.list': { module: 'inventory', action: 'read', handler: warehouses },
   assertNoStocktake,
+  updateStock,
+  defaultWarehouse,
 }

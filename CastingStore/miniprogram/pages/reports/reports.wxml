@@ -1,4 +1,5 @@
 <view class="page">
+  <help-bubble topic="reports.list" />
   <view class="card row-between" wx:if="{{canSettle}}" bindtap="goSettlement">
     <view>
       <view class="card-title">平台对账</view>
@@ -45,6 +46,7 @@
 
     <view class="card">
       <view class="card-title">每日实收趋势</view>
+      <help-bubble inline topic="report.profit" label="利润口径" />
       <view class="card-sub">条形长度代表当天实收占区间最高值的比例</view>
       <view class="divider"></view>
       <view wx:for="{{days}}" wx:key="date" style="margin-bottom: 14rpx;">
@@ -114,6 +116,7 @@
 
     <view class="card">
       <view class="card-title">库龄分布</view>
+      <help-bubble inline topic="report.inventory" label="库存指标说明" />
       <view class="divider"></view>
       <view wx:for="{{aging}}" wx:key="label" style="margin-bottom: 16rpx;">
         <view class="row-between small">
@@ -143,6 +146,7 @@
   <block wx:elif="{{tab === 'channels'}}">
     <view class="card">
       <view class="card-title">本月渠道对比</view>
+      <help-bubble inline topic="report.channels" label="渠道口径" />
       <view class="divider"></view>
       <view wx:if="{{channels.length === 0}}" class="empty" style="padding: 24rpx 0;">暂无数据</view>
       <view wx:for="{{channels}}" wx:key="platform" class="list-item">
@@ -165,6 +169,7 @@
         <view class="bold">¥{{expenseTotal}}</view>
       </view>
       <view class="divider"></view>
+      <help-bubble inline topic="report.expenses" label="费用来源" />
       <view wx:if="{{expenses.length === 0}}" class="empty" style="padding: 24rpx 0;">本月暂无费用</view>
       <view wx:for="{{expenses}}" wx:key="type" style="margin-bottom: 20rpx;">
         <view class="row-between small">
